@@ -224,8 +224,8 @@ body{
 }
 .chip:hover{border-color:var(--parchment-dim);color:var(--parchment);}
 .chip.active {
-  background: var(--chipc, var(--dark-gold));
-  border-color: var(--chipc, var(--gold));
+  background:color-mix(in srgb, var(--chipc, var(--gold)) 85%, var(--ink-2));
+  border-color:var(--chipc, var(--gold));
   color: #ffffff;
   font-weight: 700;
   text-shadow: 3px 3px 2px #000;
@@ -417,7 +417,16 @@ select.select-filter:focus{border-color:var(--gold);}
   padding:0 18px 20px;
   border-top:1px solid var(--hairline);
 }
-.spell-card.open .spell-body{display:block;padding-top:16px;}
+.spell-card.open{
+  background:color-mix(in srgb, var(--cardc, var(--gold)) 5%, var(--ink-2));
+}
+.spell-card.open .spell-body{
+  display:block;
+  padding-top:16px;
+}
+.spell-card.open .spell-head{
+  background:color-mix(in srgb, var(--cardc, var(--gold)) 25%, var(--ink-2));
+}
 
 .stat-grid{
   display:grid;
@@ -436,7 +445,7 @@ select.select-filter:focus{border-color:var(--gold);}
   border-radius:6px;
 }
 .copyable{
-  cursor:pointer;
+  cursor:copy;
   transition:background .15s;
   border-radius:4px;
 }
@@ -449,16 +458,13 @@ select.select-filter:focus{border-color:var(--gold);}
 /* Copy tooltip and icon affordances are managed via scripts; keep styling minimal here. */
 .stat-label{
   font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
+  font-size:.82rem;
   letter-spacing:.1em;
   text-transform:uppercase;
-/*
-  Note: tooltip/copy affordances managed in scripts.html. Keep copyable state styling simple.
-*/
-  color:var(--parchment-dim);
+  color:var(--gold);
 }
 .stat-value{
-  font-size:1.05rem;
+  font-size:1rem;
   color:var(--parchment);
 }
 
@@ -481,7 +487,7 @@ select.select-filter:focus{border-color:var(--gold);}
 }
 
 .spell-desc{
-  font-size:1rem;
+  font-size:0.72rem;
   color:var(--parchment);
   white-space:pre-line;
 }
@@ -494,18 +500,24 @@ select.select-filter:focus{border-color:var(--gold);}
 }
 .heightened-title{
   font-family:'JetBrains Mono',monospace;
-  font-size:.66rem;
+  font-size:.86rem;
   letter-spacing:.1em;
   text-transform:uppercase;
   color:var(--gold);
   margin-bottom:8px;
 }
-.heightened-item{
-  font-size:.95rem;
+.heightened-item,
+.desc-copy{
+  font-size:1rem;
   color:var(--parchment-dim);
-  margin-bottom:6px;
+  margin-bottom:4px;
+  white-space: pre-wrap;
 }
-.heightened-item b{color:var(--parchment);font-weight:600;}
+.desc-copy b,
+.heightened-item b{
+  color:var(--parchment);
+  font-weight:600;
+}
 
 /* scrollbar */
 .sidebar::-webkit-scrollbar{width:8px;}
@@ -516,7 +528,7 @@ select.select-filter:focus{border-color:var(--gold);}
 .copy-tooltip{
   position:fixed;
   transform:translate(-50%,-140%);
-  background:var(--gold);
+  background:var(--dark-gold);
   color:var(--ink);
   padding:6px 10px;
   border-radius:6px;
@@ -2160,12 +2172,12 @@ select.select-filter:focus{border-color:var(--gold);}
     "target_effect_area": "Target: you",
     "duration": "10 minutes",
     "save": "",
-    "sr": "",
-    "description": "You can assume the form of any Small or Medium creature of the animal type. If the form you assume has any of the following abilities, you gain the listed ability: climb 30 ft., fly 30 ft. (average maneuverability), swim 30 ft., darkvision 60 ft., low-light vision and scent.\n\n- Small animal: You gain a +2 bonus to Dexterity and a +1 bonus to natural armor.\n\n- Medium animal: You gain a +2 bonus to Strength and a +2 bonus to natural armor.\n\nSee Table: Size Modifiers for the relevant size modifiers.\n\nNote: All bonuses gained are status bonuses.\n\n- Tiny animal: You gain a +4 bonus to Dexterity, a −2 Strength penalty and a +1 bonus to natural armor.\n\n- Large animal: You gain a +4 bonus to Strength, a −2 Dexterity penalty and a +4 bonus to natural armor.\n\n- Diminutive animal: You gain a +6 bonus to Dexterity, a −4 Strength penalty and a +1 bonus to natural armor.\n\n- Huge animal: You gain a +6 bonus to Strength, a −4 Dexterity penalty and a +6 bonus to natural armor.\n\n- Small magical beast: You gain a +4 bonus to Dexterity and a +2 bonus to natural armor.\n\n- Medium magical beast: You gain a +4 bonus to Strength and a +2 bonus to natural armor.\n\n- Tiny magical beast: You gain a +8 bonus to Dexterity, a −2 Strength penalty and a +3 bonus to natural armor.\n\n- Large magical beast: You gain a +6 bonus to Strength, a +2 bonus to Constitution, a −2 Dexterity penalty and a +6 bonus to natural armor.",
+    "sr": "no",
+    "description": "You can assume the form of any Small or Medium creature of the animal type. If the form you assume has any of the following abilities, you gain the listed ability: climb 30 ft., fly 30 ft. (average maneuverability), swim 30 ft., darkvision 60 ft., low-light vision and scent.\n\n- Small animal: You gain a +2 bonus to Dexterity and a +1 bonus to natural armor.\n- Medium animal: You gain a +2 bonus to Strength and a +2 bonus to natural armor.\n\nSee Table: Size Modifiers for the relevant size modifiers.\n\nNote: All bonuses gained are status bonuses.",
     "heightened": [
-      "(4th) You can also assume the form of a Tiny or Large creature of the animal type of your choice. Add the following abilities to the list you can gain from the form you assume: climb 60 ft., fly 60 ft. (good maneuverability), swim 60 ft., darkvision 60 ft., low-light vision, scent, grab, pounce and trip.",
-      "(5th) You can also assume the form of a Diminutive or Huge creature of the animal type. This spell also allows you to take on the form of a Small or Medium creature of the magical beast type. Add the following abilities to the list you can gain from the form you assume: burrow 30 ft., climb 90 ft., fly 90 ft. (good maneuverability), swim 90 ft., blindsense 30 ft., darkvision 60 ft., low-light vision, scent, constrict, ferocity, grab, jet, poison, pounce, rake, trample, trip and web.",
-      "(6th) You can also assume the form of a Tiny or Large creature of the magical beast type. Add the following abilities to the list you can gain from the form you assume: burrow 60 ft., climb 90 ft., fly 120 ft. (good maneuverability), swim 120 ft., blindsense 60 ft., darkvision 90 ft., low-light vision, scent, tremorsense 60 ft., breath weapon, constrict, ferocity, grab, jet, poison, pounce, rake, rend, roar, spikes, trample, trip and web. If the creature has immunity or resistance to any elements, you gain resistance 20 to those elements. If the creature has vulnerability to an element, you gain that vulnerability."
+      "(4th) You can also assume the form of a Tiny or Large creature of the animal type of your choice. Add the following abilities to the list you can gain from the form you assume: climb 60 ft., fly 60 ft. (good maneuverability), swim 60 ft., darkvision 60 ft., low-light vision, scent, grab, pounce and trip.\n\n- Tiny animal: You gain a +4 bonus to Dexterity, a −2 Strength penalty and a +1 bonus to natural armor.\n- Large animal: You gain a +4 bonus to Strength, a −2 Dexterity penalty and a +4 bonus to natural armor.",
+      "(5th) You can also assume the form of a Diminutive or Huge creature of the animal type. This spell also allows you to take on the form of a Small or Medium creature of the magical beast type. Add the following abilities to the list you can gain from the form you assume: burrow 30 ft., climb 90 ft., fly 90 ft. (good maneuverability), swim 90 ft., blindsense 30 ft., darkvision 60 ft., low-light vision, scent, constrict, ferocity, grab, jet, poison, pounce, rake, trample, trip and web.\n\n- Diminutive animal: You gain a +6 bonus to Dexterity, a −4 Strength penalty and a +1 bonus to natural armor.\n- Huge animal: You gain a +6 bonus to Strength, a −4 Dexterity penalty and a +6 bonus to natural armor.\n- Small magical beast: You gain a +4 bonus to Dexterity and a +2 bonus to natural armor.\n- Medium magical beast: You gain a +4 bonus to Strength and a +2 bonus to natural armor.",
+      "(6th) You can also assume the form of a Tiny or Large creature of the magical beast type. Add the following abilities to the list you can gain from the form you assume: burrow 60 ft., climb 90 ft., fly 120 ft. (good maneuverability), swim 120 ft., blindsense 60 ft., darkvision 90 ft., low-light vision, scent, tremorsense 60 ft., breath weapon, constrict, ferocity, grab, jet, poison, pounce, rake, rend, roar, spikes, trample, trip and web. If the creature has immunity or resistance to any elements, you gain resistance 20 to those elements. If the creature has vulnerability to an element, you gain that vulnerability.\n\n- Tiny magical beast: You gain a +8 bonus to Dexterity, a −2 Strength penalty and a +3 bonus to natural armor.\n- Large magical beast: You gain a +6 bonus to Strength, a +2 bonus to Constitution, a −2 Dexterity penalty and a +6 bonus to natural armor."
     ],
     "classes": [
       "alchemist",
@@ -2414,7 +2426,7 @@ select.select-filter:focus{border-color:var(--gold);}
     "duration": "instantaneous",
     "save": "Will partial",
     "sr": "yes",
-    "description": "Any non-evil creature within the area of a blasphemy spell suffers the following ill effects.\n\nThe effects are cumulative and concurrent. A successful Will save reduces or eliminates these effects. Creatures affected by multiple effects make only one save and apply the result to all the effects.\n\nCreature's HD / Effect\n-------------------------------------\nEqual to caster level — Dazed\nUp to caster level -1 — Weakened\nUp to caster level -5 — Paralyzed\nUp to caster level -10 — Killed\n\nDazed: The creature can take no actions for 1 round, though it defends itself normally. Save negates.\n\nWeakened: The creature's Strength score decreases by 2d6 points for 2d4 rounds. Save for half.\n\nParalyzed: The creature is paralyzed and helpless for 1d10 minutes. Save reduces the paralyzed effect to 1 round.\n\nKilled: Living creatures die. Undead creatures are destroyed. Save negates. If the save is successful, the creature instead takes 3d6 points of damage + 1 point per caster level (maximum +25).\n\nFurthermore, if you are on your home plane when you cast this spell, non-evil extraplanar creatures within the area are instantly banished back to their home planes. Creatures so banished can't return for at least 24 hours. This effect takes place regardless of whether the creatures hear the blasphemy or not. The banishment effect allows a Will save (at a -4 penalty) to negate.\n\nCreatures whose Hit Dice exceed your caster level are unaffected by blasphemy.",
+    "description": "Any non-evil creature within the area of a blasphemy spell suffers the following ill effects.\n\nThe effects are cumulative and concurrent. A successful Will save reduces or eliminates these effects. Creatures affected by multiple effects make only one save and apply the result to all the effects.\n\nCreature's HD / Effect\nEqual to caster level — Dazed\nUp to caster level -1 — Weakened\nUp to caster level -5 — Paralyzed\nUp to caster level -10 — Killed\n\nDazed: The creature can take no actions for 1 round, though it defends itself normally. Save negates.\n\nWeakened: The creature's Strength score decreases by 2d6 points for 2d4 rounds. Save for half.\n\nParalyzed: The creature is paralyzed and helpless for 1d10 minutes. Save reduces the paralyzed effect to 1 round.\n\nKilled: Living creatures die. Undead creatures are destroyed. Save negates. If the save is successful, the creature instead takes 3d6 points of damage + 1 point per caster level (maximum +25).\n\nFurthermore, if you are on your home plane when you cast this spell, non-evil extraplanar creatures within the area are instantly banished back to their home planes. Creatures so banished can't return for at least 24 hours. This effect takes place regardless of whether the creatures hear the blasphemy or not. The banishment effect allows a Will save (at a -4 penalty) to negate.\n\nCreatures whose Hit Dice exceed your caster level are unaffected by blasphemy.",
     "heightened": [],
     "classes": [
       "cleric/oracle"
@@ -4065,7 +4077,7 @@ select.select-filter:focus{border-color:var(--gold);}
     "duration": "maintain, up to 1 minute",
     "save": "Will negates",
     "sr": "yes",
-    "description": "This spell assaults and twists creatures' minds, spawning delusions and provoking uncontrolled action. The target becomes confused and must roll at the beginning of each of its turn to determine its actions for the turn.\n\nd100 / Behavior\n------------------------------------\n01−25 - Acts normally\n26−50 - Does nothing but babble incoherently\n51−75 - Attack itself with held weapon or deal 1d8 + Str damage to self if unarmed\n76−100 - Attack nearest creature once (for this, a familiar counts as part of the subject's self) -\n\nA confused character who can't carry out the indicated action does nothing but babble incoherently. Attackers don't have any special benefit when attacking a confused character. Any confused character who is attacked automatically attacks its attackers on its next turn, as long as it is still confused when its turn comes. Note that a confused character will not make Attacks of Opportunity against any creature that it is not already devoted to attacking.\n\nEach round, at the end of its turn, the subject may attempt a new save to suppress the effect for its next round.",
+    "description": "This spell assaults and twists creatures' minds, spawning delusions and provoking uncontrolled action. The target becomes confused and must roll at the beginning of each of its turn to determine its actions for the turn.\n\nd100 / Behavior\n01−25 - Acts normally\n26−50 - Does nothing but babble incoherently\n51−75 - Attack itself with held weapon or deal 1d8 + Str damage to self if unarmed\n76−100 - Attack nearest creature once (for this, a familiar counts as part of the subject's self) -\n\nA confused character who can't carry out the indicated action does nothing but babble incoherently. Attackers don't have any special benefit when attacking a confused character. Any confused character who is attacked automatically attacks its attackers on its next turn, as long as it is still confused when its turn comes. Note that a confused character will not make Attacks of Opportunity against any creature that it is not already devoted to attacking.\n\nEach round, at the end of its turn, the subject may attempt a new save to suppress the effect for its next round.",
     "heightened": [
       "(+2) You can target one additional creature, no two of which can be more than 30 ft. apart."
     ],
@@ -4185,7 +4197,7 @@ select.select-filter:focus{border-color:var(--gold);}
     "duration": "instantaneous",
     "save": "Fortitude negates",
     "sr": "yes",
-    "description": "Your touch inflicts a disease. The disease is contracted immediately (the onset period doesn't apply). The diseases have a frequency of 1/day and require 2 consecutive saves to be cured.\n\nThe subject contracts one of the following diseases:\n\nDisease / Save / Effect\n--------------------------------------------------\nBlinding sickness — Fort 16 — 1d4 Str damage, if more than 2 Str damage, target must make an additional Fort save or be permanently blinded\nBubonic plague — Fort 17 — 1d4 Con damage, 1 Cha damage and exhaustion level increases by 1\nCackle fever — Fort 16 — 1d6 Wis damage\nFilth fever — Fort 12 — 1d3 Dex damage and 1d3 Con damage\nMindfire — Fort 12 — 1d4 Int damage\nRed ache — Fort 15 — 1d6 Str damage\nShakes — Fort 13 — 1d8 Dex damage\nSlimy doom — Fort 14 — 1d4 Con damage, target must make a second Fort save or 1 point of the damage is drain instead",
+    "description": "Your touch inflicts a disease. The disease is contracted immediately (the onset period doesn't apply). The diseases have a frequency of 1/day and require 2 consecutive saves to be cured.\n\nThe subject contracts one of the following diseases:\n\nDisease / Save / Effect\nBlinding sickness — Fort 16 — 1d4 Str damage, if more than 2 Str damage, target must make an additional Fort save or be permanently blinded\nBubonic plague — Fort 17 — 1d4 Con damage, 1 Cha damage and exhaustion level increases by 1\nCackle fever — Fort 16 — 1d6 Wis damage\nFilth fever — Fort 12 — 1d3 Dex damage and 1d3 Con damage\nMindfire — Fort 12 — 1d4 Int damage\nRed ache — Fort 15 — 1d6 Str damage\nShakes — Fort 13 — 1d8 Dex damage\nSlimy doom — Fort 14 — 1d4 Con damage, target must make a second Fort save or 1 point of the damage is drain instead",
     "heightened": [],
     "classes": [
       "antipaladin",
@@ -24035,6 +24047,18 @@ select.select-filter:focus{border-color:var(--gold);}
     return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   }
 
+  function boldLeadingLabel(text){
+    return escapeHtml(text).split('\n').map(line=>{
+      return line.replace(/^(\s*(?:-\s*)?)((?:\S+\s+){0,4}\S*?:)/, '$1<b>$2</b>');
+    }).join('\n');
+  }
+
+  function boldLeadingLabelText(text){
+    return (text||'').split('\n').map(line=>{
+      return line.replace(/^(\s*(?:-\s*)?)((?:\S+\s+){0,4}\S*?:)/, '$1**$2**');
+    }).join('\n');
+  }
+
   function matchesQuery(spell, query){
     if(!query) return true;
     const q = query.trim().toLowerCase();
@@ -24082,23 +24106,26 @@ select.select-filter:focus{border-color:var(--gold);}
     const classesHTML = s.level_entries.map(le=>`<span class="class-pill">${escapeHtml(le.class)} ${le.level}</span>`).join('');
     const classLevelInline = s.level_entries.map(le=>`${le.class} ${le.level}`).join(', ');
     const shortDescInline = s.short_description || classLevelInline;
-
-      const ritualHTML = s.ritual ? `\n      <div class="heightened-block">\n        <div class="heightened-title">${escapeHtml(s.ritual)}</div>\n      </div>` : '';
+    const ritualHTML = s.ritual ? `\n      <div class="heightened-block">\n        <div class="heightened-title">${escapeHtml(s.ritual)}</div>\n      </div>` : '';
 
     // Build separate copy payloads: description alone, and heightened text alone (no title)
-    const descText = (s.description || '').trim();
-    const heightenedText = (s.heightened && s.heightened.length) ? s.heightened.join('\n') : '';
-    const descHtml = (s.description||'').split(/\n\n+/).map(p=>`<p>${escapeHtml(p)}</p>`).join('');
+    const descText = boldLeadingLabelText((s.description || '').trim());
+    const heightenedText = (s.heightened && s.heightened.length) ? s.heightened.map(h=>{
+      const m = h.match(/^\s*(\([^)]*\))\s*(.*)$/s);
+      return m ? `**${m[1]}** ${boldLeadingLabelText(m[2])}` : boldLeadingLabelText(h);
+    }).join('\n') : '';
+    
+    //const descHtml = `<div>${escapeHtml(s.description || '')}</div>`;
+    const descHtml = `<div>${boldLeadingLabel(s.description || '')}</div>`;
+
     const heightenedItemsHtml = (s.heightened && s.heightened.length) ? s.heightened.map(h=>{
-      const m = h.match(/^Heightened\s*(\([^)]*\))\s*(.*)$/i);
-      if(m) return `<div class="heightened-item"><b>${escapeHtml(m[1])}</b> ${escapeHtml(m[2])}</div>`;
-      return `<div class="heightened-item">${escapeHtml(h)}</div>`;
+      const m = h.match(/^\s*(\([^)]*\))\s*(.*)$/s);
+      if(m) return `<div class="heightened-item"><b>${escapeHtml(m[1])}</b> ${boldLeadingLabel(m[2])}</div>`;
+      return `<div class="heightened-item">${boldLeadingLabel(h)}</div>`;
     }).join('') : '';
-
     const heightenedCopyBlock = heightenedText ? `\n      <div class="heightened-block">\n        <div class="heightened-title">Heightened</div>\n        <div class="heightened-copy copyable" data-copy="${escapeHtml(heightenedText)}">${heightenedItemsHtml}</div>\n      </div>` : '';
-
-    return `\n    <div class="spell-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${s._idx}">\n      <div class="spell-head" data-toggle="${s._idx}">\n        <div class="spell-title-block">\n          <span class="spell-name copyable" data-copy="${escapeHtml(s.name)}">${escapeHtml(s.name)}</span>\n          <span class="spell-meta-inline">${levelDisp}</span>\n          <span class="spell-school-tag">${escapeHtml(sch)}</span>\n        </div>\n        <div class="spell-right">\n          <span class="spell-classlevel-badge" title="${escapeHtml(shortDescInline)}">${escapeHtml(shortDescInline)}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="spell-body">\n        <div class="stat-grid">\n          ${statFields.map(([l,v])=>`<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`).join('')}\n        </div>\n        <div class="classes-row">${classesHTML}</div>\n        ${ritualHTML}\n        <div class="desc-copy copyable" data-copy="${escapeHtml(descText)}">${descHtml}</div>${heightenedCopyBlock}\n      </div>\n    </div>`;
-  }
+      return `\n    <div class="spell-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${s._idx}">\n      <div class="spell-head" data-toggle="${s._idx}">\n        <div class="spell-title-block">\n          <span class="spell-name copyable" data-copy="${escapeHtml(s.name)}">${escapeHtml(s.name)}</span>\n          <span class="spell-meta-inline">${levelDisp}</span>\n          <span class="spell-school-tag">${escapeHtml(sch)}</span>\n        </div>\n        <div class="spell-right">\n          <span class="spell-classlevel-badge" title="${escapeHtml(shortDescInline)}">${escapeHtml(shortDescInline)}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="spell-body">\n        <div class="stat-grid">\n          ${statFields.map(([l,v])=>`<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`).join('')}\n        </div>\n        <div class="classes-row">${classesHTML}</div>\n        ${ritualHTML}\n        <div class="desc-copy copyable" data-copy="${escapeHtml(descText)}">${descHtml}</div>${heightenedCopyBlock}\n      </div>\n    </div>`;
+    }
 
   function filtered(){
     let list = SPELLS_DATA;
