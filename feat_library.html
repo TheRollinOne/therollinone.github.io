@@ -87,6 +87,8 @@ body{
   font-size:1.5rem;
   letter-spacing:.03em;
   color:var(--gold);
+  text-decoration:none;
+  cursor:pointer;
 }
 .brand .sub{
   font-family:'JetBrains Mono',monospace;
@@ -306,6 +308,42 @@ select.select-filter:focus{border-color:var(--gold);}
   display:flex;
   flex-direction:column;
   gap:22px;
+}
+
+.jump-section{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+.jump-btn{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:2px;
+  text-decoration:none;
+  background:var(--ink-3);
+  border: 1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
+  border-radius:8px;
+  padding:6px 14px;
+  transition:border-color .15s, background .15s;
+}
+.jump-btn:hover{
+  border-color:var(--gold);
+  background:color-mix(in srgb, var(--gold) 8%, var(--ink-3));
+}
+.jump-btn-main{
+  font-family:'Cinzel',serif;
+  font-weight:700;
+  font-size:1.4rem;
+  color:var(--gold);
+  letter-spacing:.1em;
+}
+.jump-btn-sub{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  letter-spacing:.2em;
+  text-transform:uppercase;
+  color:var(--parchment-dim);
 }
 @media (max-width:900px){
   .filters-collapse{display:block;}
@@ -573,7 +611,7 @@ select.select-filter:focus{border-color:var(--gold);}
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
-      <div class="mark">D20 Revamp</div>
+      <a href="index.html" class="mark">D20 Revamp</a>
       <div class="sub" id="brandSub">Feat Compendium · 587 Feats</div>
     </div>
 
@@ -626,6 +664,16 @@ select.select-filter:focus{border-color:var(--gold);}
             </select>
           </div>
         </div>
+
+        <div class="jump-section">
+          <div class="filters-summary">
+            <span>Jump To</span>
+          </div>
+          <a class="jump-btn" href="spell_compendium.html">
+            <span class="jump-btn-main">Spell</span>
+            <span class="jump-btn-sub">Compendium</span>
+          </a>
+        </div>        
       </div>
     </div>
   </aside>
