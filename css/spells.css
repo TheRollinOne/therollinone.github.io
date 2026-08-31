@@ -1,0 +1,154 @@
+:root{
+--abjuration: #78dc6e;
+--conjuration: #32d2b4;
+--divination: #41c3f5;
+--enchantment: #c489ff;
+--evocation: #ff96c8;
+--illusion: #ff4b4b;
+--necromancy: #ff9b50;
+--transmutation: #e4c450;
+--universal: #f0f0f0b4;
+}
+
+.save-chip-row{
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:6px;
+}
+.save-chip-row .chip{
+  width:auto;
+  justify-content:center;
+}
+
+.spell-card{
+  background:var(--ink-2);
+  border:1px solid var(--hairline);
+  border-left:5px solid var(--cardc,var(--gold));
+  border-radius:8px;
+  overflow:hidden;
+  transition:border-color .15s;
+}
+.spell-card.open{
+  border-color:var(--cardc,var(--gold));
+}
+
+.spell-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:8px 18px;
+  cursor:pointer;
+}
+.spell-head:hover{background:rgba(255,255,255,0.02);}
+
+.spell-title-block{
+  display:flex;
+  align-items:baseline;
+  gap:12px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.spell-name{
+  font-family:'Cinzel',serif;
+  font-weight:600;
+  font-size:1.08rem;
+  color:var(--parchment);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.spell-meta-inline{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+}
+.spell-school-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.76rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--cardc,var(--gold));
+  white-space:nowrap;
+}
+
+.spell-right{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-shrink:0;
+}
+.spell-classlevel-badge{
+  font-family:'Crimson Pro',serif;
+  font-size:1rem;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:320px;
+  display:none;
+}
+@media (min-width:640px){.spell-classlevel-badge{display:inline-block;}}
+@media (min-width:1100px){.spell-classlevel-badge{max-width:460px;}}
+
+.spell-card.open .chevron{transform:rotate(180deg);}
+
+.spell-body{
+  display:none;
+  padding:0 18px 20px;
+  border-top:1px solid var(--hairline);
+}
+.spell-card.open{
+  background:color-mix(in srgb, var(--cardc, var(--gold)) 5%, var(--ink-2));
+}
+.spell-card.open .spell-body{
+  display:block;
+  padding-top:16px;
+}
+.spell-card.open .spell-head{
+  background:color-mix(in srgb, var(--cardc, var(--gold)) 25%, var(--ink-2));
+}
+
+.classes-row{
+  margin-bottom:10px;
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  align-items:center;
+}
+.class-pill{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.68rem;
+  text-transform: capitalize;
+  padding:5px 8px;
+  border-radius:20px;
+  background:var(--ink-2);
+  border:1px solid var(--hairline);
+  color:var(--parchment-dim);
+}
+
+.heightened-block{
+  margin-top:10px;
+  padding-top:14px;
+}
+.heightened-title{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.86rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:8px;
+}
+.heightened-item,
+.desc-copy{
+  font-size:1.1rem;
+  color:var(--parchment-dim);
+  margin-bottom:4px;
+  white-space: pre-wrap;
+}
+.desc-copy b,
+.heightened-item b{
+  color:var(--parchment);
+  font-weight:600;
+}
