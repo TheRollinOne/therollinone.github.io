@@ -131,7 +131,7 @@
 
     const flavorHtml = f.flavor_text ? `<p class="feat-flavor copyable" data-copy="${escapeHtml(f.flavor_text)}">${escapeHtml(f.flavor_text)}</p>` : '';
 
-    const prereqHtml = (f.prerequisites && f.prerequisites.length>0) ? `\n        <div class="feat-section">\n          <div class="feat-section-title">Prerequisites</div>\n          <div class="feat-desc copyable" data-copy="${escapeHtml(boldLeadingLabelText(f.prerequisites))}"><div>${boldLeadingLabel(f.prerequisites)}</div></div>\n        </div>` : '';
+    const prereqHtml = (f.prerequisites && f.prerequisites.length>0) ? `\n        <div class="feat-section copyable" data-copy="${escapeHtml(boldLeadingLabelText(f.prerequisites))}">\n          <div class="feat-section-title">Prerequisites</div>\n          <div class="feat-desc"><div>${boldLeadingLabel(f.prerequisites)}</div></div>\n        </div>` : '';
 
     const groupFields = [
       ['Benefits', f.benefits],

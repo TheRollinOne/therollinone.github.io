@@ -1,0 +1,5754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>D20 Revamp — Weapon Arsenal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/weapons.css">
+</head>
+<body>
+
+<!-- ===== sidebar ===== -->
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand">
+      <a href="index.html" class="mark">D20 Revamp</a>
+      <div class="sub" id="brandSub">Weapon Arsenal · 222 Weapons</div>
+    </div>
+
+    <div class="search-wrap" id="searchWrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input id="searchInput" type="text" placeholder="Search everything…" autocomplete="off">
+      <svg class="search-clear-icon" id="searchClearIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </div>
+
+    <div class="filters-collapse" id="filtersCollapse">
+      <div class="filters-summary" id="filtersSummary">
+        <span>Filters</span>
+        <div class="filters-header-actions">
+          <button id="clearAll" type="button">clear all</button>
+          <span class="fs-arrow">▾</span>
+        </div>
+      </div>
+      <div class="filters-inner" id="filtersInner">
+        <div class="filter-group">
+          <div class="filter-label"><span>Proficiencies</span><button id="clearProficiencies" type="button">clear</button></div>
+          <div class="chip-row proficiency-chip-row" id="proficiencyChips">
+            <div class="chip" data-proficiency="simple">Simple</div>
+            <div class="chip" data-proficiency="martial">Martial</div>
+            <div class="chip" data-proficiency="exotic">Exotic</div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-label"><span>Categories</span><button id="clearCategories" type="button">clear</button></div>
+          <div class="chip-row category-chip-row" id="categoryChips">
+            <div class="chip" data-category="unarmed" style="--dotc:var(--cat-unarmed);--chipc:var(--cat-unarmed);"><span class="dot"></span>Unarmed</div>
+            <div class="chip" data-category="light" style="--dotc:var(--cat-light);--chipc:var(--cat-light);"><span class="dot"></span>Light</div>
+            <div class="chip" data-category="one handed" style="--dotc:var(--cat-one-handed);--chipc:var(--cat-one-handed);"><span class="dot"></span>One Handed</div>
+            <div class="chip" data-category="two handed" style="--dotc:var(--cat-two-handed);--chipc:var(--cat-two-handed);"><span class="dot"></span>Two Handed</div>
+            <div class="chip" data-category="ranged" style="--dotc:var(--cat-ranged);--chipc:var(--cat-ranged);"><span class="dot"></span>Ranged</div>
+            <div class="chip" data-category="ammunition" style="--dotc:var(--cat-ammunition);--chipc:var(--cat-ammunition);"><span class="dot"></span>Ammunition</div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-label"><span>Damage Types</span><button id="clearDamageTypes" type="button">clear</button></div>
+          <div class="chip-row damage-type-chip-row" id="damageTypeChips">
+            <div class="chip" data-damage-type="slashing">Slashing</div>
+            <div class="chip" data-damage-type="piercing">Piercing</div>
+            <div class="chip" data-damage-type="bludgeoning">Bludgeoning</div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-label"><span>Critical</span><button id="clearCritical" type="button">clear</button></div>
+          <div class="chip-row critical-chip-row" id="criticalChips">
+            <div class="chip" data-critical="x2">x2</div>
+            <div class="chip" data-critical="x3">x3</div>
+            <div class="chip" data-critical="x4">x4</div>
+            <div class="chip" data-critical="19-20/x2">19-20/x2</div>
+            <div class="chip" data-critical="18-20/x2">18-20/x2</div>
+            <div class="chip" data-critical="19-20/x3">19-20/x3</div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-label"><span>Weapon Groups</span><button id="clearWeaponGroups" type="button">clear</button></div>
+          <div class="chip-row weapon-group-chip-row" id="weaponGroupChips">
+            <div class="chip" data-weapon-group="axes">Axes</div>
+            <div class="chip" data-weapon-group="bows">Bows</div>
+            <div class="chip" data-weapon-group="close">Close</div>
+            <div class="chip" data-weapon-group="crossbows">Crossbows</div>
+            <div class="chip" data-weapon-group="double">Double</div>
+            <div class="chip" data-weapon-group="flails">Flails</div>
+            <div class="chip" data-weapon-group="hammers">Hammers</div>
+            <div class="chip" data-weapon-group="heavy blades">Heavy Blades</div>
+            <div class="chip" data-weapon-group="light blades">Light Blades</div>
+            <div class="chip" data-weapon-group="monk">Monk</div>
+            <div class="chip" data-weapon-group="polearms">Polearms</div>
+            <div class="chip" data-weapon-group="spears">Spears</div>
+            <div class="chip" data-weapon-group="thrown">Thrown</div>
+            <div class="chip" data-weapon-group="tribal">Tribal</div>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-label"><span>Special</span><button id="clearSpecial" type="button">clear</button></div>
+          <div class="chip-row special-chip-row" id="specialChips">
+            <div class="chip" data-special="agile">Agile</div>
+            <div class="chip" data-special="attached">Attached</div>
+            <div class="chip" data-special="brace">Brace</div>
+            <div class="chip" data-special="disarm">Disarm</div>
+            <div class="chip" data-special="double">Double</div>
+            <div class="chip" data-special="fragile">Fragile</div>
+            <div class="chip" data-special="grapple">Grapple</div>
+            <div class="chip" data-special="improvised">Improvised</div>
+            <div class="chip" data-special="monk">Monk</div>
+            <div class="chip" data-special="nonlethal">Nonlethal</div>
+            <div class="chip" data-special="parry">Parry</div>
+            <div class="chip" data-special="performance">Performance</div>
+            <div class="chip" data-special="reach">Reach</div>
+            <div class="chip" data-special="see text">See Text</div>
+            <div class="chip" data-special="sunder">Sunder</div>
+            <div class="chip" data-special="trip">Trip</div>
+          </div>
+        </div>
+        
+        <div class="filters-summary" id="sortingSummary">
+          <span>Sorting</span>
+          <div class="filters-header-actions">
+            <span class="fs-arrow">▾</span>
+          </div>
+        </div>
+
+        <div class="filter-group">
+          <div class="filter-label"><span>Sort by</span></div>
+          <div class="sort-row">
+            <select class="select-filter" id="sortSelect">
+              <option value="name">Name (A–Z)</option>
+              <option value="category">Category</option>
+              <option value="cost">Cost (low–high)</option>
+              <option value="weight">Weight (low–high)</option>
+            </select>
+          </div>
+        </div>
+
+         <div class="jump-section">
+          <div class="filters-summary">
+            <span>Back To</span>
+          </div>
+          <a class="jump-btn" href="index.html">
+            <span class="jump-btn-main">D20 Revamp</span>
+            <span class="jump-btn-sub">Homepage</span>
+          </a>
+        </div> 
+      </div>
+    </div>
+  </aside>
+
+<!-- ===== main (placeholder — list rendering comes in the next step) ===== -->
+  <main class="main">
+    <div class="page-title-desktop">
+      <h1 id="listTitle">222 Weapons Listed</h1>
+    </div>
+    <div class="list" id="weaponList"></div>
+  </main>
+</div>
+
+<!-- ===== scripts ===== -->
+<!-- WEAPONS_DATA moved to data/weapons.json -->
+<script>const WEAPONS_DATA = [
+  {
+    "name": "Aklys",
+    "cost": "5 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": "thrown"
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "hammers",
+      "thrown"
+    ],
+    "special": [
+      "performance",
+      "trip"
+    ],
+    "description": "The aklys is a hooked throwing club with a 20-foot-long cord, usually of woven leather. Some aklyses have holes drilled through them and whistle when flung.\n\nYou can retrieve the aklys after throwing it as 1 action. The hook allows you to make trip attacks at range."
+  },
+  {
+    "name": "Amentum",
+    "cost": "",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "50 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "martial",
+    "weapon_group": [],
+    "special": [
+      "performance"
+    ],
+    "description": "An amentum is a long leather thong that attaches to a javelin. Before throwing, the amentum is wound about the javelin's shaft. You then throw the javelin while gripping the amentum, imparting spin on the weapon and greatly improving its range.\n\nAttaching an amentum to a javelin requires 1 action, and winding requires 3 actions. Javelins can be stored with amenta already wound about them. A javelin wound with an amentum is considered a martial weapon."
+  },
+  {
+    "name": "Ankus",
+    "cost": "8 gp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [
+      "disarm",
+      "trip"
+    ],
+    "description": "Also known as an elephant goad, this tool consists of a 2- to 3-foot rod ending in a spearhead and a backward-facing hook. Traditionally used to train and direct large animals, the ankus can be used as a weapon in a pinch.\n\nArrows (20)\n\nA standard (common) arrow used as a melee weapon is treated as a light improvised weapon (-4 Conviction on attack rolls) and deals damage as a dagger of its size (critical multiplier ×2). Unless indicated otherwise, arrows come in a leather quiver that holds 20 arrows.\n\nArrows, Barbed (20)\n\nThe head of a barbed arrow resembles that of a harpoon.\n\nBenefits: When a barbed arrow is attached to a length of silk rope and fired from a bow, the arrow's range increment is reduced to 30 feet, but it gains the grapple special weapon quality."
+  },
+  {
+    "name": "Arrow, Bleeding (1)",
+    "cost": "360 gp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Benefits: A bleeding arrow deals normal damage when it hits a creature. Each round thereafter, the creature bleeds for 1 point of damage until the bleeding is stopped by a DC 10 Heal check or the application of a cure spell or some other healing magic. A critical hit doesn't multiply the bleed damage. Creatures immune to critical hits are immune to the bleed damage dealt by this weapon."
+  },
+  {
+    "name": "Arrows, Blunt (20)",
+    "cost": "2 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Benefits: Blunt Arrows deal bludgeoning damage rather than piercing damage. An archer can use a blunt arrow to deal nonlethal damage."
+  },
+  {
+    "name": "Arrows, Distance (20)",
+    "cost": "1 gp per 20",
+    "weight": "4 lbs. per 20",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Used tactically for long-range attacks on troops, these arrows are fitted with heavy iron heads. While these heads help them travel great distances, they make the arrows less effective at dealing damage.\n\nBenefits: Iron-tipped distance arrows increase their bow's range increment by 10 feet but suffer a --1 penalty on damage dealt per range increment (minimum 1 point of damage)."
+  },
+  {
+    "name": "Arrow, Durable (1)",
+    "cost": "1 gp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Benefits: Durable arrows don't break due to normal use, whether or not they hit their target; unless the arrow goes missing, an archer can retrieve and reuse a durable arrow again and again. Durable arrows can be broken in other ways (such as deliberate snapping, hitting a fire elemental, and so on).\n\nDrawback: If crafted with magic (such as bane property), the magic only lasts for one use of the arrow, but the nonmagical arrow can still be reused or imbued with magic again."
+  },
+  {
+    "name": "Arrows, Flight (20)",
+    "cost": "2 gp per 20",
+    "weight": "3 lbs. per 20",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Benefits: A flight arrows range increment is 20 feet greater with longbows, 10 feet greater with shortbows.\n\nDrawback: Flight arrows deal damage as if one size category smaller.\n\nArrows, Incendiary (20)\n\nA metal cage behind this arrow's point contains flammable material.\n\nBenefits You suffer a --1 penalty on attack rolls when firing incendiary arrows. You can light up to six incendiary arrows as 3 actions action (2 actions if you use a tindertwig) that provokes Attacks of Opportunity. Once lit, the arrow burns for 2 rounds. A lit incendiary arrow deals an additional 1 point of fire damage.\n\nOn a critical hit, the target must succeed at a DC 15 Reflex save or catch fire."
+  },
+  {
+    "name": "Arrow, Lodestone (1)",
+    "cost": "10 gp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Action: Pulling the string to break the seal and activating the reaction in the arrowhead requires 1 action.\n\nBenefits: You gain +2 Conviction on attack rolls when firing a lodestone arrow at a target wearing a significant amount of metal armor (at least chain mail or a metal shield) or made of metal. The increased magnetism fades 1 round after you activate it, after which time it is a normal arrow.\n\n_SPECIALPROSE_: In areas with a lot of magnetic metal, the attack bonus may drop to 0 or even become a penalty as competing sources steer the arrow away from your intended target.\n\nDrawback: The magnetized arrow only deals half damage.\n\nArrow, Pheromone (1)\n\nBenefits: Any creature with the scent ability gains a +2 bonus on attack and damage rolls made against a target marked with a pheromone arrow. This effect lasts for 1 hour or until the target spends 1 minute washing."
+  },
+  {
+    "name": "Arrows, Pronged (20)",
+    "cost": "15 gp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Rather than narrowing to a single point, a pronged arrow has a wide face with two points resembling a crescent or V-shape.\n\nBenefits Originally used for hunting game, a pronged arrow deals damage as if one size category smaller, but you gain a +1 bonus on attack rolls against creatures or objects one or more size categories smaller than you."
+  },
+  {
+    "name": "Arrow, Raining (1)",
+    "cost": "30 gp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Benefits: The reservoir of holy water is designed to burst on impact, hitting the target and splashing nearby creatures as if you had thrown the vial.\n\nDrawback: A raining arrow has a --2 penalty on attack rolls due to its weight."
+  },
+  {
+    "name": "Arrow, Slow Burn (1)",
+    "cost": "150 gp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Benefits: On your turn, 1 round after impact, the burst of flame deals 1d6 points of fire damage to the target.\n\nDrawback: The extra weight of this arrowhead gives you a --1 penalty on attack rolls with the arrow."
+  },
+  {
+    "name": "Arrow, Smoke (1)",
+    "cost": "10 gp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "A smoke arrow trails smoke as it flies, and creates a 5-foot cube of smoke where it strikes. It otherwise functions like a normal arrow in terms of damage, range, and so on."
+  },
+  {
+    "name": "Arrow, Splintercloud (1)",
+    "cost": "25 gp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Benefits: When fired, the numerous bone fragments tear themselves apart, forming a 5-foot burst of razor-sharp bones that deals 1d3 points of piercing damage (Reflex DC 18 negates)."
+  },
+  {
+    "name": "Arrow, Tangleshot (1)",
+    "cost": "20 gp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Benefits: You fire a tangleshot arrow as a ranged touch attack; the arrow deals no damage when it hits, but the target is splashed with the alchemical adhesive. The reduced amount of the glue means this arrow is less effective than an actual tanglefoot bag (DC 10 Reflex save, DC 12 Strength check to break, 10 points of slashing damage to cut through, DC 10 Concentration check).\n\nDrawback: The weight of a tangleshot arrow reduces its range increment by half."
+  },
+  {
+    "name": "Arrow, Trip (1)",
+    "cost": "25 gp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Benefits: If the arrow hits, it makes a trip attack against the target with an Acrobatics bonus of +5; the target falls prone if it fails its check, but if it succeeds it can't attempt to trip you in return."
+  },
+  {
+    "name": "Arrows, Whistling (20)",
+    "cost": "2 gp",
+    "weight": "3 lb.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "These arrows come with specially designed grooves and fletching that cause them to emit a loud keening sound.\n\nBenefits: The sound is audible within 500 feet of the flight path."
+  },
+  {
+    "name": "Axe, Battle",
+    "cost": "10 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "axes"
+    ],
+    "special": [],
+    "description": "The handle of this axe is long enough that you can wield it one-handed or two-handed. The head may have one blade or two, with blade shapes ranging from half-moons to squared edges like narrower versions of woodcutting axes. The wooden haft may be protected and strengthened with metal bands called langets."
+  },
+  {
+    "name": "Axe, Boarding",
+    "cost": "6 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "axes"
+    ],
+    "special": [],
+    "description": "A boarding axe is similar to a handaxe, but features a spike that allows the weapon to do either slashing or piercing damage. When in hand, a boarding axe grants +2 Conviction on Athletics checks to climb wooden or other penetrable surfaces, such as ice."
+  },
+  {
+    "name": "Axe, Butchering",
+    "cost": "65 gp",
+    "weight": "25 lbs.",
+    "damage": {
+      "small": "1d12",
+      "medium": "3d4"
+    },
+    "critical": "×3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "axes"
+    ],
+    "special": [],
+    "description": "A creation of orc smiths, this axe has an oversized head bristling with spikes and a long, thick haft that only barely counterbalances its weight.\n\nIf your Strength is less than 19 (or 17 for a Small or smaller butchering axe), you suffer a --2 penalty on attacks with it, as you're unable to maneuver its daunting size and weight."
+  },
+  {
+    "name": "Axe, Hooked",
+    "cost": "20 gp",
+    "weight": "7 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "axes"
+    ],
+    "special": [
+      "disarm",
+      "performance",
+      "trip"
+    ],
+    "description": "The hooked end of this axe's blade can be used to disarm foes or pull them off balance."
+  },
+  {
+    "name": "Axe, Knuckle",
+    "cost": "9 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "axes"
+    ],
+    "special": [
+      "agile",
+      "monk",
+      "performance"
+    ],
+    "description": "Knuckle axes, usually used in pairs, resemble axe blades mounted on brass knuckles.\n\nYou may hold, but not wield, a weapon or other object in a hand wearing a knuckle axe. Unlike when wearing brass knuckles, you can't use a hand wearing a knuckle axe for spellcasting."
+  },
+  {
+    "name": "Axe, Orc Double",
+    "cost": "60 gp",
+    "weight": "15 lbs.",
+    "damage": {
+      "small": "1d6/1d6",
+      "medium": "1d8/1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "axes",
+      "double"
+    ],
+    "special": [
+      "double"
+    ],
+    "description": "A cruel weapon with blades placed at opposite ends of a long haft, an orc double axe is a double weapon. Because of the blades at either end of the axe, the wielder must hold an orc double axe in the middle of its haft, and utilize a weaving, slashing fighting style more akin to that of a quarterstaff than to that of a greataxe or battleaxe."
+  },
+  {
+    "name": "Axe, Throwing",
+    "cost": "8 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "ranged",
+    "proficiency": "martial",
+    "weapon_group": [
+      "axes",
+      "thrown",
+      "tribal"
+    ],
+    "special": [],
+    "description": "This is a small axe balanced for throwing."
+  },
+  {
+    "name": "Bardiche",
+    "cost": "13 gp",
+    "weight": "14 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "axes",
+      "polearms"
+    ],
+    "special": [
+      "brace",
+      "reach"
+    ],
+    "description": "The crescent axe-blade of this polearm is attached to the haft at two points: the center of the blade attaches to a socket at the top of the haft, and the lower point of the blade attaches to a secondary mount point. The blade is often very long, sometimes almost as long as the haft.\n\nYou gain a +2 bonus to your CMD to resist sunder attempts made against a bardiche."
+  },
+  {
+    "name": "Battle Aspergillum",
+    "cost": "5 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "hammers"
+    ],
+    "special": [],
+    "description": "Aspergillums are mace-like tools used by priests to sprinkle holy water. They have a hollow head and a metal plug to fit the hollow's neck.\n\nBenefits: When the mace strikes a creature, holy water sprinkles out through tiny holes throughout the weapon's head; creatures subject to damage from holy water take 1 point of damage in addition to the normal effect of being struck by the mace. After 5 hits, the battle aspergillum is empty and needs to be refilled.\n\nFilling it with holy water takes 2 actions that provokes Attacks of Opportunity. A filled aspergillum is normally carried upright, otherwise the holy water leaks out as the weapon moves."
+  },
+  {
+    "name": "Bayonet",
+    "cost": "5 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "light blades",
+      "close"
+    ],
+    "special": [],
+    "description": "Bayonets are close combat weapons designed to fit into the grooves or muzzles of crossbows and firearms.\n\nBayonets allow you to make melee attacks with these weapons but render them temporarily useless as ranged weapons. Attaching or removing a bayonet requires 1 action that provokes Attacks of Opportunity."
+  },
+  {
+    "name": "Bec de Corbin",
+    "cost": "15 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "bludgeoning",
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "brace",
+      "reach"
+    ],
+    "description": "The bec de corbin is a polearm very similar to the lucerne hammer, but the hammer head is slightly blunter and the spike is stouter and more hooked. You primarily attack with the spike.\n\nYou gain a +2 bonus on combat maneuver checks to sunder medium or heavy armor with a bec de corbin."
+  },
+  {
+    "name": "Bladed Scarf",
+    "cost": "12 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "flails"
+    ],
+    "special": [
+      "disarm",
+      "trip"
+    ],
+    "description": "The skill required in using bladed scarves effectively and not revealing their deadly nature makes them exotic weapons.\n\nIf you are proficient with a bladed scarf, you deal 1d4 points of slashing damage to any creature that makes a successful grapple check against you while you wield the scarf.\n\nYou can use your Dexterity for attack rolls with a bladed scarf sized for you as if it was a light weapon."
+  },
+  {
+    "name": "Blade Boot",
+    "cost": "25 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [],
+    "special": [],
+    "description": "Blade boots come with a spring-mounted knife that pops out when triggered with the right combination of toe presses.\n\nReleasing the knife requires 1 action; rearming it takes 3 actions. When the blade is extended, you treat normal terrain as difficult and difficult terrain as impassable."
+  },
+  {
+    "name": "Blowgun",
+    "cost": "2 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1",
+      "medium": "1d2"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "simple",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "Blowguns are generally used to deliver debilitating, but rarely fatal, poisons from a distance. They are nearly silent when fired.\n\nFor a list of appropriate poisons, see [Poisons](#ZA_Poisons)."
+  },
+  {
+    "name": "Blowgun, Darts (10)",
+    "cost": "5 sp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "These light darts have tiny grooves behind the tips.\n\nA character can apply poison to a blowgun dart without risk of poisoning himself."
+  },
+  {
+    "name": "Boarding Pike",
+    "cost": "8 gp",
+    "weight": "9 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "brace",
+      "reach"
+    ],
+    "description": "A boarding pike is an 8-foot-long pole topped with a foot-long tapered metal tip. Boarding pikes look much like longspears, but the metal pike is designed to flow into the wooden haft, leaving no grooves, collars, or spikes that could trap salt water and cause rust. Boarding pikes are mainly used defensively, to repel boarding actions. The pikes are kept in brackets around the mast, so sailors can quickly grab pikes and brace them against the gunwale to repel boarders."
+  },
+  {
+    "name": "Bolas",
+    "cost": "5 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [
+      "nonlethal",
+      "trip"
+    ],
+    "description": "A bolas is a pair of wooden, stone, or metal weights connected by a thin rope or cord.\n\nYou can whirl and throw this weapon to make a ranged trip attack against an opponent. You can't be tripped during your own trip attempt when using a bolas."
+  },
+  {
+    "name": "Bola, Brutal",
+    "cost": "15 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning",
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [
+      "trip"
+    ],
+    "description": "These bolas function as standard bolas, but they deal lethal damage rather than nonlethal damage."
+  },
+  {
+    "name": "Boomerang",
+    "cost": "3 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "30 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [],
+    "description": "The boomerang is primarily a hunting tool, but it is not uncommon for these versatile thrown weapons to be carried into battle. A boomerang is made of wood and is flat, with a long haft, a pronounced forward curve, and a sharp backward bend at the head. A hunting boomerang doesn't fly in a returning path."
+  },
+  {
+    "name": "Bow, Thorn",
+    "cost": "50 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "40 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "bows"
+    ],
+    "special": [],
+    "description": "This polished rosewood bow is studded with thorns and tiny flowers.\n\nTreat this weapon as a shortbow."
+  },
+  {
+    "name": "Boarding Gaff",
+    "cost": "8 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d4/1d4",
+      "medium": "1d6/1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "double",
+      "polearms"
+    ],
+    "special": [
+      "double",
+      "reach",
+      "trip"
+    ],
+    "description": "A gaff hook is a long pole with a hook on one end for spearing fish. Pirates often add extra, heavier hooks to both ends of gaff hooks to assist with boarding actions. After the pirates use grappling hooks to draw ships close together, they hook the gunwales together with boarding gaffs to prevent the ships from drifting. Small crafts often use boarding gaffs in place of grappling hooks. Boarding gaffs bite deeply into the wood of the railing. It takes 1 minute to pry a boarding gaff loose. Most pirates use a boarding axe or cutlass to cut through boarding gaffs rather than trying to unhook them one by one. The gaff can also be used for fishing when not in combat."
+  },
+  {
+    "name": "Brass Knife",
+    "cost": "2 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "light blades",
+      "thrown"
+    ],
+    "special": [
+      "agile",
+      "fragile"
+    ],
+    "description": "Pirates often carry long brass knives for working aboard a ship. Though brass doesn't hold as sharp an edge as steel, it is not vulnerable to rust like steel is. In a pinch, a pirate can use his brass knife as a weapon. Mostly, though, they are used for cutting ropes, cleaning fish, and other sundry tasks."
+  },
+  {
+    "name": "Brass Knuckles",
+    "cost": "1 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d2",
+      "medium": "1d3"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "close",
+      "monk"
+    ],
+    "special": [
+      "agile",
+      "monk"
+    ],
+    "description": "These close combat weapons are designed to fit comfortably around the knuckles, narrowing the contact area and therefore magnifying the amount of force delivered by a punch.\n\nBenefits: Brass knuckles allow you to deal lethal damage.\n\nDrawback: You may hold, but not wield, a weapon or other object in a hand wearing brass knuckles. You may cast a spell with a somatic component while wearing brass knuckles if you make a Concentration check (DC 10 + the level of the spell you're casting)."
+  },
+  {
+    "name": "Cestus",
+    "cost": "5 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "bludgeoning",
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "close",
+      "monk"
+    ],
+    "special": [
+      "monk"
+    ],
+    "description": "The cestus is a glove of leather or thick cloth that covers the wielder from mid-finger to mid-forearm. The close combat weapon is reinforced with metal plates over the fingers and often lined with wicked spikes along the backs of the hands and wrists.\n\nBenefits: While wearing a cestus, you are considered armed and your unarmed attacks deal normal damage. If you are proficient with a cestus, your unarmed strikes may deal bludgeoning or piercing damage. Monks are proficient with the cestus.\n\nDrawback: When using a cestus, your fingers are mostly exposed, allowing you to wield or carry items in that hand, but the constriction of the weapon at your knuckles gives you a --2 penalty on all precision-based tasks involving that hand (such as opening locks)."
+  },
+  {
+    "name": "Chain-Hammer",
+    "cost": "35 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d4/1d4",
+      "medium": "1d6/1d6"
+    },
+    "critical": "×2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": "thrown"
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "double",
+      "hammers",
+      "thrown"
+    ],
+    "special": [
+      "double"
+    ],
+    "description": "This pair of hammers is linked by a loose chain. While the two hammers are balanced to wield in melee together, the chain is long enough that you can throw one hammer a short distance and then pull it back; pulling the chain to retrieve the thrown hammer is a Move action. The chain-hammer's maximum throwing range is 10 feet. Dwarf rangers are fond of using chain-hammers, often using a locked gauntlet to make sure one of the hammers remains secure."
+  },
+  {
+    "name": "Chakram",
+    "cost": "1 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "30 ft.",
+      "type": "thrown"
+    },
+    "category": "ranged",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades",
+      "thrown"
+    ],
+    "special": [],
+    "description": "The chakram is a simple, elegant, and highly portable thrown weapon. It is a flat, open-centered metal discus with a sharpened edge.\n\nYou can wield the chakram as a melee weapon, but it is not designed for such use; you suffer a --1 penalty on your attack roll with the weapon and must succeed at a DC 15 Reflex save or cut yourself on the blade (half damage, no Strength modifier). You don't need to make this save if wearing heavy armor."
+  },
+  {
+    "name": "Club",
+    "cost": "",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "one handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "hammers",
+      "tribal"
+    ],
+    "special": [],
+    "description": "This weapon is usually just a shaped piece of wood, sometimes with a few nails or studs embedded in it."
+  },
+  {
+    "name": "Club, Great",
+    "cost": "5 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "hammers",
+      "tribal"
+    ],
+    "special": [],
+    "description": "This larger, bulkier version of the common club is heavy enough that you can't wield it with one hand. It may be ornate and carved, reinforced with metal, or a simple branch from a tree. Like simple clubs, greatclubs have many names, such as cudgels, bludgeons, shillelaghs, and more."
+  },
+  {
+    "name": "Club, Mere",
+    "cost": "2 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning",
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "close",
+      "hammers"
+    ],
+    "special": [
+      "fragile"
+    ],
+    "description": "Traditionally made of carved stone, the mere (MEH-reh) is a short, flat-sided, sharp-pointed club."
+  },
+  {
+    "name": "Combat Scabbard",
+    "cost": "1 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [],
+    "special": [
+      "improvised",
+      "see text"
+    ],
+    "description": "This scabbard is an improvised weapon designed to allow you to remove it from your belt as 1 action when drawing the weapon it contains. For the purpose of fighter weapon groups, a scabbard for a heavy blade is considered a hammer, and a scabbard for a light blade is considered a close weapon."
+  },
+  {
+    "name": "Combat Scabbard, Sharpened",
+    "cost": "10 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [],
+    "special": [
+      "see text"
+    ],
+    "description": "This combat scabbard has a sharp blade on the outer edge, allowing you to use it as a weapon."
+  },
+  {
+    "name": "Crook",
+    "cost": "1 gp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "reach",
+      "trip"
+    ],
+    "description": "This common herder's tool is a wooden pole with a hooked end.\n\nWhen using a crook, you can ignore the penalty for not having two hands free when making a combat maneuver check to initiate a grapple against a creature you threaten."
+  },
+  {
+    "name": "Crossbow, Bolts (10/5)",
+    "cost": "1 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Bolts come in a case or quiver that holds 10 bolts (or 5 for a repeating crossbow).\n\nA crossbow bolt used as a melee weapon is treated as a light improvised weapon (-4 Conviction on attack rolls) and deals damage as a dagger (crit ×2)."
+  },
+  {
+    "name": "Crossbow Bolt, Acid (1)",
+    "cost": "40 gp",
+    "weight": "0.1 lb.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "These metal bolts have a glass section in the middle, filled with acid.\n\nOn a successful hit, acid bolts deal normal damage and 1d4 points of additional acid damage. Acid bolts don't cause any splash damage.\n\nCrossbow Bolt, Barbed (10)\n\nThe head of a barbed bolt resembles that of a harpoon.\n\nWhen a barbed bolt is attached to a length of silk rope and fired from a crossbow, the bolt's range increment is reduced to 30 feet, but it gains the grapple special weapon quality."
+  },
+  {
+    "name": "Crossbow Bolt, Drow Poison (1)",
+    "cost": "100 gp",
+    "weight": "0.1 lb.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Anyone struck by a drow poison bolt must make a DC 13 Fortitude save or become affected by drow poison. Those using drow poison bolts don't risk poisoning themselves. The strange tip affects the bolts' accuracy. Double the range penalties when using a drow poison bolt."
+  },
+  {
+    "name": "Crossbow Bolt, Fire (1)",
+    "cost": "50 gp",
+    "weight": "0.1 lb.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "On a successful hit, fire bolts deal normal damage plus 1d4 points of fire damage. Alchemical fire bolts don't cause any splash damage, and the fire burst is not enough to ignite targets (unless they are particularly flammable).\n\nCrossbow Bolts, Incendiary (10)\n\nA metal cage behind this bolt's point contains flammable material.\n\nYou suffer a --1 penalty on attack rolls when firing incendiary bolts. You can light up to six incendiary bolts as 3 actions (2 actions if you use a tindertwig) that provokes Attacks of Opportunity. Once lit, the bolt burns for 2 rounds. A lit incendiary bolt deals an additional 1 point of fire damage.\n\nOn a critical hit, the target must succeed at a DC 15 Reflex save or catch fire."
+  },
+  {
+    "name": "Crossbow Bolts, Pronged (10)",
+    "cost": "15 gp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Rather than narrowing to a single point, a pronged bolt has a wide face with two points resembling a crescent or V-shape.\n\nBenefit: Originally used for hunting game, a pronged bolt deals damage as if one size category smaller, but you gain a +1 bonus on attack rolls against creatures or objects one or more size categories smaller than you."
+  },
+  {
+    "name": "Crossbow, Crank, Heavy",
+    "cost": "400 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "120 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "crossbows"
+    ],
+    "special": [],
+    "description": "This heavy crossbow has a winch mounted below the stock.\n\nUp to 50 feet of silk rope can be wound onto the winch as 3 actions that provokes Attacks of Opportunity. The wound rope can be attached to a barbed bolt or grappling bolt as part of a loading action. After firing such a bolt, the wielder can use the winch to retract the rope or pull himself along the rope if the bolt is secure.\n\nWhen used with a barbed bolt, the winch provides a +2 bonus on grapple combat maneuver checks to pull the target toward you. When used with a grappling bolt, the winch provides a +2 bonus on Athletics checks to climb."
+  },
+  {
+    "name": "Crossbow, Crank, Light",
+    "cost": "250 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "80 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "crossbows"
+    ],
+    "special": [],
+    "description": "This weapon functions as a heavy crank crossbow, except that its damage, critical, and range values are equivalent to those of a light crossbow.\n\nIts lighter construction means it provides only a +1 bonus on Athletics checks to climb and grapple combat maneuver checks to pull the target toward you."
+  },
+  {
+    "name": "Crossbow, Hand",
+    "cost": "100 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "30 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "crossbows"
+    ],
+    "special": [],
+    "description": "You can draw a hand crossbow back by hand.\n\nYou can shoot, but not load, a hand crossbow with one hand at no penalty. Loading a hand crossbow requires 1 action that provokes Attacks of Opportunity."
+  },
+  {
+    "name": "Crossbow, Heavy",
+    "cost": "50 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "120 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "simple",
+    "weapon_group": [
+      "crossbows"
+    ],
+    "special": [],
+    "description": "Load: Loading a heavy crossbow takes 3 actions that provokes Attacks of Opportunity.\n\nYou draw a heavy crossbow back by turning a small winch. Normally, operating a heavy crossbow requires two hands. However, you can shoot, but not load, a heavy crossbow with one hand at a --4 penalty on attack rolls."
+  },
+  {
+    "name": "Crossbow, Heavy (Underwater)",
+    "cost": "100 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "120 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "simple",
+    "weapon_group": [
+      "crossbows"
+    ],
+    "special": [],
+    "description": "An underwater crossbow functions like its normal counterpart above water, and can be used underwater. When fired underwater, the crossbow has a range increment of 20 feet. Anyone proficient with a normal crossbow can use an underwater crossbow."
+  },
+  {
+    "name": "Crossbow, Launching",
+    "cost": "75 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "30 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "crossbows"
+    ],
+    "special": [],
+    "description": "A launching crossbow is designed to launch splash weapons.\n\nLoading a launching crossbow is 3 actions that provokes Attacks of Opportunity."
+  },
+  {
+    "name": "Crossbow, Light",
+    "cost": "35 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "80 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "simple",
+    "weapon_group": [
+      "crossbows"
+    ],
+    "special": [],
+    "description": "Load: Loading a light crossbow takes 1 action that provokes Attacks of Opportunity.\n\nYou draw a light crossbow back by pulling a lever. Normally, operating a light crossbow requires two hands. However, you can shoot, but not load, a light crossbow with one hand at a --2 penalty on attack rolls."
+  },
+  {
+    "name": "Crossbow, Light (Underwater)",
+    "cost": "70 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "80 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "simple",
+    "weapon_group": [
+      "crossbows"
+    ],
+    "special": [],
+    "description": "An underwater light crossbow functions like its normal counterpart above water, and can be used underwater. When fired underwater, the crossbow has a range increment of 20 feet. Anyone proficient with a normal light crossbow can use an underwater light crossbow."
+  },
+  {
+    "name": "Crossbow, Repeating Heavy",
+    "cost": "400 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "120 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "crossbows"
+    ],
+    "special": [],
+    "description": "The repeating heavy crossbow holds 5 repeating crossbow bolts.\n\nAs long as it holds bolts, you can reload it by pulling the reloading lever (a free action). Loading a new case of 5 bolts requires 3 actions that provokes Attacks of Opportunity.\n\nYou can fire a repeating crossbow with one hand or fire a repeating crossbow in each hand in the same manner as you would a normal crossbow of the same size. However, you must fire the weapon with two hands in order to use the reloading lever, and you must use two hands to load a new case of bolts."
+  },
+  {
+    "name": "Crossbow, Repeating Light",
+    "cost": "250 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "80 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "crossbows"
+    ],
+    "special": [],
+    "description": "This weapon functions identically to a repeating heavy crossbow, except that its damage, critical, and range values are equivalent to those of a light crossbow instead of a heavy crossbow. Its significantly lighter construction and pull make it both more portable and more useful to those who rely on stealth or speed."
+  },
+  {
+    "name": "Cutlass",
+    "cost": "15 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "18-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [],
+    "description": "This short, curved sword is favored by seafarers for close-quarters combat.\n\nIt is treated as a scimitar for any effects that apply to scimitars."
+  },
+  {
+    "name": "Dagger",
+    "cost": "2 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "light blades",
+      "thrown",
+      "tribal"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "A dagger has a blade that is about 1 foot in length.\n\nBenefits: You get a +2 bonus on Sleight of Hand skill checks made to conceal a dagger on your body."
+  },
+  {
+    "name": "Dagger, Dueling",
+    "cost": "12 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "19-20/×2",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades",
+      "thrown"
+    ],
+    "special": [
+      "parry"
+    ],
+    "description": "This dagger is usually used in the off hand to block attacks.\n\nIf you are not proficient with a dueling dagger, you treat it as a dagger and gain no special benefits. Any effects that apply to daggers apply to dueling daggers."
+  },
+  {
+    "name": "Dagger, Punching",
+    "cost": "2 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "close"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "A punching dagger's blade is attached to a horizontal handle that projects out from the fist when held."
+  },
+  {
+    "name": "Dagger, Swordbreaker",
+    "cost": "10 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "agile",
+      "disarm",
+      "sunder"
+    ],
+    "description": "If you are proficient with this weapon, add a +2 bonus on your disarm or sunder attempts against bladed weapons."
+  },
+  {
+    "name": "Dart",
+    "cost": "5 sp",
+    "weight": "1/2 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": "thrown"
+    },
+    "category": "ranged",
+    "proficiency": "simple",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "Darts are missile weapons, designed to fly such that a sharp, often weighted point will strike first. They can be distinguished from javelins by fletching (i.e., feathers on the tail) and a shaft that is shorter and/or more flexible, and from arrows by the fact that they are not of the right length to use with a normal bow."
+  },
+  {
+    "name": "Dart, Jolting",
+    "cost": "100 gp",
+    "weight": "1/2 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": "thrown"
+    },
+    "category": "ranged",
+    "proficiency": "martial",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [],
+    "description": "This alchemically grown crystal dart builds up an electrical charge when thrown.\n\nA creature struck by the dart takes normal piercing damage and 1d6 points of electricity damage. Anyone proficient in darts can use a jolting dart. Once thrown, the dart is destroyed."
+  },
+  {
+    "name": "Dogslicer",
+    "cost": "8 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "agile",
+      "fragile"
+    ],
+    "description": "This short, curved sword is a favorite weapon of goblins, who show unusual cunning by drilling numerous holes in the blade to reduce the weapon's weight."
+  },
+  {
+    "name": "Double Spear",
+    "cost": "25 gp",
+    "weight": "12 lb.",
+    "damage": {
+      "small": "1d6/1d6",
+      "medium": "1d8/1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "spears"
+    ],
+    "special": [
+      "double"
+    ],
+    "description": "This long, heavy spear has a point at each end, allowing it to be used as a double weapon."
+  },
+  {
+    "name": "Drow Razor",
+    "cost": "25 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "18-20/×2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "Meant for quick strikes and slashes, this long, slender knife is incredibly sharp along one edge. Drow swashbucklers and assassins are particularly fond of these weapons.\n\nA confirmed critical hit or successful sneak attack with a drow razor deals an additional 2 points of damage; this damage is precision damage and is not multiplied on a critical hit.\n\nA character with the drow's weapon familiarity racial trait treats the drow razor as a martial weapon."
+  },
+  {
+    "name": "Dwarven Chain-flail",
+    "cost": "50 gp",
+    "weight": "15 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "flails"
+    ],
+    "special": [
+      "reach"
+    ],
+    "description": "This 10-foot-long chain is weighted at the end by a ball of solid iron the size of a large fist.\n\nBy adjusting the slack of the chain, the weapon can be used either with or without reach. Changing between using it as a normal weapon and a reach weapon requires 1 action."
+  },
+  {
+    "name": "Dwarven Double Waraxe",
+    "cost": "60 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [],
+    "special": [],
+    "description": "This hefty waraxe is similar to the common dwarven waraxe, but its recurved blade spans forward and back from its head like a deadly butterfly.\n\nA dwarven double waraxe grants a +1 bonus on all attack rolls after the first when using Cleave or Great Cleave."
+  },
+  {
+    "name": "Dwarven Giant-Sticker",
+    "cost": "25 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "2d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "brace",
+      "reach"
+    ],
+    "description": "This heavy bladed spear is specifically designed for use against giants, who have long reach and the ability to soak up large amounts of damage."
+  },
+  {
+    "name": "Dwarven Longaxe",
+    "cost": "50 gp",
+    "weight": "14 lbs.",
+    "damage": {
+      "small": "1d10",
+      "medium": "1d12"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [],
+    "special": [
+      "reach"
+    ],
+    "description": "These ornate and heavy blades are mounted atop a long, steel-shod haft for greater reach. They are rare among cave-dwelling dwarves but common in mountain dwarf clans that commonly feud with giants."
+  },
+  {
+    "name": "Dwarven Longhammer",
+    "cost": "70 gp",
+    "weight": "20 lbs.",
+    "damage": {
+      "small": "1d10",
+      "medium": "2d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [],
+    "special": [
+      "reach"
+    ],
+    "description": "These heavy-headed bludgeons are often carved or cast with monstrous faces or drilled with tiny holes to create a menacing whistling as they are swung through the air."
+  },
+  {
+    "name": "Dwarven Maulaxe",
+    "cost": "25 gp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "bludgeoning",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [],
+    "special": [
+      "agile"
+    ],
+    "description": "This versatile weapon appears like a heavy-headed axe, but a skilled wielder can strike equally well with its chopping edge as with the forged sledge that backs the blade.\n\nA dwarven maulaxe is a martial weapon for dwarves and an exotic weapon for members of other races. It is not a double weapon, and any enchantments applied to the weapon operate normally regardless of which part of the weapon's head is used to deliver the blow, except for magic runes that apply only to blunt or sharp weapons. Such item bonuses apply only to attacks dealing the appropriate type of damage."
+  },
+  {
+    "name": "Dwarven Pelletbow, Heavy",
+    "cost": "75 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "19-20/x3",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "60 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "crossbows"
+    ],
+    "special": [],
+    "description": "The dwarven pelletbow is a crossbowlike weapon that is loaded with and fires sling bullets rather than bolts.\n\nA dwarven heavy pelletbow takes the same amount of time and effort to load as a light crossbow (normally 1 action).\n\nNormally a pelletbow takes two hands to operate, but you can shoot (but not load) a pelletbow with one hand by taking a --2 penalty on attack rolls.\n\nFeats and special abilities that don't involve proficiency (that don't depend on dealing piercing damage or firing bolts) that apply to a heavy crossbow also apply to a dwarven heavy pelletbow."
+  },
+  {
+    "name": "Dwarven Pelletbow, Light",
+    "cost": "50 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "19-20/x3",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "40 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "crossbows"
+    ],
+    "special": [],
+    "description": "A dwarven light pelletbow can be reloaded as a free action (allowing characters to attack with it multiple times in a round).\n\nNormally a pelletbow takes two hands to operate, but you can shoot (but not load) a pelletbow with one hand by taking a --2 penalty on attack rolls.\n\nFeats and special abilities that don't involve proficiency (that don't depend on dealing piercing damage or firing bolts) that apply to a light crossbow also apply to a dwarven light pelletbow."
+  },
+  {
+    "name": "Dwarven Ram Hammer",
+    "cost": "25 gp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "hammers",
+      "thrown"
+    ],
+    "special": [],
+    "description": "The dwarven ram hammer is designed to be thrown or used in melee, with a long leather strap that is wrapped around the wrist when used to deliver blows in close combat but unfurled to aid in swinging the weapon when the hammer is thrown."
+  },
+  {
+    "name": "Dwarven Urgrosh",
+    "cost": "50 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d6/1d4",
+      "medium": "1d8/1d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "double"
+    ],
+    "special": [
+      "brace",
+      "double"
+    ],
+    "description": "A dwarven urgrosh is a double weapon---an axe head and a spear point on opposite ends of a long haft. The urgrosh's axe head is a slashing weapon that deals 1d8 points of damage. Its spear head is a piercing weapon that deals 1d6 points of damage. If you use an urgrosh against a charging character, the spear head is the part of the weapon that deals damage.\n\nDwarves treat dwarven urgroshes as martial weapons."
+  },
+  {
+    "name": "Dwarven Waraxe",
+    "cost": "30 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "axes"
+    ],
+    "special": [],
+    "description": "A dwarven waraxe has a large, ornate head mounted to a thick handle, making it too large to use in one hand without special training.\n\nDue to its size, a dwarven waraxe is an exotic weapon. A Medium character can use a dwarven waraxe two-handed as a martial weapon, or a Large creature can use it one-handed in the same way.\n\nA dwarf treats a dwarven waraxe as a martial weapon even when using it in one hand."
+  },
+  {
+    "name": "Earth Breaker",
+    "cost": "40 gp",
+    "weight": "14 lbs.",
+    "damage": {
+      "small": "1d10",
+      "medium": "2d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "hammers"
+    ],
+    "special": [],
+    "description": "The crude metal of this massive hammer's head ends in multiple blunt spikes that help concentrate the force of a powerful swing down into a smaller, more focused area, allowing it to smash through armor with greater ease. Due to the tremendous size and weight of its head, an earth breaker is poorly balanced, and requires two hands to properly lift and control."
+  },
+  {
+    "name": "Elven Branched Spear",
+    "cost": "20 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "spears"
+    ],
+    "special": [
+      "brace",
+      "reach"
+    ],
+    "description": "Behind this long pole weapon's spearhead, several short branches project from the shaft at irregular intervals, each angled forward and tipped with a smaller leaf-like blade.\n\nWhen you make Attacks of Opportunity provoked by movement, you gain a +2 bonus on attack rolls.\n\nYou can use your Dexterity for attack rolls with an elven branched spear sized for you as if it was a light weapon.\n\nElves treat elven branched spears as martial weapons."
+  },
+  {
+    "name": "Elven Curve Blade",
+    "cost": "80 gp",
+    "weight": "7 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "18-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "Essentially a longer version of a scimitar, but with a thinner blade, the elven curve blade is exceptionally rare.\n\nYou receive a +2 bonus to your CMD whenever a foe attempts to sunder your elven curve blade due to its flexible metal.\n\nYou can use your Dexterity for attack rolls with an elven curve blade sized for you as if it was a light weapon."
+  },
+  {
+    "name": "Estoc",
+    "cost": "50 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "2d3",
+      "medium": "2d4"
+    },
+    "critical": "18-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [],
+    "description": "An estoc is a sword about as long as a bastard sword, but designed exclusively for thrusting attacks. Its \"blade\" is a steel spike with a triangular, square, or hexagonal cross-section.\n\nLike the bastard sword, an estoc requires special training to use it one handed, but it can also be wielded as a two-handed martial weapon.\n\nWhen you wield an estoc with one hand, treat it as a one-handed weapon; when you wield an estoc with two hands, treat it as a two-handed weapon. If you can use the estoc proficiently with one hand, you can also use your Dexterity for attack rolls with this weapon as if it was a light weapon when wielding an estoc sized for you with one or two hands, even though it is not a light weapon."
+  },
+  {
+    "name": "Falcata",
+    "cost": "18 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "19-20/x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [],
+    "description": "The falcata has a single-edged blade that pitches forward towards the point, the edge being concave near the hilt, but convex near the point. This shape distributes the weight in such a way that the falcata is capable of delivering a blow with the momentum of an axe, while maintaining the longer cutting edge of a sword and some facility to execute a thrust. The grip is typically hook-shaped, the end often stylized in the shape of a horse or a bird. There is often a thin chain connecting the hooked butt with the hilt."
+  },
+  {
+    "name": "Falchion",
+    "cost": "75 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "2d4"
+    },
+    "critical": "18-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [],
+    "description": "This sword has one curved, sharp edge like a scimitar, with the back edge unsharpened and either flat or slightly curved. Its weight is greater toward the end, making it better for chopping rather than stabbing."
+  },
+  {
+    "name": "Fauchard",
+    "cost": "14 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "18-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "reach",
+      "trip"
+    ],
+    "description": "Like a glaive, the fauchard is a curved blade at the end of a pole. However, the cutting edge of a fauchard is along the concave side, like that of a sickle or scythe."
+  },
+  {
+    "name": "Flailpole",
+    "cost": "15 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [],
+    "special": [
+      "disarm",
+      "reach",
+      "trip"
+    ],
+    "description": "This is simply a heavy flail mounted on the end of a long polearm."
+  },
+  {
+    "name": "Flail, Dire",
+    "cost": "90 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d6/1d6",
+      "medium": "1d8/1d8"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "double",
+      "flails"
+    ],
+    "special": [
+      "disarm",
+      "double",
+      "trip"
+    ],
+    "description": "A dire flail consists of two spheres of spiked iron dangling from chains at opposite ends of a long haft. This weapon excels at short but powerful strikes, and is typically swung in a constant churning motion. The wielder of a dire flail must have great strength, both to use the weapon effectively and to keep from tiring out."
+  },
+  {
+    "name": "Flail, Heavy",
+    "cost": "15 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "flails"
+    ],
+    "special": [
+      "disarm",
+      "trip"
+    ],
+    "description": "Similar to a light flail, a heavy flail has a larger metal ball and a longer handle."
+  },
+  {
+    "name": "Flail, Light",
+    "cost": "8 gp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "flails"
+    ],
+    "special": [
+      "disarm",
+      "trip"
+    ],
+    "description": "A light flail consists of a weighted striking end connected to a handle by a sturdy chain. Though often imagined as a ball, sometimes spiked like the head of a morningstar, the head of a light flail can actually take many different shapes, such as short bars. Military flails are sturdier evolutions of agricultural flails, which are used for threshing -- beating stacks of grains to separate the useful grains from their husks."
+  },
+  {
+    "name": "Flambard",
+    "cost": "50 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [
+      "sunder"
+    ],
+    "description": "This two-handed sword has a wavy blade that is especially useful for cutting through wooden weapons.\n\nIf you are proficient with this weapon, you gain a +2 bonus on any sunder attempts made against weapons with a wooden haft; otherwise you may use this sword as a bastard sword."
+  },
+  {
+    "name": "Flask Thrower",
+    "cost": "25 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": "thrown"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [],
+    "description": "This staff has a cradle at the end, designed to hold alchemical weapons such as acid. A flask thrower significantly extends the range of thrown substances that deal splash damage, such as acid, alchemist's fire, or holy water, as well as that of tools such as tanglefoot bags, thunderstones, or caltrops."
+  },
+  {
+    "name": "Flindbar",
+    "cost": "9 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning",
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [],
+    "special": [
+      "disarm",
+      "trip"
+    ],
+    "description": "This one-handed weapon is similar to a nunchaku in that it consists of a pair of bars linked with heavy chain. However, a flindbar's bars are made of iron and are capped with a ring of spikes or studs. Since it's much heavier than a nunchaku, it is not a light weapon."
+  },
+  {
+    "name": "Flying Blade",
+    "cost": "40 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d10",
+      "medium": "1d12"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [],
+    "special": [
+      "performance",
+      "reach"
+    ],
+    "description": "A flying blade is a large, crescent-shaped blade anchored to a 10-foot chain. You fight with a flying blade by spinning it about your head or by snapping it toward an opponent.\n\nThe flying blade is a clumsy weapon and receives a --2 penalty on attack rolls, but when you make Attacks of Opportunity provoked by movement, you receive a +2 bonus on attack rolls instead of the penalty."
+  },
+  {
+    "name": "Flying Talon",
+    "cost": "15 gp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "flails"
+    ],
+    "special": [
+      "agile",
+      "disarm",
+      "trip"
+    ],
+    "description": "This weapon consists of a three-pronged, barbed hook attached to a length of chain.\n\nDue to the weapon's unwieldiness, you can't make Attacks of Opportunity with a flying talon and don't threaten any squares with it."
+  },
+  {
+    "name": "Garrote",
+    "cost": "3 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [],
+    "special": [
+      "grapple"
+    ],
+    "description": "In order to use a garrote, your opponent must be helpless or unaware of you. You must make a grapple check to successfully begin garroting your opponent, though you don't suffer -4 Conviction for not having two hands free. Sneak attack damage doesn't apply to a garrote. Your garroted opponent must make a Concentration check (DC 20 + level of the spell he's casting) to cast a spell with a verbal component, use a command word item, or use any magic requiring speech. You gain the following additional option when grappling with a garrote.\n\nChoke: You cut off your target's air supply so he has to hold his breath (see Suffocationfor additional information). Any round you don't maintain the choke, your opponent can take a breath and restart when he has to begin making Constitution checks."
+  },
+  {
+    "name": "Gauntlet",
+    "cost": "2 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d2",
+      "medium": "1d3"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "unarmed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "close"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "This metal glove lets you deal lethal damage rather than nonlethal damage, but is otherwise considered an unarmed attack. Your opponent can't use a disarm action to disarm you of gauntlets.\n\nNote: The cost and weight given are for a single gauntlet. Medium and heavy armors (except breastplate) come with gauntlets."
+  },
+  {
+    "name": "Gauntlet, Spiked",
+    "cost": "5 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "close"
+    ],
+    "special": [
+      "attached"
+    ],
+    "description": "Benefits: An attack with a spiked gauntlet is considered an armed attack. Your opponent can't use a disarm action to disarm you of spiked gauntlets.\n\nNote: The cost and weight given are for a single gauntlet."
+  },
+  {
+    "name": "Gnome Battle Ladder",
+    "cost": "20 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d4/1d4",
+      "medium": "1d6/1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "double"
+    ],
+    "special": [
+      "trip"
+    ],
+    "description": "Gnomes use these narrow, reinforced, 4-foot ladders as weapons. Fighting with a battle ladder is like fighting with a quarterstaff, except that the spaces in the ladder can be used to entangle limbs, granting the ladder the trip weapon feature."
+  },
+  {
+    "name": "Gnome Hooked Hammer",
+    "cost": "20 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d6/1d4",
+      "medium": "1d8/1d6"
+    },
+    "critical": "x3/x4",
+    "damage_type": [
+      "bludgeoning",
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "double"
+    ],
+    "special": [
+      "double",
+      "trip"
+    ],
+    "description": "A gnome hooked hammer is a double weapon---an ingenious tool with a hammer head at one end of its haft and a long, curved pick at the other.\n\nThe hammer's blunt head is a bludgeoning weapon that deals 1d6 points of damage (crit ×3). Its hook is a piercing weapon that deals 1d4 points of damage (crit ×4).\n\nGnomes treat hooked hammers as martial weapons."
+  },
+  {
+    "name": "Gnome Pincher",
+    "cost": "10 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "flails"
+    ],
+    "special": [
+      "agile",
+      "disarm"
+    ],
+    "description": "This odd weapon is a 2-foot rod topped with four blunt claws. Squeezing the handle causes the claws to close.\n\nYou can use the gnome pincher to attempt a disarm or steal combat maneuver with a +2 bonus. You can transfer an object from the pincher to your free hand as a free action. Gnomes treat gnome pinchers as martial weapons."
+  },
+  {
+    "name": "Gnome Ripsaw Glaive",
+    "cost": "30 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "reach"
+    ],
+    "description": "The blade of this glaive is serrated and mounted on an axle, around which a heavy cord is wrapped.\n\nWhen the cord is pulled as 1 action, the blade spins rapidly for a number of rounds equal to your Strength modifier. While the blade is spinning, you gain a +2 bonus on damage rolls with the weapon. When the blade is not spinning, treat this weapon as a glaive."
+  },
+  {
+    "name": "Halfling Rope-Shot",
+    "cost": "1 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "flails"
+    ],
+    "special": [
+      "agile",
+      "disarm"
+    ],
+    "description": "One end of this short rope has a sling bullet wrapped in a monkey's fist knot, and the other end is tied in a small loop.\n\nYou wrap the loop around your wrist as 3 actions and swing the weighted end like a flail. If the loop is properly attached to your wrist and you drop the rope-shot or are disarmed, you can recover it as 1 action. Removing the weapon's loop is 3 actions. You get a +2 bonus on Sleight of Hand checks made to conceal a rope-shot on your body.\n\nHalflings treat rope-shots as martial weapons."
+  },
+  {
+    "name": "Halfling Sling Staff",
+    "cost": "20 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "80 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [],
+    "description": "Made from a specially designed sling attached to a short club, a halfling sling staff can be used by a proficient wielder to devastating effect.\n\nYour Strength modifier applies to damage rolls when you use a halfling sling staff just as it does for thrown weapons. You can fire, but not load, a halfling sling staff with one hand. You can hurl ordinary stones with a halfling sling staff, but stones are not as dense or as round as bullets. Thus, such an attack deals damage as if the weapon were designed for a creature one size category smaller than you and you suffer a --1 penalty on attack rolls. A halfling sling staff can be used as a simple weapon that deals bludgeoning damage equal to that of a club of its size.\n\nLoading a halfling sling staff requires 1 action that requires two hands and provokes Attacks of Opportunity.\n\nHalflings treat halfling sling staves as martial weapons."
+  },
+  {
+    "name": "Hammer, Light",
+    "cost": "1 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "hammers",
+      "thrown"
+    ],
+    "special": [],
+    "description": "A lighter version of a warhammer, this weapon usually has a sleek metal head with one striking surface."
+  },
+  {
+    "name": "Handwraps",
+    "cost": "1 sp",
+    "weight": "",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [
+      "agile"
+    ],
+    "description": "Many unarmed fighters wrap their hands in cloth to minimize injuries to their fists.\n\nSome martial artists also weave small coins or metal bars into their handwraps, adding special material effects as well. Handwraps don't alter the damage a character's unarmed attacks deal. However, masterwork handwraps can hold magic runes as weapons, providing their benefits on unarmed attacks the character makes with his hands. A character can't benefit from both handwraps and other items that provide item bonuses or weapon special abilities (such as an amulet of mighty fists) on the same attack."
+  },
+  {
+    "name": "Hook Hand",
+    "cost": "10 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "close"
+    ],
+    "special": [
+      "attached",
+      "disarm",
+      "parry"
+    ],
+    "description": "Pirates who lose a hand in the course of their adventures sometimes attach hooks to their wrists.\n\nHook hands generally don't interfere with routine activities, but you can't use another weapon two-handed if you have a hook hand attached. You can't use any type of weapon if both your hands are hook hands and you may have trouble with routine activities. Your opponent can't use a disarm action to disarm you of a hook hand. It takes 1 minute to attach or detach a hook hand."
+  },
+  {
+    "name": "Gladius",
+    "cost": "15 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "performance"
+    ],
+    "description": "The gladius is the favorite short sword of gladiators, with a heavier blade than the standard short sword. It serves well as a slashing weapon.\n\nFeats and abilities that affect short swords apply to the gladius."
+  },
+  {
+    "name": "Glaive",
+    "cost": "8 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "reach"
+    ],
+    "description": "A glaive is composed of a simple blade mounted on the end of a pole about 7 feet in length."
+  },
+  {
+    "name": "Glaive-Guisarme",
+    "cost": "12 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "brace",
+      "reach",
+      "see text"
+    ],
+    "description": "This polearm combines the blade of a glaive with a wicked hook.\n\nA mounted opponent hit by a glaive-guisarme suffers a --2 penalty on his Ride check to stay mounted."
+  },
+  {
+    "name": "Greataxe",
+    "cost": "20 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d10",
+      "medium": "1d12"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "axes"
+    ],
+    "special": [],
+    "description": "This two-handed battle axe is heavy enough that you can't wield it with one hand. The head may have one blade or two, and may be \"bearded\" (meaning hooked or trailing at the bottom) to increase cleaving power and help pull down enemy shields. The haft is usually 3 to 4 feet long."
+  },
+  {
+    "name": "Greatsword",
+    "cost": "50 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d10",
+      "medium": "2d6"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [],
+    "description": "This immense two-handed sword is about 5 feet in length. A greatsword may have a dulled lower blade that can be gripped."
+  },
+  {
+    "name": "Guisarme",
+    "cost": "9 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "2d4"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "reach",
+      "trip"
+    ],
+    "description": "A guisarme is an 8-foot-long shaft with a blade and a hook mounted at the tip."
+  },
+  {
+    "name": "Handaxe",
+    "cost": "6 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "axes",
+      "tribal"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "This one-handed axe is short (roughly 1 foot long) and designed for use with one hand. Unlike throwing axes, it is not well balanced for a graceful tumbling motion, and is instead heavier at its head. Tomahawks, war hatchets, and other such names usually refer to hand axes."
+  },
+  {
+    "name": "Halberd",
+    "cost": "10 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "brace",
+      "trip"
+    ],
+    "description": "A halberd is similar to a 5-foot-long spear, but it also has a small, axe-like head mounted near the tip."
+  },
+  {
+    "name": "Hammer, Lucerne",
+    "cost": "15 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d10",
+      "medium": "1d12"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning",
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "brace",
+      "reach",
+      "see text"
+    ],
+    "description": "This polearm has both a pronged hammer head for crushing blows and a spiked head for piercing and peeling armor. The long haft allows the wielder to put amazing force behind the head of this weapon.\n\nYou gain a +2 bonus on combat maneuver checks to sunder medium or heavy armor with a lucerne hammer."
+  },
+  {
+    "name": "Harpoon",
+    "cost": "5 gp",
+    "weight": "16 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "spears",
+      "thrown"
+    ],
+    "special": [
+      "grapple"
+    ],
+    "description": "A harpoon is a barbed spear with an attached rope 50 feet or less in length. Most harpoons have metal points, but some use ivory or are made entirely of wood.\n\nIf you are proficient in the harpoon, it is a grappling weapon. A harpoon's weight includes 10 pounds for the weight of 50 feet of hemp rope. The weight can be reduced by using shorter or lighter rope.\n\nIf you are not proficient with a harpoon, treat it like a spear."
+  },
+  {
+    "name": "Horsechopper",
+    "cost": "10 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "reach",
+      "trip"
+    ],
+    "description": "Crafted by goblins for battling horses, this weapon is essentially a long-handled halberd with an enlarged hook on the blade. Most horsechoppers are sized for Small creatures."
+  },
+  {
+    "name": "Hunga Munga",
+    "cost": "4 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "15 ft.",
+      "type": "thrown"
+    },
+    "category": "ranged",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades",
+      "thrown"
+    ],
+    "special": [],
+    "description": "Also called a mambele, danisco, goleyo, njiga, or any of many lesser-known names, this three-bladed dagger is intended for throwing but can be used as a melee weapon. Though the basic three-blade design is most common, hunga mungas can take a wide variety of forms."
+  },
+  {
+    "name": "Hurlbat",
+    "cost": "8 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "ranged",
+    "proficiency": "martial",
+    "weapon_group": [],
+    "special": [],
+    "description": "A hurlbat is a throwing axe made from a single piece of flat metal. Every extremity of the hurlbat is sharpened, including the point of the handle.\n\nYou can wield the hurlbat as a melee weapon, but it's not designed for such use; you suffer a --1 penalty on melee attack rolls with the weapon, and you must succeed at a DC 15 Reflex save when making melee attacks to avoid cutting yourself on an edge and taking 1 point of slashing damage. You don't need to attempt this save while wearing heavy armor."
+  },
+  {
+    "name": "Javelin",
+    "cost": "1 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "30 ft.",
+      "type": "thrown"
+    },
+    "category": "ranged",
+    "proficiency": "simple",
+    "weapon_group": [
+      "spears",
+      "thrown"
+    ],
+    "special": [],
+    "description": "A javelin is a thin throwing spear.\n\nA javelin can be used as a melee weapon but you are treated as non-proficient with it and you suffer -4 Conviction on attack rolls."
+  },
+  {
+    "name": "Kama",
+    "cost": "2 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "light blades",
+      "monk"
+    ],
+    "special": [
+      "agile",
+      "monk",
+      "trip"
+    ],
+    "description": "Similar to a sickle---and in some regions still used to reap grain---a kama is a short, curved blade attached to a simple handle, usually made of wood. It is sometimes also referred to as a kai, and is frequently used in pairs by martial artists."
+  },
+  {
+    "name": "Khopesh",
+    "cost": "20 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [
+      "trip"
+    ],
+    "description": "This heavy blade has a convex curve near the end, making its overall shape similar to that of a battleaxe. A typical khopesh is 20 to 24 inches in length. Its curved shape allows the wielder to hook around defenses and trip foes. The elegant shape of a khopesh leads some artisans to cover them in ornate decorations."
+  },
+  {
+    "name": "Knife, Butterfly",
+    "cost": "5 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "agile",
+      "parry"
+    ],
+    "description": "A butterfly knife has a blade concealed between two halves of the handle that can be brought to bear quickly.\n\nIf you are proficient with the butterfly knife (or have the Quick Draw feat) and are holding it in your hand, you may open it as a free action; a nonproficient user must spend a 1 action to open it. Otherwise, treat this weapon as a dagger. When it's closed, you gain a +2 bonus on Sleight of Hand checks made to conceal it on your body."
+  },
+  {
+    "name": "Knife, Deer Horn",
+    "cost": "10 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": "thrown"
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "light blades",
+      "monk",
+      "thrown"
+    ],
+    "special": [
+      "agile",
+      "monk",
+      "parry"
+    ],
+    "description": "This flat, metal weapon consists of two joined crescent-shaped blades overlapping to form a hollow center with four projecting points. The blades can differ in length. One side of the center is wrapped to serve as a grip while the other acts as a guard. Deer horn knives are traditionally used in pairs."
+  },
+  {
+    "name": "Knife, Switchblade",
+    "cost": "5 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades",
+      "thrown"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "This weapon is treated as a dagger.\n\nThis knife can be designed to look like another type of object (a DC 15 Perception check reveals the deception). If held in your hand, you can activate it as a free action."
+  },
+  {
+    "name": "Kukri",
+    "cost": "8 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "18-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "A kukri is a curved blade, about 1 foot in length."
+  },
+  {
+    "name": "Kumade",
+    "cost": "5 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "axes"
+    ],
+    "special": [
+      "grapple"
+    ],
+    "description": "Adapted from a garden rake, the kumade consists of a wood or bamboo pole topped with a metal claw.\n\nThe rake head doubles as a grappling hook. When a kumade is secured to a surface, such as a rafter or window sill, its handle can be climbed as a 5-foot length of rope."
+  },
+  {
+    "name": "Kumade, Collapsible",
+    "cost": "10 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "axes"
+    ],
+    "special": [
+      "grapple"
+    ],
+    "description": "This weapon acts as a kumade, but the handle consists of bamboo sections held together by a taut rope running through the center. Releasing the rope requires 1 action that provokes Attacks of Opportunity and causes the weapon to collapse into a bundle that fits into a backpack. Reassembling the collapsible kumade requires 3 actions that provokes Attacks of Opportunity."
+  },
+  {
+    "name": "Kunai",
+    "cost": "2 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning",
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "close",
+      "thrown"
+    ],
+    "special": [],
+    "description": "Crafted from a single piece of iron, a kunai has a leaf-shaped blade and a ring for a pommel. Adapted from the common trowel, the kunai has a thick blade that is sharpened only near the tip.\n\nBenefits: Unlike finer weapons, the kunai can readily substitute for a crowbar or piton without being damaged in the process."
+  },
+  {
+    "name": "Lance",
+    "cost": "10 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "spears"
+    ],
+    "special": [
+      "reach"
+    ],
+    "description": "A lance deals double damage when used from the back of a charging mount. While mounted, you can wield a lance with one hand."
+  },
+  {
+    "name": "Lantern Staff",
+    "cost": "15 gp",
+    "weight": "9 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "×2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "hammers"
+    ],
+    "special": [],
+    "description": "This long metal staff has reservoirs for lamp oil, and a lantern-like structure at its head. The lantern staff is fueled and provides light as a hooded lantern. While lit, attacks with the lantern staff deal 1 point of fire damage in addition to the normal damage. Any effects that apply to a quarterstaff, except those that require it be used as a double weapon, also apply to a lantern staff."
+  },
+  {
+    "name": "Lasso",
+    "cost": "1 sp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [],
+    "description": "This thrown weapon is a length of rope with a simple open knot on one end that allows you to entangle a foe like you would using a net.\n\nOn a successful hit, the lasso tightens; to use it again you must spend 2 actions sliding the knot to enlarge the loop.\n\nThe DC to cast a spell while entangled with a lasso is 10 + the spell level being cast. An entangled creature can slip free with a successful DC 15 Escape action as 2 actions. The lasso has 2 Hit Points and AC 10, and requires a DC 23 Strength check to break."
+  },
+  {
+    "name": "Longbow",
+    "cost": "75 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "100 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "martial",
+    "weapon_group": [
+      "bows"
+    ],
+    "special": [],
+    "description": "At almost 5 feet in height, a longbow is made up of one solid piece of carefully curved wood.\n\nYou need two hands to use a bow, regardless of its size. A longbow can't be used while mounted. If you have a penalty for low Strength, apply it to damage rolls, however don't apply it to damage rolls for high Strength.\n\nEastern Version: Daikyu This long curved bow made of laminated bamboo or wood, and favored by many samurai, is equivalent to a longbow."
+  },
+  {
+    "name": "Longbow, Composite",
+    "cost": "100 gp (or more, see text)",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "110 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "martial",
+    "weapon_group": [
+      "bows"
+    ],
+    "special": [],
+    "description": "You need at least two hands to use a bow, regardless of its size. You can use a composite longbow while mounted.\n\nAll composite bows are made with a particular Strength rating (that is, each requires a minimum Strength modifier to use with proficiency). If your Strength modifier is less than the strength rating of the composite bow, you can't effectively use it, so you suffer a --2 penalty on attacks with it. The default composite longbow requires a Strength modifier of +0 or higher to use with proficiency. A composite longbow can be made with a high strength rating to leverage an above-average Strength score; this feature allows you to add your Strength modifier to damage, up to the maximum bonus indicated for the bow. Each point of Strength modifier granted by the bow adds 100 gp to its cost. If you have a penalty for low Strength, apply it to damage rolls when you use a composite longbow.\n\nFor purposes of Weapon Proficiency and similar feats, a composite longbow is treated as if it were a longbow."
+  },
+  {
+    "name": "Longspear",
+    "cost": "5 gp",
+    "weight": "9 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "spears"
+    ],
+    "special": [
+      "brace",
+      "reach"
+    ],
+    "description": "A longspear is about 8 feet in length."
+  },
+  {
+    "name": "Longsword",
+    "cost": "15 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [],
+    "description": "This sword is about 3 1/2 feet in length.\n\nEastern Version: Hwandudaedo This heavy sword consists of large straight blade with a thick back and wickedly sharpened edge. It is equivalent to a longsword."
+  },
+  {
+    "name": "Mace, Heavy",
+    "cost": "12 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "hammers"
+    ],
+    "special": [],
+    "description": "A heavy mace has a larger head and a longer handle than a normal (light) mace."
+  },
+  {
+    "name": "Mace, Light",
+    "cost": "5 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "hammers"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "A light mace is made up of an ornate metal head attached to a simple wooden or metal shaft."
+  },
+  {
+    "name": "Machete",
+    "cost": "10 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "This tool is a wide, single-edged blade about 2 feet in length. Most often used to hack through dense vegetation, it works equally well as a weapon.\n\nA character proficient with a machete gains +1 Conviction on Survival checks to get along in the wild."
+  },
+  {
+    "name": "Manople",
+    "cost": "17 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "disarm",
+      "parry"
+    ],
+    "description": "This rigid, fingerless gauntlet has three blades projecting from the gauntlet's hand. The central blade is straight and double edged, while the side blades are curved like the prongs of a sai.\n\nYou can't use the hand on which a manople is worn for anything else. A manople takes 3 actions to don."
+  },
+  {
+    "name": "Morningstar",
+    "cost": "8 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning",
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "flails"
+    ],
+    "special": [],
+    "description": "A morningstar is a spiked metal ball, affixed to the top of a long handle."
+  },
+  {
+    "name": "Net",
+    "cost": "20 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [],
+    "description": "When you throw a net, you make a ranged touch attack against your target. A net's maximum range is 10 feet. If you hit, the target is entangled.\n\nIf you control the trailing rope by succeeding on an opposed Strength check while holding it, the entangled creature can move only within the limits that the rope allows. If the entangled creature attempts to cast a spell, it must make a Concentration check with a DC of 15 + the spell's level or be unable to cast the spell.\n\nAn entangled creature can escape with a DC 20 Escape action (2 actions). The net has 5 Hit Points and can be burst with a DC 25 Strength check (also 2 actions). A net is useful only against creatures within one size category of you.\n\nA net must be folded to be thrown effectively. The first time you throw your net in a fight, you make a ranged touch attack roll. After the net is unfolded, you suffer -4 Conviction on attack rolls with it. It takes 2 rounds for a proficient user to fold a net and twice that long for a non-proficient one to do so."
+  },
+  {
+    "name": "Net, Snag",
+    "cost": "30 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "see text",
+      "medium": "see text"
+    },
+    "critical": "",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [
+      "trip"
+    ],
+    "description": "This short, wide net is covered in barbed loops and slipknots.\n\nBenefits: A snag net works like a typical net exotic weapon, except it has the trip weapon special feature. If you entangle an opponent and hold the trailing rope, on your turn in place of a melee attack you may make a trip combat maneuver check against that opponent; if you succeed, you may trip the opponent or deal 1 point of piercing damage to the opponent.\n\nThe Concentration check DC to cast while entangled in a snag net is 17 + the spell's level.\n\nThe Escape action DC of a snag net is 22."
+  },
+  {
+    "name": "Nunchaku",
+    "cost": "2 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "flails",
+      "monk"
+    ],
+    "special": [
+      "agile",
+      "disarm",
+      "monk"
+    ],
+    "description": "A nunchaku is made up of two wooden or metal bars connected by a small length of rope or chain."
+  },
+  {
+    "name": "Ogre Hook",
+    "cost": "24 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "trip"
+    ],
+    "description": "This large crook of sharpened metal makes it easy to trip and catch fleeing opponents. Invented by ogres, most ogre hooks are Large and crudely fashioned---often from metal torn from previous victims' weapons and armor. Despite their poor workmanship, the rarity and peril involved in getting ogre hooks make such items quite valuable."
+  },
+  {
+    "name": "Orc Hornbow",
+    "cost": "130 gp",
+    "weight": "7 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "2d6"
+    },
+    "critical": "×3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "80 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "bows"
+    ],
+    "special": [],
+    "description": "Larger even than a longbow, these bows are often made from the horns of great beasts. Though they have a shorter range than other bows, their greater destructive power is highly favored by orcs and their kin.\n\nAll hornbows are composite bows and can be modified to benefit from high Strength scores in the same way as other composite bows. Any effect that applies to both longbows and shortbows also applies to hornbows."
+  },
+  {
+    "name": "Orc Skull Ram",
+    "cost": "15 gp",
+    "weight": "20 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "spears"
+    ],
+    "special": [
+      "reach"
+    ],
+    "description": "This weapon consists of a wooden log with a shoulder strap to carry some of the weight. The name comes from the orc tradition of making the ram's head out of a large skull.\n\nOn a successful critical hit with a skull ram, you can attempt a combat maneuver check to bull rush your opponent as a free action."
+  },
+  {
+    "name": "Pickaxe",
+    "cost": "14 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x4",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [],
+    "special": [],
+    "description": "A two-handed version of the heavy pick, the brutal pickaxe is equally effective at breaking up earth and stone as it is at sundering flesh and bone. Often a weapon of convenience for commoners, the pickaxe is also a favorite among brutes and thugs who value the intimidation factor afforded by the immense weapon."
+  },
+  {
+    "name": "Pick, Heavy",
+    "cost": "8 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x4",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "axes"
+    ],
+    "special": [],
+    "description": "This variant of the light pick has a longer handle and can be used with one or two hands. It is a common, inexpensive weapon for mounted soldiers since it can be used effectively from horseback."
+  },
+  {
+    "name": "Pick, Light",
+    "cost": "4 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x4",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "axes"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "This weapon, adapted from the pickaxe tool, has a head with a slightly curved, armorpiercing spike and a hammerlike counterweight."
+  },
+  {
+    "name": "Planson",
+    "cost": "10 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning",
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "hammers",
+      "spears"
+    ],
+    "special": [
+      "brace"
+    ],
+    "description": "This 5-foot tapered pole is bound in metal with a narrow metal spike projecting from the top. The planson can be used as a club or as a sturdy, if top-heavy, spear to stop a charge."
+  },
+  {
+    "name": "Quadrens",
+    "cost": "8 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "disarm",
+      "performance"
+    ],
+    "description": "A quadrens looks similar to a sturdy dagger, but with four spikes mounted in a square pattern in place of a blade.\n\nWhen you score a critical hit with a quadrens, the resulting gaping wound causes 1 point of bleed damage. In addition to punching through hide and armor, the spikes can also be used to snag opponents' blades and twist them out of their grips."
+  },
+  {
+    "name": "Quarterstaff",
+    "cost": "",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d4/1d4",
+      "medium": "1d6/1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "double",
+      "monk"
+    ],
+    "special": [
+      "double",
+      "monk",
+      "parry"
+    ],
+    "description": "A quarterstaff is a simple piece of wood, about 5 feet in length."
+  },
+  {
+    "name": "Ranseur",
+    "cost": "10 gp",
+    "weight": "12 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "2d4"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "polearms"
+    ],
+    "special": [
+      "disarm",
+      "reach"
+    ],
+    "description": "Similar in appearance to a trident, a ranseur has a single spear at its tip, flanked by a pair of short, curving blades."
+  },
+  {
+    "name": "Rapier",
+    "cost": "20 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "18-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [],
+    "description": "You can use your Dexterity for attack rolls with a rapier sized for you as if it was a light weapon. You can't wield a rapier in two hands in order to apply 1-1/2 times your Strength modifier to damage."
+  },
+  {
+    "name": "Rapier, Spiral",
+    "cost": "80 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "18-20/×2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "agile",
+      "disarm",
+      "parry"
+    ],
+    "description": "This rapier like weapon has a thicker blade than normal, which is shaped into a corkscrewing spiral of sharpened edges. These edges can catch enemy weapons, making it ideal for disarming or parrying.\n\nYou can use your Dexterity for attack rolls with a spiral rapier sized for you as if it was a light weapon. You can't wield a spiral rapier in two hands in order to apply 1-1/2 times your Strength modifier to its damage. Any effects that apply to rapiers also apply to a spiral rapier."
+  },
+  {
+    "name": "Rhoka",
+    "cost": "5 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "18-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [],
+    "description": "This sword is used almost exclusively by the urdefhan, life-hating quasi-daemonic underground dwelling creatures. The sword is the size of a longsword but consists of two serrated blades placed side by side, each ending in a cruel hook."
+  },
+  {
+    "name": "Sabre, Sawtoothed",
+    "cost": "35 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "heavy blades",
+      "light blades"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "A sawtooth sabre may be used as a Martial Weapon (in which case it functions identically to a shortsword)."
+  },
+  {
+    "name": "Sai",
+    "cost": "1 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "monk"
+    ],
+    "special": [
+      "agile",
+      "disarm",
+      "monk"
+    ],
+    "description": "A sai is a metal spike flanked by a pair of prongs used to trap an enemy's weapon. Though pointed, a sai is not usually used for stabbing. Instead, it is used primarily to bludgeon foes, punching with the hilt, or else to catch and disarm weapons between its tines. Sais are often wielded in pairs.\n\nWhen wielding a sai, you get a +2 bonus on combat maneuver checks to sunder an enemy's weapon."
+  },
+  {
+    "name": "Sap",
+    "cost": "1 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "close"
+    ],
+    "special": [
+      "nonlethal"
+    ],
+    "description": "This weapon consists of a soft wrapping around a hard, dense core, typically a leather sheath around a lead rod. The head is wider than the handle and designed to spread out the force of the blow, making it less likely to draw blood or break bones."
+  },
+  {
+    "name": "Scimitar",
+    "cost": "15 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "18-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [],
+    "description": "This curved sword is shorter than a longsword and longer than a shortsword. Only the outer edge is sharp, and the back is flat, giving the blade a triangular cross-section."
+  },
+  {
+    "name": "Scythe",
+    "cost": "18 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "2d4"
+    },
+    "critical": "x4",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [
+      "trip"
+    ],
+    "description": "This weapon consists of a long wooden shaft with protruding handles and a sharp curved blade set at a right angle. Derived from a farm tool used to mow down crops, a scythe requires two hands to use, and is unwieldy but capable of inflicting grievous wounds. Its connotations as a symbol of death make it an intimidating weapon.\n\nShield, Heavy or Light"
+  },
+  {
+    "name": "Heavy Shield (Steel)",
+    "cost": "20 gp",
+    "weight": "15 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "close",
+      "tribal"
+    ],
+    "special": [],
+    "description": ""
+  },
+  {
+    "name": "Heavy Shield (Wood)",
+    "cost": "7 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "close",
+      "tribal"
+    ],
+    "special": [],
+    "description": ""
+  },
+  {
+    "name": "Light Shield (Steel)",
+    "cost": "9 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d2",
+      "medium": "1d3"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "close",
+      "tribal"
+    ],
+    "special": [],
+    "description": "You can bash an opponent with a shield. Used this way, a shield is a martial bludgeoning weapon. An armor potency rune bonus on a shield doesn't improve the effectiveness of a shield bash made with it, but if a weapon potency rune is used, its bonus applies to both attack and armor bonuses."
+  },
+  {
+    "name": "Light Shield (Wood)",
+    "cost": "3 gp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "1d2",
+      "medium": "1d3"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "close",
+      "tribal"
+    ],
+    "special": [],
+    "description": "You can bash an opponent with a shield. Used this way, a shield is a martial bludgeoning weapon. An armor potency rune bonus on a shield doesn't improve the effectiveness of a shield bash made with it, but if a weapon potency rune is used, its bonus applies to both attack and armor bonuses."
+  },
+  {
+    "name": "Shield, Throwing",
+    "cost": "+50 gp",
+    "weight": "",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [
+      "performance",
+      "trip"
+    ],
+    "description": "This shield is designed for throwing and has specially designed straps allowing you to unclasp and throw it as a free action. Tower shields can't be throwing shields. A throwing shield can't be disarmed.\n\nNeither a shield's potency rune bonus to AC nor its shield spikes apply on your attack or damage rolls."
+  },
+  {
+    "name": "Shortbow",
+    "cost": "30 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "60 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "martial",
+    "weapon_group": [
+      "bows"
+    ],
+    "special": [],
+    "description": "A shortbow is made up of one piece of wood, about 3 feet in length.\n\nYou need two hands to use a bow, regardless of its size. You can use a shortbow while mounted. If you have a penalty for low Strength, apply it to damage rolls when you use a shortbow. If you have a penalty for low Strength, apply it to damage rolls, however don't apply it to damage rolls for high Strength.\n\nEastern Version: Hankyu This shorter bow is similar to the diakyu in form and construction and is equivalent to a shortbow."
+  },
+  {
+    "name": "Shortbow, Composite",
+    "cost": "75 gp (or more, see text)",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "70 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "martial",
+    "weapon_group": [
+      "bows"
+    ],
+    "special": [],
+    "description": "You need at least two hands to use a bow, regardless of its size. You can use a composite shortbow while mounted.\n\nAll composite bows are made with a particular Strength rating (that is, each requires a minimum Strength modifier to use with proficiency). If your Strength modifier is lower than the strength rating of the composite bow, you can't effectively use it, so you suffer a --2 penalty on attacks with it. The default composite shortbow requires a Strength modifier of +0 or higher to use with proficiency. A composite shortbow can be made with a high strength rating to leverage an above-average Strength score; this feature allows you to add your Strength modifier to damage, up to the maximum bonus indicated for the bow. Each point of Strength modifier granted by the bow adds 75 gp to its cost. If you have a penalty for low Strength, apply it to damage rolls when you use a composite shortbow.\n\nFor purposes of Weapon Proficiency, Weapon Focus, and similar feats, a composite shortbow is treated as if it were a shortbow."
+  },
+  {
+    "name": "Shortspear",
+    "cost": "1 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": "thrown"
+    },
+    "category": "one handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "spears",
+      "thrown",
+      "tribal"
+    ],
+    "special": [],
+    "description": "A shortspear is about 3 feet in length, making it a suitable thrown weapon."
+  },
+  {
+    "name": "Shortsword",
+    "cost": "10 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [],
+    "description": "Short swords are some of the most common weapons found in any martial society, and thus designs are extremely varied, depending on the region and creator. Most are around 2 feet in length. Their blades can be curved or straight, single- or double-edged, and wide or narrow. Hilts may be ornate or simple, with crossguards, basket hilts, or no guard at all. Such weapons are often used on their own, but can also be paired as a matched set, or used in conjunction with a dagger or longer sword."
+  },
+  {
+    "name": "Shotel",
+    "cost": "30 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [
+      "performance"
+    ],
+    "description": "The shotel is a downward-curving sword designed to reach over or around an opponent's shield. The curve of a shotel's blade varies from sword to sword, and some models are double-edged, while others are single-edged, with the back edge able to be braced against a shield for additional power. Shotels are particularly useful for hooking mounted combatants and ripping them from their steeds.\n\nYou gain a +1 bonus on attack rolls with a shotel against opponents using the Raise a Shield action."
+  },
+  {
+    "name": "Shurikens (5)",
+    "cost": "1 gp",
+    "weight": "1/2 lbs.",
+    "damage": {
+      "small": "1",
+      "medium": "1d2"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "monk",
+      "thrown"
+    ],
+    "special": [
+      "agile",
+      "monk"
+    ],
+    "description": "A shuriken is a small piece of metal with sharpened edges, designed for throwing.\n\nA shuriken can't be used as a melee weapon.\n\nAlthough they are thrown weapons, shuriken are treated as ammunition for the purposes of drawing them and crafting masterwork or otherwise special versions of them, and of what happens to them after they are thrown."
+  },
+  {
+    "name": "Siangham",
+    "cost": "3 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "monk"
+    ],
+    "special": [
+      "agile",
+      "monk"
+    ],
+    "description": "This weapon is a handheld shaft fitted with a pointed tip for stabbing foes. It resembles a (much sturdier) arrow with a grip designed for melee combat."
+  },
+  {
+    "name": "Sica",
+    "cost": "10 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "performance"
+    ],
+    "description": "This blade is a smaller, lighter version of the shotel.\n\nYou gain a +1 bonus on attack rolls with a sica against opponents using the Raise a Shield action."
+  },
+  {
+    "name": "Sickle",
+    "cost": "6 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "agile",
+      "trip"
+    ],
+    "description": ""
+  },
+  {
+    "name": "Sling",
+    "cost": "",
+    "weight": "",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "50 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "simple",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [],
+    "description": "A sling is little more than a leather cup attached to a pair of strings.\n\nYour Strength modifier applies to damage rolls when you use a sling, just as it does for thrown weapons. You can fire, but not load, a sling with one hand. Loading a sling requires 1 action that requires two hands and provokes Attacks of Opportunity.\n\nYou can hurl ordinary stones with a sling, but stones are not as dense or as round as bullets. Thus, such an attack deals damage as if the weapon were designed for a creature one size category smaller than you and you suffer a --1 penalty on attack rolls."
+  },
+  {
+    "name": "Sling Bullets (10)",
+    "cost": "1 sp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Bullets come in a leather pouch that holds 10 bullets."
+  },
+  {
+    "name": "Sling Bullets, Groaning (10)",
+    "cost": "2 gp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "These sling bullets are honeycombed with overlapping perforations that cause them to emit an eerie moan audible within 500 feet of their flight path."
+  },
+  {
+    "name": "Sling Bullets, Little Starstones (10)",
+    "cost": "5 cp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1",
+      "medium": "1"
+    },
+    "critical": "",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Though they are technically sling ammunition, these thread- or cloth-wrapped pebbles are mainly used for signaling or celebration rather than battle, as they barely hit hard enough to sting. When soaked in oil or strong alcohol, they burn brightly for 1 round, illuminating an area like a candle and creating brief streaks of light as they fly through the air. They generally are not hot enough and burn out too quickly to ignite combustibles."
+  },
+  {
+    "name": "Sling Bullets, Sharpstones (10)",
+    "cost": "1 gp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "A thin layer of baked clay covers the spikes and jagged ridges covering this specially designed bullet. A proficient user knows how to crack the clay (a free action) so that it peels off from either the spikes or ridges when fired, dealing either piercing or slashing damage."
+  },
+  {
+    "name": "Sling Bullets, Softstones (10)",
+    "cost": "1 sp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [
+      "nonlethal"
+    ],
+    "description": "These tight bundles of elastic fibers deal nonlethal damage when fired from a sling."
+  },
+  {
+    "name": "Sling Bullets, Smoke (10)",
+    "cost": "100 gp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "",
+    "damage_type": [],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "ammunition",
+    "proficiency": "",
+    "weapon_group": [],
+    "special": [],
+    "description": "Smoke bullets require only a successful touch attack to release the smoke. When they strike a target, they burst, releasing a cloud of noxious gas that requires the creature struck to attempt a DC 13 Fortitude save. If the save fails, the target is nauseated for 2 rounds."
+  },
+  {
+    "name": "Sling Glove",
+    "cost": "5 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "50 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "thrown"
+    ],
+    "special": [],
+    "description": "Loading a sling glove is a free action that doesn't provoke Attacks of Opportunity so long as you have a free hand.\n\nYou suffer -4 Conviction when throwing a stone at an adjacent target and can't use the weapon to attack creatures in your space."
+  },
+  {
+    "name": "Spear",
+    "cost": "2 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": "thrown"
+    },
+    "category": "two handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "spears",
+      "thrown",
+      "tribal"
+    ],
+    "special": [
+      "brace"
+    ],
+    "description": "A spear is 5 feet in length and can be thrown."
+  },
+  {
+    "name": "Spear, Boar",
+    "cost": "5 gp",
+    "weight": "8 lb.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "spears"
+    ],
+    "special": [
+      "brace"
+    ],
+    "description": "This spear with a spiraling blade has a metal crossbar approximately halfway down its length.\n\nBenefits: If you ready a boar spear against a charge and your attack hits, you get to do a Raise a Shield action for free, the bonus to AC is limited to that creature."
+  },
+  {
+    "name": "Spear-Sling",
+    "cost": "50 gp (or more, see text)",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "see text",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "martial",
+    "weapon_group": [],
+    "special": [],
+    "description": "A spear-sling consists of a hollow tube with a loop of elastic material, such as rubber or sinew, attached to one end. The wielder draws a harpoon, javelin, shortspear, or spear through the tube, pulling the loop taut. Releasing the loop propels the shaft forward like a bow does an arrow.\n\nA harpoon, javelin, shortspear, spear, or other weapon shot from a spear-sling is treated as a projectile weapon instead of a thrown weapon, increasing its maximum range and allowing it to be used underwater. Using a spear-sling requires two hands.\n\nLoading a spear-sling take 2 actions (1 action if the wielder has the Rapid Reload feat) that provokes Attacks of Opportunity.\n\nA spear-sling is made with a particular strength rating, like a composite longbow. Each point of Strength modifier granted by the sling's strength rating adds 50 gp to its cost. If you have a negative Strength modifier, apply it to damage rolls when you use a spear-sling."
+  },
+  {
+    "name": "Spear, Syringe",
+    "cost": "100 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": "thrown"
+    },
+    "category": "two handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "spears"
+    ],
+    "special": [
+      "brace"
+    ],
+    "description": "A successful hit with the spear injects the liquid contents of the container (typically poison) into the target. Refilling a syringe spear takes 1 minute."
+  },
+  {
+    "name": "Spear, Totem",
+    "cost": "25 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "spears"
+    ],
+    "special": [],
+    "description": "If the user is trained in the spear's use, a totem spear can be used by bards to create bardic music effects using Perform (wind instrument). The spear itself has a strong, flexible shaft, and in the hands of one trained in its use, grants +2 Conviction on Acrobatics checks. The spear's relatively wide head allows it to be used as a slashing weapon, swung side to side, or as a piercing weapon in a more traditional spear-fighting technique."
+  },
+  {
+    "name": "Spear, Weighted",
+    "cost": "10 gp",
+    "weight": "8 lbs.",
+    "damage": {
+      "small": "1d6/1d4",
+      "medium": "1d8/1d6"
+    },
+    "critical": "x3/x2",
+    "damage_type": [
+      "bludgeoning",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "simple",
+    "weapon_group": [
+      "double",
+      "spears"
+    ],
+    "special": [
+      "brace",
+      "double"
+    ],
+    "description": "This pole has a spear head at one end and a mace head at the other. It can be wielded like a standard spear (though it is not balanced for throwing), or it can be used as a double weapon, alternately thrusting and bashing."
+  },
+  {
+    "name": "Spiked Armor",
+    "cost": "+50 gp",
+    "weight": "+10 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "close"
+    ],
+    "special": [],
+    "description": "You can have spikes added to your armor, which allow you to deal extra piercing damage on a successful grapple attack. If you are not proficient with martial weapons, you suffer -4 Conviction on grapple checks when you try to use armor spikes.\n\nYou can also make a regular melee attack with the spikes, and they count as a light weapon in this case. An armor potency rune bonus on a shield doesn't improve the effectiveness of a shield bash made with it, but if a weapon potency rune is used, its bonus applies to both attack and armor bonuses."
+  },
+  {
+    "name": "Spiked Chain",
+    "cost": "25 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "2d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "flails"
+    ],
+    "special": [
+      "disarm",
+      "trip"
+    ],
+    "description": "A spiked chain is about 4 feet in length, covered in wicked barbs.\n\nYou can use your Dexterity for attack rolls with a spiked chain sized for you as if it was a light weapon."
+  },
+  {
+    "name": "Spiked Shield, Heavy or Light",
+    "cost": "+10 gp",
+    "weight": "+5 lbs.",
+    "damage": {
+      "small": "",
+      "medium": ""
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "close",
+      "tribal"
+    ],
+    "special": [],
+    "description": "These spikes turn a shield into a martial piercing weapon and increase the damage dealt by a shield bash as if the shield were designed for a creature one size category larger than you. You can't put spikes on a buckler or a tower shield. Otherwise, attacking with a spiked shield is like making a shield bash attack."
+  },
+  {
+    "name": "Spring Blade",
+    "cost": "70 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "light blades",
+      "thrown"
+    ],
+    "special": [],
+    "description": "This 4-inch blade is attached via a hinge to a wooden handle with a slot in the center, into which the blade can be folded. With a click of a switch, a spring thrusts the blade outward, where it locks into place until it is reset.\n\nReleasing the blade is a free action, and resetting it requires 1 action. The handle must be in your hand for the blade to be released; placing it in your hand requires the same type of action as drawing a weapon. A spring blade is easy to conceal: an observer must succeed at a DC 20 Perception check to notice the blade hidden within the wooden handle, and you gain a +4 bonus on Sleight of Hand checks to conceal a spring blade on your body."
+  },
+  {
+    "name": "Starknife",
+    "cost": "24 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "20 ft.",
+      "type": "thrown"
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades",
+      "thrown"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "From a central metal ring, four tapering metal blades extend from this weapon like points on a compass rose. By gripping the crossbar that runs through the weapon's open middle, a wielder can strike with it as a deadly melee weapon. Alternatively, by gripping it by the outer rim, a starknife's light, aerodynamic design allows it to be thrown short distances in a manner similar to a chakram."
+  },
+  {
+    "name": "Stonebow",
+    "cost": "35 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "50 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "simple",
+    "weapon_group": [
+      "bows"
+    ],
+    "special": [],
+    "description": "A stonebow, or bullet crossbow, resembles a light crossbow except for the distinct U-shaped bend in the stock.\n\nInstead of bolts, the stonebow shoots sling bullets. The bow has two strings with a leather pocket between them to hold the bullet.\n\nLoading: Loading a stonebow requires 1 action (a free action if you have the Rapid Reload feat) that provokes Attacks of Opportunity.\n\nFiring: You can shoot, but not load, a stonebow with one hand, but doing so imposes a --2 penalty on your attack rolls.\n\nYou can shoot ordinary stones with a stonebow, but stones are not as dense or as round as bullets. When using stones, you suffer a --1 penalty on attack rolls and deal damage as if the weapon were designed for a creature one size category smaller than you."
+  },
+  {
+    "name": "Switchscythe",
+    "cost": "18 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "2d4"
+    },
+    "critical": "×4",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [
+      "trip"
+    ],
+    "description": "This scythe has a spring-loaded blade that folds down into the weapon's handle.\n\nOpening the scythe blade requires 1 action, and closing it again is 2 actions. You can use Deception or Sleight of Hand to treat a closed switchscythe as a hidden weapon; the apparatus can be disguised with 1 minute of work, which grants a +5 bonus on such checks. This disguise is ruined when the weapon is opened and must be reapplied to hide the weapon again.\n\nAny effects that apply to a scythe also apply to a switchscythe."
+  },
+  {
+    "name": "Sword cane",
+    "cost": "45 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "agile",
+      "parry",
+      "see text"
+    ],
+    "description": "This slender light blade lies within a wooden container that serves as both its scabbard and hiding place.\n\nYou can draw the blade from the cane as 1 action (or a free action if you have the Quick Draw feat). An observer must make a DC 20 Perception check to realize an undrawn sword cane is a weapon rather than a walking stick; the DC decreases to 10 if the observer is able to handle the weapon.\n\nYou can use your Dexterity for attack rolls with a sword cane sized for you as if it was a light weapon. You can't wield a sword cane in two hands in order to apply 1-1/2 times your Strength modifier to damage."
+  },
+  {
+    "name": "Sword, Bastard",
+    "cost": "35 gp",
+    "weight": "6 lbs.",
+    "damage": {
+      "small": "1d8",
+      "medium": "1d10"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [],
+    "description": "A bastard sword is about 4 feet in length, making it too large to use in one hand without special training; thus, it is an exotic weapon. A character can use a bastard sword two-handed as a martial weapon."
+  },
+  {
+    "name": "Sword, Dueling",
+    "cost": "20 gp",
+    "weight": "3 lbs",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [],
+    "description": "These slightly curved swords measure just over 3 feet in length.\n\nA dueling sword can be used as a martial weapon (in which case it functions as a longsword), but if you have the feat Exotic Weapon Proficiency (dueling sword), you can use your Dexterity for attack rolls with this weapon as if it was a light weapon if it is sized for you. You can also wield a dueling sword in two hands to apply 1-1/2 times your Strength modifier to damage rolls."
+  },
+  {
+    "name": "Terbutje (Steel)",
+    "cost": "20 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [],
+    "description": "This Stone Age weapon, also called a macuahuitl, is made from a length of tempered wood. It has bits of shark teeth, obsidian, glass, or similar materials studded all along its length."
+  },
+  {
+    "name": "Terbutje (Wood)",
+    "cost": "5 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "heavy blades"
+    ],
+    "special": [
+      "fragile"
+    ],
+    "description": "This Stone Age weapon, also called a macuahuitl, is made from a length of tempered wood. It has bits of shark teeth, obsidian, glass, or similar materials studded all along its length."
+  },
+  {
+    "name": "Tongi",
+    "cost": "18 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "19-20/x3",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "axes"
+    ],
+    "special": [],
+    "description": "This rare weapon resembles a battleaxe with wedges cut out of the head, presenting four sharp points that splay from the handle rather than a single convex blade."
+  },
+  {
+    "name": "Traveling Kettle",
+    "cost": "5 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "monk"
+    ],
+    "special": [
+      "monk"
+    ],
+    "description": "These small tea kettles are made with clamping lids and heavily reinforced handles, allowing them to be swung like a club. A traveling kettle with boiling water inside deals an additional 1 point of fire damage on a hit. Boiling water cools to a non-damaging temperature after 5 minutes."
+  },
+  {
+    "name": "Tri-Bladed Katar",
+    "cost": "6 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "×4",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades",
+      "close"
+    ],
+    "special": [
+      "agile",
+      "parry"
+    ],
+    "description": "Where most punching daggers boast a single thick blade, the tri-bladed katar features a fan of three splayed razor edges.\n\nAny effects that apply to a punching dagger also apply to a tri-bladed katar."
+  },
+  {
+    "name": "Trident",
+    "cost": "15 gp",
+    "weight": "4 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "spears",
+      "thrown"
+    ],
+    "special": [
+      "brace"
+    ],
+    "description": "A trident has three metal prongs at the end of a 4-foot-long shaft.\n\nThis weapon can be thrown."
+  },
+  {
+    "name": "Two-Bladed Sword",
+    "cost": "100 gp",
+    "weight": "10 lbs.",
+    "damage": {
+      "small": "1d6/1d6",
+      "medium": "1d8/1d8"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "two handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "double",
+      "heavy blades"
+    ],
+    "special": [
+      "double"
+    ],
+    "description": "A two-bladed sword is a double weapon---twin blades extend from either side of a central, short haft, allowing the wielder to attack with graceful but deadly flourishes."
+  },
+  {
+    "name": "Unarmed Strike",
+    "cost": "",
+    "weight": "",
+    "damage": {
+      "small": "1d2",
+      "medium": "1d3"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "close"
+    ],
+    "special": [],
+    "description": "An unarmed strike is always considered a light weapon. Unarmed strikes don't count as natural weapons. The damage from an unarmed strike is considered weapon damage for the purposes of effects that give you a bonus on weapon damage rolls.\n\nA monk or any character with the Improved Unarmed Strike feat chooses to deal lethal or nonlethal damage with unarmed strikes."
+  },
+  {
+    "name": "Warhammer",
+    "cost": "12 gp",
+    "weight": "5 lbs.",
+    "damage": {
+      "small": "1d6",
+      "medium": "1d8"
+    },
+    "critical": "x3",
+    "damage_type": [
+      "bludgeoning"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "martial",
+    "weapon_group": [
+      "hammers"
+    ],
+    "special": [],
+    "description": "This weapon consists of a wooden haft and a heavy, metal head. The head may be single (like a carpenter's hammer) or double (like a sledgehammer). The haft is long enough that you may wield it one- or two-handed. Though heavy and relatively slow to wield, warhammers are capable of delivering immense blows, crushing armor and flesh alike."
+  },
+  {
+    "name": "War Razor",
+    "cost": "8 gp",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "martial",
+    "weapon_group": [
+      "light blades"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "You gain a +2 bonus on Sleight of Hand checks made to conceal the weapon on your body."
+  },
+  {
+    "name": "Waveblade",
+    "cost": "5 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d4",
+      "medium": "1d6"
+    },
+    "critical": "18-20/×2",
+    "damage_type": [
+      "piercing",
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "close",
+      "monk"
+    ],
+    "special": [
+      "agile",
+      "monk"
+    ],
+    "description": "Also known as a \"scorpion's tail\" due to its unique, stinger-like shape, this short, double-curved blade has no hilt but features a knuckle guard.\n\nYou gain a +2 bonus to your CMD against disarm attempts made to disarm you of a waveblade."
+  },
+  {
+    "name": "Whip",
+    "cost": "1 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d2",
+      "medium": "1d3"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "one handed",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "flails"
+    ],
+    "special": [
+      "disarm",
+      "nonlethal",
+      "reach",
+      "trip"
+    ],
+    "description": "A whip deals no damage to any creature with an armor bonus of +1 or higher or a natural armor bonus of +3 or higher. The whip is treated as a melee weapon with 15-foot reach, though you don't threaten the area into which you can make an attack. In addition, unlike most other weapons with reach, you can use it against foes anywhere within your reach (including adjacent foes).\n\nUsing a whip provokes Attacks of Opportunity, just as if you had used a ranged weapon.\n\nYou can use your Dexterity for attack rolls with a whip sized for you as if it was a light weapon. Wielding a whip in two hands doesn't add 1-1/2 times your Strength modifier to damage rolls as with other weapons."
+  },
+  {
+    "name": "Whip, Scorpion",
+    "cost": "5 gp",
+    "weight": "3 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "slashing"
+    ],
+    "range_increment": {
+      "range": "",
+      "type": ""
+    },
+    "category": "light",
+    "proficiency": "exotic",
+    "weapon_group": [
+      "flails"
+    ],
+    "special": [
+      "disarm",
+      "performance",
+      "reach",
+      "trip"
+    ],
+    "description": "This whip has a series of razor-sharp blades and fangs inset along its tip.\n\nIt deals lethal damage, even to creatures with armor bonuses. If you are proficient with both the scorpion whip and whip, you can use a scorpion whip in either the normal way (as a light performance weapon) or as a whip. When you use a scorpion whip as a whip, it is equivalent to a whip, but deals lethal damage and can harm creatures regardless of their armor bonus."
+  },
+  {
+    "name": "Wooden Stake",
+    "cost": "",
+    "weight": "1 lb.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "10 ft.",
+      "type": "thrown"
+    },
+    "category": "light",
+    "proficiency": "simple",
+    "weapon_group": [
+      "close"
+    ],
+    "special": [
+      "agile"
+    ],
+    "description": "This close combat weapon is just a sharpened piece of wood.\n\nNote: Iron spikes used as weapons deal damage as wooden stakes."
+  },
+  {
+    "name": "Wrist Launcher",
+    "cost": "250 gp",
+    "weight": "2 lbs.",
+    "damage": {
+      "small": "1d3",
+      "medium": "1d4"
+    },
+    "critical": "19-20/x2",
+    "damage_type": [
+      "piercing"
+    ],
+    "range_increment": {
+      "range": "30 ft.",
+      "type": "projectile"
+    },
+    "category": "ranged",
+    "proficiency": "exotic",
+    "weapon_group": [],
+    "special": [],
+    "description": "This slender tube is strapped to one forearm and designed to be concealed beneath the sleeve, where the wielder can fire a bolt with a twist of the wrist.\n\nThe launcher functions by means of a tightly compressed spring, and must be reloaded and re-cocked with a separate bolt as 3 actions. After firing, the wearer can attempt a Sleight of Hand check opposed by opponents' Perception checks to keep the wrist launcher concealed.\n\nThis device fires a single crossbow bolt. If you are proficient with hand crossbows, you are also proficient with heavy wrist launchers.\n\nrop the weapon to avoid being tripped"
+  }
+];</script>
+
+<script src="js/base.js"></script>
+<script src="js/weapons.js"></script>
+</body>
+</html>

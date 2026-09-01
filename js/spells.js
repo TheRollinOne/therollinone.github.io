@@ -197,7 +197,7 @@
       if(m) return `<div class="heightened-item"><b>${escapeHtml(m[1])}</b> ${boldLeadingLabel(m[2])}</div>`;
       return `<div class="heightened-item">${boldLeadingLabel(h)}</div>`;
     }).join('') : '';
-    const heightenedCopyBlock = heightenedText ? `\n      <div class="heightened-block">\n        <div class="heightened-title">Heightened</div>\n        <div class="heightened-copy copyable" data-copy="${escapeHtml(heightenedText)}">${heightenedItemsHtml}</div>\n      </div>` : '';
+    const heightenedCopyBlock = heightenedText ? `\n      <div class="heightened-block copyable" data-copy="${escapeHtml(heightenedText)}">\n        <div class="heightened-title">Heightened</div>\n        <div class="heightened-copy">${heightenedItemsHtml}</div>\n      </div>` : '';
     return `\n    <div class="spell-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${s._idx}">\n      <div class="spell-head" data-toggle="${s._idx}">\n        <div class="spell-title-block">\n          <span class="spell-name copyable" data-copy="${escapeHtml(s.name)}">${escapeHtml(s.name)}</span>\n          <span class="spell-meta-inline">${levelDisp}</span>\n          <span class="spell-school-tag">${escapeHtml(sch)}</span>\n        </div>\n        <div class="spell-right">\n          <span class="spell-classlevel-badge" title="${escapeHtml(shortDescInline)}">${escapeHtml(shortDescInline)}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="spell-body">\n        <div class="stat-grid">\n          ${statFields.map(([l,v])=>`<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`).join('')}\n        </div>\n        <div class="classes-row">${classesHTML}</div>\n        ${ritualHTML}\n        <div class="desc-copy copyable" data-copy="${escapeHtml(descText)}">${descHtml}</div>${heightenedCopyBlock}\n      </div>\n    </div>`;
   }
 
@@ -220,7 +220,7 @@
       }
     }
     if(state.saves.size){
-      list = list.filter(s=>state.saves.has(s.save_type));
+      list = list.filter(s=>s.save_type && state.saves.has(s.save_type));
     }
     const sorted = list.slice();
     if(state.sort==='name'){

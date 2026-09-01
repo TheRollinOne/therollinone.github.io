@@ -1,0 +1,41 @@
+:root{
+--cat-unarmed: #78dc6e;
+--cat-light: #32d2b4;
+--cat-one-handed: #41c3f5;
+--cat-two-handed: #c489ff;
+--cat-ranged: #ff96c8;
+--cat-ammunition: #ff9b50;
+}
+
+/* Proficiencies: 3 equal-width chips in a single row */
+.proficiency-chip-row{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:6px;
+}
+.proficiency-chip-row .chip{
+  width:auto;
+  justify-content:center;
+}
+
+/* Categories: fixed 2-column grid, equal width per chip */
+.category-chip-row{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:6px;
+}
+.category-chip-row .chip{
+  width:auto;
+  justify-content:left;
+}
+
+/* Damage Types: 3 equal-width chips in a single row */
+.damage-type-chip-row{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:6px;
+}
+.damage-type-chip-row .chip{
+  width:auto;
+  justify-content:center;
+}

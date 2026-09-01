@@ -1,0 +1,208 @@
+:root{
+--cat-unarmed: #78dc6e;
+--cat-light: #32d2b4;
+--cat-one-handed: #41c3f5;
+--cat-two-handed: #c489ff;
+--cat-ranged: #ff96c8;
+--cat-ammunition: #ff9b50;
+}
+
+/* Proficiencies: 3 equal-width chips in a single row */
+.proficiency-chip-row{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:6px;
+}
+.proficiency-chip-row .chip{
+  width:auto;
+  justify-content:center;
+}
+
+/* Categories: fixed 2-column grid, equal width per chip */
+.category-chip-row{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:6px;
+}
+.category-chip-row .chip{
+  width:auto;
+  justify-content:left;
+}
+
+/* Damage Types: 3 equal-width chips in a single row */
+.damage-type-chip-row{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:6px;
+}
+.damage-type-chip-row .chip{
+  width:auto;
+  justify-content:center;
+}
+
+/* Special: fixed 2-column grid, equal width per chip (no color coding) */
+.special-chip-row{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:6px;
+}
+.special-chip-row .chip{
+  width:auto;
+  justify-content:left;
+}
+
+/* Weapon Groups: fixed 2-column grid, equal width per chip (no color coding) */
+.weapon-group-chip-row{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:6px;
+}
+.weapon-group-chip-row .chip{
+  width:auto;
+  justify-content:left;
+}
+
+/* Critical: 3 equal-width chips per row, 2 rows */
+.critical-chip-row{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:6px;
+}
+.critical-chip-row .chip{
+  width:auto;
+  justify-content:center;
+}
+
+.weapon-card{
+  background:var(--ink-2);
+  border:1px solid var(--hairline);
+  border-left:5px solid var(--cardc,var(--gold));
+  border-radius:8px;
+  overflow:hidden;
+  transition:border-color .15s;
+}
+.weapon-card.open{
+  border-color:var(--cardc,var(--gold));
+}
+
+.weapon-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:8px 18px;
+  cursor:pointer;
+}
+.weapon-head:hover{background:rgba(255,255,255,0.02);}
+
+.weapon-title-block{
+  display:flex;
+  align-items:baseline;
+  gap:12px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.weapon-name{
+  font-family:'Cinzel',serif;
+  font-weight:600;
+  font-size:1.08rem;
+  color:var(--parchment);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.weapon-proficiency-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+  text-transform:capitalize;
+}
+.weapon-category-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.76rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--cardc,var(--gold));
+  white-space:nowrap;
+}
+
+.weapon-right{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-shrink:0;
+}
+.weapon-badge{
+  font-family:'Crimson Pro',serif;
+  font-style:italic;
+  font-size:1rem;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:320px;
+  min-width:0;
+  flex-shrink:0;
+  display:none;
+  text-transform:capitalize;
+}
+@media (min-width:640px){.weapon-badge{display:inline-block;}}
+@media (min-width:1100px){.weapon-badge{max-width:460px;}}
+
+.weapon-card.open .chevron{transform:rotate(180deg);}
+
+.weapon-body{
+  display:none;
+  padding:0 18px 20px;
+  border-top:1px solid var(--hairline);
+}
+.weapon-card.open{
+  background:color-mix(in srgb, var(--cardc, var(--gold)) 5%, var(--ink-2));
+}
+.weapon-card.open .weapon-body{
+  display:block;
+  padding-top:16px;
+}
+.weapon-card.open .weapon-head{
+  background:color-mix(in srgb, var(--cardc, var(--gold)) 25%, var(--ink-2));
+}
+
+.weapon-section{
+  margin-top:10px;
+  padding-top:14px;
+}
+.weapon-section-title{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.86rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:8px;
+}
+.weapon-desc{
+  font-size:1.1rem;
+  color:var(--parchment-dim);
+  white-space:pre-wrap;
+}
+.weapon-desc b{
+  color:var(--parchment);
+  font-weight:600;
+}
+
+.empty-state{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:60px 20px;
+  color:var(--parchment-dim);
+  font-family:'Crimson Pro',serif;
+  text-align:center;
+}
+.empty-state .big{
+  font-family:'Cinzel',serif;
+  font-size:1.2rem;
+  color:var(--gold);
+}
