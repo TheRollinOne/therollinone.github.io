@@ -4,10 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>D20 Revamp — Rune Repository</title>
+<script>
+(function(){
+  var theme = localStorage.getItem('theme');
+  if (theme && theme !== 'gold') document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
+<link rel="stylesheet" href="css/themes.css">
 <link rel="stylesheet" href="css/runes.css">
 </head>
 <body>
@@ -92,13 +99,19 @@
   <main class="main">
     <div class="page-title-desktop">
       <h1 id="listTitle">248 Runes Listed</h1>
+      <div class="theme-toggle" id="themeToggle">
+  <button class="theme-toggle-btn" id="themeGoldBtn" type="button" data-theme-choice="gold">Gold</button>
+  <button class="theme-toggle-btn" id="themeBlueBtn" type="button" data-theme-choice="blue">Blue</button>
+  <button class="theme-toggle-btn" id="themeGreenBtn" type="button" data-theme-choice="green">Green</button>
+  <button class="theme-toggle-btn" id="themeOrangeBtn" type="button" data-theme-choice="orange">Orange</button>
+</div>
+
     </div>
     <div class="list" id="runeList"></div>
   </main>
 </div>
 
 <!-- ===== scripts ===== -->
-<!-- RUNES_DATA moved to data/runes.json -->
 <script>const RUNES_DATA = [
   {
     "category": "armor",

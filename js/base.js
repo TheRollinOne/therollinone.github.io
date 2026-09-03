@@ -147,3 +147,32 @@ function wireSortSelect(state, render){
     render();
   });
 }
+
+// Wires the Gold/Blue/Orange/Green theme toggle buttons found in the
+// current page. Call once per page after the buttons exist in the DOM.
+// onThemeChange (optional) fires after each theme switch, e.g. index.html
+// uses it to also swap the hero image.
+function initThemeToggle(onThemeChange){
+  const themeButtons = {
+    gold: document.getElementById('themeGoldBtn'),
+    blue: document.getElementById('themeBlueBtn'),
+    orange: document.getElementById('themeOrangeBtn'),
+    green: document.getElementById('themeGreenBtn'),
+  };
+  function applyTheme(theme){
+    if (theme === 'gold') document.documentElement.removeAttribute('data-theme');
+    else document.documentElement.setAttribute('data-theme', theme);
+    Object.entries(themeButtons).forEach(([name, btn]) => {
+      if (btn) btn.classList.toggle('active', name === theme);
+    });
+    if (onThemeChange) onThemeChange(theme);
+  }
+  const savedTheme = localStorage.getItem('theme') || 'gold';
+  applyTheme(savedTheme);
+  Object.entries(themeButtons).forEach(([name, btn]) => {
+    if (btn) btn.addEventListener('click', () => {
+      localStorage.setItem('theme', name);
+      applyTheme(name);
+    });
+  });
+}

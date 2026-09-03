@@ -22,6 +22,7 @@
   });
 
   initMobileFiltersCollapse();
+  initThemeToggle();
 
   const bonusChips = document.getElementById('bonusChips');
   bonusChips.querySelectorAll('.chip').forEach(chip => {

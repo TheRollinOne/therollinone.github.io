@@ -26,6 +26,7 @@
   });
 
   initMobileFiltersCollapse();
+  initThemeToggle();
 
   const proficiencyChips = document.getElementById('proficiencyChips');
   proficiencyChips.querySelectorAll('.chip').forEach(chip => {
@@ -164,7 +165,7 @@
 
   function parseLeadingNumber(str){
     const n = parseFloat(str);
-    return Number.isNaN(n) ? Infinity : n;
+    return Number.isNaN(n) ? -1 : n;
   }
 
   function rangeIncrementText(w){
@@ -174,19 +175,45 @@
       : w.range_increment.range;
   }
 
+  function damageTypeAbbrev(types){
+    const map = { bludgeoning: 'B', slashing: 'S', piercing: 'P' };
+    return (types||[]).map(t => map[t] || t).join('/');
+  }
+
+  function damageQuickText(w){
+    const med = w.damage && w.damage.medium;
+    const small = w.damage && w.damage.small;
+    if (med && small) return `${med}/${small}`;
+    if (med) return med;
+    if (small) return small;
+    return '';
+  }
+
+  function quickStatsHTML(w){
+    const boxes = [
+      ['Proficiency', w.proficiency || '—', ''],
+      ['Damage', damageQuickText(w) || '—', ''],
+      ['Type', damageTypeAbbrev(w.damage_type) || '—', ' type'],
+      ['Critical', w.critical || '—', ''],
+    ];
+    return `<div class="weapon-quick-stats">${boxes.map(([l, v, cls]) =>
+      `<div class="weapon-quick-stat${cls}"><div class="weapon-quick-stat-label">${escapeHtml(l)}</div><div class="weapon-quick-stat-value">${escapeHtml(v)}</div></div>`
+    ).join('')}</div>`;
+  }
+
   function buildStatFields(w){
     return [
-      ['Cost', w.cost],
-      ['Weight', w.weight],
       ['Damage Medium', w.damage && w.damage.medium],
       ['Damage Small', w.damage && w.damage.small],
       ['Critical', w.critical],
       ['Damage Type', (w.damage_type||[]).join(', ')],
-      ['Range Increment', rangeIncrementText(w)],
-      ['Category', w.category],
       ['Proficiency', w.proficiency],
+      ['Category', w.category],
       ['Weapon Groups', (w.weapon_group||[]).join(', ')],
+      ['Range Increment', rangeIncrementText(w)],
       ['Special', (w.special||[]).join(', ')],
+      ['Cost', w.cost],
+      ['Weight', w.weight],
     ].filter(([, val]) => val && val.length > 0);
   }
 
@@ -195,9 +222,9 @@
     const cardStyle = slug ? ` style="--cardc:var(--cat-${slug})"` : '';
     const isOpen = state.open.has(w._idx);
 
-    const proficiencyTagHtml = w.proficiency ? `<span class="weapon-proficiency-tag">${escapeHtml(w.proficiency)}</span>` : '';
     const categoryTagHtml = w.category ? `<span class="weapon-category-tag">${escapeHtml(w.category)}</span>` : '';
     const weaponGroupsText = (w.weapon_group||[]).join(', ');
+    const weaponGroupTagHtml = weaponGroupsText ? `<span class="weapon-group-tag">${escapeHtml(weaponGroupsText)}</span>` : '';
 
     const statFields = buildStatFields(w);
     const statGridHtml = statFields.map(([l,v]) =>
@@ -216,11 +243,11 @@
       <div class="weapon-head" data-toggle="${w._idx}">
         <div class="weapon-title-block">
           <span class="weapon-name copyable" data-copy="${escapeHtml(w.name)}">${escapeHtml(w.name)}</span>
-          ${proficiencyTagHtml}
+          ${weaponGroupTagHtml}
           ${categoryTagHtml}
         </div>
         <div class="weapon-right">
-          <span class="weapon-badge" title="${escapeHtml(weaponGroupsText)}">${escapeHtml(weaponGroupsText)}</span>
+          ${quickStatsHTML(w)}
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
@@ -263,6 +290,10 @@
       sorted.sort((a, b) => parseLeadingNumber(a.cost) - parseLeadingNumber(b.cost) || a.name.localeCompare(b.name));
     } else if (state.sort === 'weight') {
       sorted.sort((a, b) => parseLeadingNumber(a.weight) - parseLeadingNumber(b.weight) || a.name.localeCompare(b.name));
+    } else if (state.sort === 'cost_desc') {
+    sorted.sort((a, b) => parseLeadingNumber(b.cost) - parseLeadingNumber(a.cost) || a.name.localeCompare(b.name));
+    } else if (state.sort === 'weight_desc') {
+      sorted.sort((a, b) => parseLeadingNumber(b.weight) - parseLeadingNumber(a.weight) || a.name.localeCompare(b.name));
     }
     return sorted;
   }

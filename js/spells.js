@@ -23,6 +23,8 @@
     ].join(' ').toLowerCase();
   });
 
+  initThemeToggle();
+
   const allClasses = Array.from(new Set(SPELLS_DATA.flatMap(s=>s.classes))).sort();
   const classChips = document.getElementById('classChips');
   allClasses.forEach(c=>{

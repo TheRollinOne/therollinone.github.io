@@ -42,27 +42,33 @@ body{
   overflow:hidden;
 }
 
-.hero-buttons{
+.hero-buttons-wrap{
   position:absolute;
   left:0;
   right:0;
   bottom:0;
   display:flex;
-  gap:20px;
-  justify-content:center;
+  flex-direction:column;
+  gap:16px;
   padding:56px 28px 26px;
   background:linear-gradient(to top, rgba(14,16,24,0.92) 0%, rgba(14,16,24,0.6) 55%, rgba(14,16,24,0) 100%);
   z-index:1;
 }
 
+.hero-buttons{
+  display:flex;
+  gap:16px;
+  justify-content:center;  
+}
+
 .nav-btn{
   flex:1 1 0;
-  max-width:340px;
+  max-width:300px;
   display:flex;
   flex-direction:column;
   align-items:center;
   justify-content:center;
-  gap:6px;
+  gap:3px;
   text-decoration:none;
   background:rgba(23,25,37,0.82);
   border: 1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));

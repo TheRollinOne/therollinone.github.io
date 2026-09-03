@@ -1,0 +1,38 @@
+/* ===== Blue theme ===== */
+/* Applied when <html data-theme="blue">. Overrides the default palette
+   defined in base.css's :root — every component already references
+   var(--ink), var(--gold), etc., so no other CSS needs to change. */
+[data-theme="blue"]{
+  --ink:#0a0e18;
+  --ink-2:#131a2b;
+  --ink-3:#1b2438;
+  --parchment:#e9f0fb;
+  --parchment-dim:#c3d2e8;
+  --hairline:#2c3a55;
+  --gold:#4f9dde;
+  --dark-gold:#3d7fb8;
+}
+
+/* ===== Orange theme ===== */
+[data-theme="orange"]{
+  --ink:#180f0a;
+  --ink-2:#251710;
+  --ink-3:#332018;
+  --parchment:#fbeee2;
+  --parchment-dim:#e8cdb5;
+  --hairline:#4a3324;
+  --gold:#e0812f;
+  --dark-gold:#b5661f;
+}
+
+/* ===== Green theme ===== */
+[data-theme="green"]{
+  --ink:#0a140f;
+  --ink-2:#122019;
+  --ink-3:#1a2c23;
+  --parchment:#e9f7ee;
+  --parchment-dim:#c2dfcb;
+  --hairline:#2a4536;
+  --gold:#5cd486;
+  --dark-gold:#4caf6e;
+}

@@ -4,35 +4,142 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>D20 Revamp</title>
+<script>
+(function(){
+  var theme = localStorage.getItem('theme');
+  if (theme && theme !== 'gold') document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/home.css">
+<link rel="stylesheet" href="css/themes.css">
 </head>
 <body>
 
+  <div class="theme-toggle" id="themeToggle">
+    <button class="theme-toggle-btn" id="themeGoldBtn" type="button" data-theme-choice="gold">Gold</button>
+    <button class="theme-toggle-btn" id="themeBlueBtn" type="button" data-theme-choice="blue">Blue</button>
+    <button class="theme-toggle-btn" id="themeGreenBtn" type="button" data-theme-choice="green">Green</button>
+    <button class="theme-toggle-btn" id="themeOrangeBtn" type="button" data-theme-choice="orange">Orange</button>
+  </div>
+
   <div class="hero">
-    <div class="hero-image">
-      <div class="hero-buttons">
-        <a class="nav-btn" href="feat_library.html">
-          <span class="btn-main">Feat</span>
-          <span class="btn-sub">Library</span>
-        </a>        
-        <a class="nav-btn" href="rune_repository.html">
-          <span class="btn-main">Rune</span>
-          <span class="btn-sub">Repository</span>
-        </a>
-        <a class="nav-btn" href="spell_compendium.html">
-          <span class="btn-main">Spell</span>
-          <span class="btn-sub">Compendium</span>
-        </a>
-        <a class="nav-btn" href="weapon_arsenal.html">
-          <span class="btn-main">Weapon</span>
-          <span class="btn-sub">Arsenal</span>
-        </a>
+    <div class="hero-image" id="heroImage">
+      <div class="hero-buttons-wrap">
+        <div class="hero-buttons">
+          <a class="nav-btn" href="armor_catalogue.html">
+            <span class="btn-main">Armor</span>
+            <span class="btn-sub">Catalogue</span>
+          </a> 
+          <a class="nav-btn" href="feat_library.html">
+            <span class="btn-main">Feat</span>
+            <span class="btn-sub">Library</span>
+          </a> 
+          <a class="nav-btn" href="rune_repository.html">
+            <span class="btn-main">Rune</span>
+            <span class="btn-sub">Repository</span>
+          </a>
+        </div>
+        <div class="hero-buttons">
+          <a class="nav-btn" href="spell_compendium.html">
+            <span class="btn-main">Spell</span>
+            <span class="btn-sub">Compendium</span>
+          </a>
+          <a class="nav-btn" href="weapon_arsenal.html">
+            <span class="btn-main">Weapon</span>
+            <span class="btn-sub">Arsenal</span>
+          </a>
+        </div>
       </div>
     </div>
   </div>
+
+<style>
+.theme-toggle{
+  position:fixed;
+  top:16px;
+  right:16px;
+  z-index:3;
+  display:flex;
+  gap:0;
+  border:1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
+  border-radius:20px;
+  overflow:hidden;
+  background:rgba(23,25,37,0.82);
+}
+.theme-toggle-btn{
+  border:none;
+  background:transparent;
+  color:var(--parchment-dim);
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  padding:8px 16px;
+  cursor:pointer;
+  transition:background .18s, color .18s;
+}
+.theme-toggle-btn:hover{
+  color:var(--parchment);
+}
+.theme-toggle-btn.active{
+  background:var(--gold);
+  color:var(--ink);
+}
+</style>
+
+<script>
+(function(){
+  const heroImage = document.getElementById('heroImage');
+
+  const themeImages = {
+    gold: 'd20.png',
+    blue: 'd20_blue.png',
+    orange: 'd20_orange.png',
+    green: 'd20_green.png',
+  };
+
+  function setHeroImage(theme){
+    const file = themeImages[theme] || themeImages.gold;
+    heroImage.style.backgroundImage = `url('../pictures/${file}')`;
+  }
+
+  // Gold/Blue/Orange/Green theme toggle. Gold is the default (no data-theme
+  // attribute); the others set data-theme="<name>", which themes.css
+  // overrides against.
+  const themeButtons = {
+    gold: document.getElementById('themeGoldBtn'),
+    blue: document.getElementById('themeBlueBtn'),
+    orange: document.getElementById('themeOrangeBtn'),
+    green: document.getElementById('themeGreenBtn'),
+  };
+
+  function applyTheme(theme){
+    if (theme === 'gold') {
+      document.documentElement.removeAttribute('data-theme');
+    } else {
+      document.documentElement.setAttribute('data-theme', theme);
+    }
+    Object.entries(themeButtons).forEach(([name, btn]) => {
+      btn.classList.toggle('active', name === theme);
+    });
+    setHeroImage(theme);
+  }
+
+  const savedTheme = localStorage.getItem('theme') || 'gold';
+  applyTheme(savedTheme);
+
+  Object.entries(themeButtons).forEach(([name, btn]) => {
+    btn.addEventListener('click', () => {
+      localStorage.setItem('theme', name);
+      applyTheme(name);
+    });
+  });
+})();
+</script>
 
 </body>
 </html>

@@ -24,6 +24,8 @@
     ].filter(Boolean).join(' ').toLowerCase();
   });
 
+  initThemeToggle();
+
   const allCategories = Array.from(new Set(FEATS_DATA.map(f=>f.category))).sort();
   const categoryChips = document.getElementById('categoryChips');
   allCategories.forEach(cat=>{

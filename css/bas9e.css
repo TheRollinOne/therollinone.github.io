@@ -442,38 +442,3 @@ select.select-filter:focus{border-color:var(--gold);}
   z-index:9999;
 }
 .copy-tooltip.show{opacity:1; transform:translate(-50%,-170%);}
-/* ---------- Theme toggle (shared across all pages) ---------- */
-/* Sits inside .page-title-desktop, which is already a flex row with
-   justify-content:space-between — this becomes the right-hand flex item,
-   so its right edge lines up with .main's padding (same edge as .list/
-   .stat-grid below it). Index.html additionally floats a copy of this
-   over the hero image via its own page-specific position:fixed override. */
-.theme-toggle{
-  display:flex;
-  gap:0;
-  flex-shrink:0;
-  border:1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
-  border-radius:20px;
-  overflow:hidden;
-  background:var(--ink-2);
-}
-.theme-toggle-btn{
-  border:none;
-  background:transparent;
-  color:var(--parchment-dim);
-  font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
-  font-weight:700;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  padding:6px 16px;
-  cursor:pointer;
-  transition:background .18s, color .18s;
-}
-.theme-toggle-btn:hover{
-  color:var(--parchment);
-}
-.theme-toggle-btn.active{
-  background:var(--gold);
-  color:var(--ink);
-}
