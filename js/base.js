@@ -56,6 +56,60 @@ function showCopiedTooltip(x,y){
   }, 900);
 }
 
+// Delegated hover tooltip: shows a two-line "Click to copy / <text>" bubble
+// above any matching element inside a container, using position:fixed so it
+// escapes ancestors with overflow:hidden (e.g. .spell-card). Horizontally
+// clamped to stay inside the viewport. Text comes from the element's
+// data-copy attribute unless a different attr name is given.
+function wireHoverCopyTooltip(containerId, selector, dataAttr){
+  const container = document.getElementById(containerId);
+  if(!container) return;
+  const attr = dataAttr || 'copy';
+  let tip = null, forEl = null;
+
+  function positionTip(el){
+    const rect = el.getBoundingClientRect();
+    const tipRect = tip.getBoundingClientRect();
+    const margin = 8;
+    const half = tipRect.width/2;
+    let left = rect.left + rect.width/2;
+    left = Math.min(Math.max(left, half+margin), window.innerWidth - half - margin);
+    tip.style.left = left + 'px';
+    tip.style.top = (rect.top - margin) + 'px';
+  }
+
+  function showTip(el){
+    const text = el.dataset[attr];
+    if(!text) return;
+    const label = el.dataset.tipLabel || 'Click to copy';
+    tip = document.createElement('div');
+    tip.className = 'hover-tooltip';
+    tip.innerHTML = `<div>${escapeHtml(label)}</div><div class="hover-tooltip-value">${escapeHtml(text)}</div>`;
+    document.body.appendChild(tip);
+    forEl = el;
+    positionTip(el);
+    requestAnimationFrame(()=>{ if(tip) tip.classList.add('show'); });
+  }
+  function removeTip(){
+    if(tip){ tip.remove(); tip = null; forEl = null; }
+  }
+
+  container.addEventListener('mouseover', e=>{
+    const el = e.target.closest(selector);
+    if(!el || el===forEl) return;
+    removeTip();
+    showTip(el);
+  });
+  container.addEventListener('mouseout', e=>{
+    const el = e.target.closest(selector);
+    if(!el || el!==forEl) return;
+    if(e.relatedTarget && el.contains(e.relatedTarget)) return;
+    removeTip();
+  });
+  container.addEventListener('click', removeTip);
+  container.addEventListener('scroll', removeTip, true);
+}
+
 // Delegated click handler: copies any .copyable element's data-copy text,
 // except the name element (which has its own open/closed-dependent behavior,
 // wired separately by wireCardToggle).
@@ -148,31 +202,55 @@ function wireSortSelect(state, render){
   });
 }
 
-// Wires the Gold/Blue/Orange/Green theme toggle buttons found in the
-// current page. Call once per page after the buttons exist in the DOM.
-// onThemeChange (optional) fires after each theme switch, e.g. index.html
-// uses it to also swap the hero image.
+// Wires the single-button theme toggle (a round swatch button that opens a
+// small popup of Gold/Blue/Green/Orange choices). Call once per page after
+// #themeToggle exists in the DOM. onThemeChange (optional) fires after each
+// theme switch, e.g. index.html uses it to also swap the hero image.
 function initThemeToggle(onThemeChange){
-  const themeButtons = {
-    gold: document.getElementById('themeGoldBtn'),
-    blue: document.getElementById('themeBlueBtn'),
-    orange: document.getElementById('themeOrangeBtn'),
-    green: document.getElementById('themeGreenBtn'),
-  };
+  const wrap = document.getElementById('themeToggle');
+  if(!wrap) return;
+  const btn = document.getElementById('themeToggleBtn');
+  const popup = document.getElementById('themeTogglePopup');
+  const swatches = popup.querySelectorAll('[data-theme-choice]');
+
+  function openPopup(){
+    popup.hidden = false;
+    btn.setAttribute('aria-expanded', 'true');
+  }
+  function closePopup(){
+    popup.hidden = true;
+    btn.setAttribute('aria-expanded', 'false');
+  }
   function applyTheme(theme){
     if (theme === 'gold') document.documentElement.removeAttribute('data-theme');
     else document.documentElement.setAttribute('data-theme', theme);
-    Object.entries(themeButtons).forEach(([name, btn]) => {
-      if (btn) btn.classList.toggle('active', name === theme);
-    });
+    swatches.forEach(s => s.classList.toggle('active', s.dataset.themeChoice === theme));
     if (onThemeChange) onThemeChange(theme);
   }
-  const savedTheme = localStorage.getItem('theme') || 'gold';
-  applyTheme(savedTheme);
-  Object.entries(themeButtons).forEach(([name, btn]) => {
-    if (btn) btn.addEventListener('click', () => {
-      localStorage.setItem('theme', name);
-      applyTheme(name);
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (popup.hidden) openPopup(); else closePopup();
+  });
+  swatches.forEach(s => {
+    s.addEventListener('click', () => {
+      const theme = s.dataset.themeChoice;
+      localStorage.setItem('theme', theme);
+      applyTheme(theme);
+      closePopup();
+      btn.focus();
     });
   });
+  document.addEventListener('click', (e) => {
+    if (!wrap.contains(e.target)) closePopup();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !popup.hidden){
+      closePopup();
+      btn.focus();
+    }
+  });
+
+  const savedTheme = localStorage.getItem('theme') || 'gold';
+  applyTheme(savedTheme);
 }

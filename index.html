@@ -19,10 +19,23 @@
 <body>
 
   <div class="theme-toggle" id="themeToggle">
-    <button class="theme-toggle-btn" id="themeGoldBtn" type="button" data-theme-choice="gold">Gold</button>
-    <button class="theme-toggle-btn" id="themeBlueBtn" type="button" data-theme-choice="blue">Blue</button>
-    <button class="theme-toggle-btn" id="themeGreenBtn" type="button" data-theme-choice="green">Green</button>
-    <button class="theme-toggle-btn" id="themeOrangeBtn" type="button" data-theme-choice="orange">Orange</button>
+    <button
+      class="theme-toggle-main"
+      id="themeToggleBtn"
+      type="button"
+      aria-haspopup="true"
+      aria-expanded="false"
+      aria-controls="themeTogglePopup"
+      aria-label="Change color theme"
+    ></button>
+
+    <div class="theme-toggle-popup" id="themeTogglePopup" role="menu" hidden>
+      <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="gold" aria-label="Gold theme"></button>
+      <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="blue" aria-label="Blue theme"></button>
+      <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="green" aria-label="Green theme"></button>
+      <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="orange" aria-label="Orange theme"></button>
+      <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="red" aria-label="Red theme"></button>
+    </div>
   </div>
 
   <div class="hero">
@@ -62,35 +75,72 @@
   top:16px;
   right:16px;
   z-index:3;
-  display:flex;
-  gap:0;
+}
+.theme-toggle-main{
+  width:34px;
+  height:34px;
+  border-radius:50%;
   border:1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
-  border-radius:20px;
-  overflow:hidden;
-  background:rgba(23,25,37,0.82);
-}
-.theme-toggle-btn{
-  border:none;
-  background:transparent;
-  color:var(--parchment-dim);
-  font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
-  font-weight:700;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  padding:8px 16px;
-  cursor:pointer;
-  transition:background .18s, color .18s;
-}
-.theme-toggle-btn:hover{
-  color:var(--parchment);
-}
-.theme-toggle-btn.active{
   background:var(--gold);
-  color:var(--ink);
+  cursor:pointer;
+  padding:0;
+  box-shadow:0 1px 3px rgba(0,0,0,.4);
+  transition:transform .12s;
+}
+.theme-toggle-main:hover{
+  transform:scale(1.06);
+}
+.theme-toggle-main:focus-visible{
+  outline:2px solid var(--parchment);
+  outline-offset:2px;
+}
+.theme-toggle-popup{
+  position:absolute;
+  top:calc(100% + 8px);
+  right:0;
+  display:flex;
+  gap:8px;
+  padding:8px;
+  background:rgba(23,25,37,0.92);
+  border:1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
+  border-radius:12px;
+  box-shadow:0 10px 24px rgba(0,0,0,.45);
+}
+.theme-toggle-popup[hidden]{
+  display:none;
+}
+.theme-swatch{
+  position:relative;
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  border:1px solid rgba(0,0,0,.3);
+  cursor:pointer;
+  padding:0;
+  transition:transform .12s;
+}
+.theme-swatch:hover{
+  transform:scale(1.1);
+}
+.theme-swatch:focus-visible{
+  outline:2px solid var(--parchment);
+  outline-offset:2px;
+}
+.theme-swatch[data-theme-choice="gold"]{background:#d3ac43;}
+.theme-swatch[data-theme-choice="blue"]{background:#4f9dde;}
+.theme-swatch[data-theme-choice="green"]{background:#5cd486;}
+.theme-swatch[data-theme-choice="orange"]{background:#e0812f;}
+.theme-swatch[data-theme-choice="red"]{background:#e14b4b;}
+.theme-swatch.active::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:2px solid var(--parchment);
 }
 </style>
 
+<script src="js/base.js"></script>
 <script>
 (function(){
   const heroImage = document.getElementById('heroImage');
@@ -100,6 +150,7 @@
     blue: 'd20_blue.png',
     orange: 'd20_orange.png',
     green: 'd20_green.png',
+    red: 'd20_red.png',
   };
 
   function setHeroImage(theme){
@@ -107,37 +158,7 @@
     heroImage.style.backgroundImage = `url('../pictures/${file}')`;
   }
 
-  // Gold/Blue/Orange/Green theme toggle. Gold is the default (no data-theme
-  // attribute); the others set data-theme="<name>", which themes.css
-  // overrides against.
-  const themeButtons = {
-    gold: document.getElementById('themeGoldBtn'),
-    blue: document.getElementById('themeBlueBtn'),
-    orange: document.getElementById('themeOrangeBtn'),
-    green: document.getElementById('themeGreenBtn'),
-  };
-
-  function applyTheme(theme){
-    if (theme === 'gold') {
-      document.documentElement.removeAttribute('data-theme');
-    } else {
-      document.documentElement.setAttribute('data-theme', theme);
-    }
-    Object.entries(themeButtons).forEach(([name, btn]) => {
-      btn.classList.toggle('active', name === theme);
-    });
-    setHeroImage(theme);
-  }
-
-  const savedTheme = localStorage.getItem('theme') || 'gold';
-  applyTheme(savedTheme);
-
-  Object.entries(themeButtons).forEach(([name, btn]) => {
-    btn.addEventListener('click', () => {
-      localStorage.setItem('theme', name);
-      applyTheme(name);
-    });
-  });
+  initThemeToggle(setHeroImage);
 })();
 </script>
 

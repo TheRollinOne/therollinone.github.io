@@ -8,6 +8,7 @@
     classes:new Set(),
     levels:new Set(),
     saves:new Set(),
+    ritual:null,
     sort:'name',
     open:new Set()
   };
@@ -16,16 +17,17 @@
 
   SPELLS_DATA.forEach((s,i)=>{
     s._idx = i;
+    s._classes = s.level_entries.map(le=>le.class);
     s._blob = [
-      s.name, s.school, s.level_raw, s.classes.join(' '), s.casting_time,
+      s.name, s.school, s.level_raw, s._classes.join(' '), s.casting_time,
       s.components, s.range, s.target_effect_area, s.duration, s.save, s.sr,
-      s.description, (s.heightened||[]).join(' ')
+      s.description, (s.heightened||[]).join(' '), s.ritual || ''
     ].join(' ').toLowerCase();
   });
 
   initThemeToggle();
 
-  const allClasses = Array.from(new Set(SPELLS_DATA.flatMap(s=>s.classes))).sort();
+  const allClasses = Array.from(new Set(SPELLS_DATA.flatMap(s=>s._classes))).sort();
   const classChips = document.getElementById('classChips');
   allClasses.forEach(c=>{
     const chip = document.createElement('div');
@@ -80,6 +82,37 @@
       render();
     });
     saveChips.appendChild(chip);
+  });
+
+  // Ritual Casting section — no static markup exists for this yet, so build
+  // it and insert it directly after the Saves filter-group.
+  const savesGroup = saveChips.closest('.filter-group');
+  const ritualGroup = document.createElement('div');
+  ritualGroup.className = 'filter-group';
+  ritualGroup.innerHTML = `
+    <div class="filter-label">Ritual Casting</div>
+    <div class="chip-row ritual-chip-row" id="ritualChips"></div>`;
+  savesGroup.insertAdjacentElement('afterend', ritualGroup);
+
+  const ritualChips = ritualGroup.querySelector('#ritualChips');
+  const RITUAL_OPTIONS = [{key:'yes', label:'Yes'}, {key:'no', label:'No'}];
+  RITUAL_OPTIONS.forEach(opt=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.dataset.ritual = opt.key;
+    chip.textContent = opt.label;
+    chip.addEventListener('click', ()=>{
+      if(state.ritual === opt.key){
+        state.ritual = null;
+      } else {
+        state.ritual = opt.key;
+      }
+      ritualChips.querySelectorAll('.chip').forEach(c=>{
+        c.classList.toggle('active', c.dataset.ritual === state.ritual);
+      });
+      render();
+    });
+    ritualChips.appendChild(chip);
   });
 
   const schoolChips = document.getElementById('schoolChips');
@@ -147,12 +180,16 @@
     document.querySelectorAll('#levelChips .chip').forEach(el=>el.classList.remove('active'));
     state.saves.clear();
     document.querySelectorAll('#saveChips .chip').forEach(el=>el.classList.remove('active'));
+    state.ritual = null;
+    document.querySelectorAll('#ritualChips .chip').forEach(el=>el.classList.remove('active'));
     render();
   });
 
   wireSortSelect(state, ()=>render());
 
   wireCopyableList('spellList', 'spell-name');
+  wireHoverCopyTooltip('spellList', '.class-pill-damage:not(.class-pill-split)');
+  wireHoverCopyTooltip('spellList', '.pill-half');
 
   function matchesQuery(spell, query){
     return matchesQueryOnBlob(spell._blob, query);
@@ -181,10 +218,21 @@
       ['SR', s.sr]
     ].filter(([label,val])=>val && val.length>0);
 
-    const classesHTML = s.level_entries.map(le=>`<span class="class-pill">${escapeHtml(le.class)} ${le.level}</span>`).join('');
+    const classesHTML = s.level_entries.map(le=>{
+      const formula = le.damage_formula;
+      if(!formula){
+        return `<span class="class-pill">${escapeHtml(le.class)} ${le.level}</span>`;
+      }
+      if(!/c1_/.test(formula)){
+        return `<span class="class-pill class-pill-damage copyable" data-copy="${escapeHtml(formula)}">${escapeHtml(le.class)} ${le.level}</span>`;
+      }
+      const formula1 = formula;
+      const formula2 = formula.replace(/c1_/g, 'c2_');
+      return `<span class="class-pill class-pill-damage class-pill-split">${escapeHtml(le.class)} ${le.level}<span class="pill-halves"><span class="pill-half pill-half-1 copyable" data-copy="${escapeHtml(formula1)}" data-tip-label="Click to copy - Caster 1">1</span><span class="pill-half pill-half-2 copyable" data-copy="${escapeHtml(formula2)}" data-tip-label="Click to copy - Caster 2">2</span></span></span>`;
+    }).join('');
     const classLevelInline = s.level_entries.map(le=>`${le.class} ${le.level}`).join(', ');
     const shortDescInline = s.short_description || classLevelInline;
-    const ritualHTML = s.ritual ? `\n      <div class="heightened-block">\n        <div class="heightened-title">${escapeHtml(s.ritual)}</div>\n      </div>` : '';
+    const ritualTagHTML = s.ritual ? `<span class="ritual-tag">Ritual</span>` : '';
 
     const descText = boldLeadingLabelText((s.description || '').trim());
     const heightenedText = (s.heightened && s.heightened.length) ? s.heightened.map(h=>{
@@ -192,7 +240,7 @@
       return m ? `**${m[1]}** ${boldLeadingLabelText(m[2])}` : boldLeadingLabelText(h);
     }).join('\n') : '';
 
-    const descHtml = `<div>${boldLeadingLabel(s.description || '')}</div>`;
+    const descHtml = `<div class="spell-section-title-row"><div class="spell-section-title">Description</div>${ritualTagHTML}</div><div>${boldLeadingLabel((s.description || '').trim())}</div>`;
 
     const heightenedItemsHtml = (s.heightened && s.heightened.length) ? s.heightened.map(h=>{
       const m = h.match(/^\s*(\([^)]*\))\s*(.*)$/s);
@@ -200,7 +248,7 @@
       return `<div class="heightened-item">${boldLeadingLabel(h)}</div>`;
     }).join('') : '';
     const heightenedCopyBlock = heightenedText ? `\n      <div class="heightened-block copyable" data-copy="${escapeHtml(heightenedText)}">\n        <div class="heightened-title">Heightened</div>\n        <div class="heightened-copy">${heightenedItemsHtml}</div>\n      </div>` : '';
-    return `\n    <div class="spell-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${s._idx}">\n      <div class="spell-head" data-toggle="${s._idx}">\n        <div class="spell-title-block">\n          <span class="spell-name copyable" data-copy="${escapeHtml(s.name)}">${escapeHtml(s.name)}</span>\n          <span class="spell-meta-inline">${levelDisp}</span>\n          <span class="spell-school-tag">${escapeHtml(sch)}</span>\n        </div>\n        <div class="spell-right">\n          <span class="spell-classlevel-badge" title="${escapeHtml(shortDescInline)}">${escapeHtml(shortDescInline)}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="spell-body">\n        <div class="stat-grid">\n          ${statFields.map(([l,v])=>`<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`).join('')}\n        </div>\n        <div class="classes-row">${classesHTML}</div>\n        ${ritualHTML}\n        <div class="desc-copy copyable" data-copy="${escapeHtml(descText)}">${descHtml}</div>${heightenedCopyBlock}\n      </div>\n    </div>`;
+    return `\n    <div class="spell-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${s._idx}">\n      <div class="spell-head" data-toggle="${s._idx}">\n        <div class="spell-title-block">\n          <span class="spell-name copyable" data-copy="${escapeHtml(s.name)}">${escapeHtml(s.name)}</span>\n          <span class="spell-meta-inline">${levelDisp}</span>\n          <span class="spell-school-tag">${escapeHtml(sch)}</span>\n        </div>\n        <div class="spell-right">\n          <span class="spell-classlevel-badge" title="${escapeHtml(shortDescInline)}">${escapeHtml(shortDescInline)}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="spell-body">\n        <div class="stat-grid">\n          ${statFields.map(([l,v])=>`<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`).join('')}\n        </div>\n        <div class="classes-row">${classesHTML}</div>\n        <div class="desc-copy copyable" data-copy="${escapeHtml(descText)}">${descHtml}</div>${heightenedCopyBlock}\n      </div>\n    </div>`;
   }
 
   function filtered(){
@@ -212,7 +260,7 @@
       list = list.filter(s=>state.schools.has(s.school));
     }
     if(state.classes.size){
-      list = list.filter(s=>s.classes.some(c=>state.classes.has(c)));
+      list = list.filter(s=>s._classes.some(c=>state.classes.has(c)));
     }
     if(state.levels.size){
       if(state.classes.size){
@@ -223,6 +271,11 @@
     }
     if(state.saves.size){
       list = list.filter(s=>s.save_type && state.saves.has(s.save_type));
+    }
+    if(state.ritual === 'yes'){
+      list = list.filter(s=>!!s.ritual);
+    } else if(state.ritual === 'no'){
+      list = list.filter(s=>!s.ritual);
     }
     const sorted = list.slice();
     if(state.sort==='name'){

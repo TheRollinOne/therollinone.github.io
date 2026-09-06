@@ -20,6 +20,16 @@
   justify-content:center;
 }
 
+.ritual-chip-row{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:6px;
+}
+.ritual-chip-row .chip{
+  width:auto;
+  justify-content:center;
+}
+
 .spell-card{
   background:var(--ink-2);
   border:1px solid var(--hairline);
@@ -30,6 +40,43 @@
 }
 .spell-card.open{
   border-color:var(--cardc,var(--gold));
+}
+
+.spell-section{
+  margin-top:0px;
+  padding-top:0px;
+}
+.spell-section-title{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.86rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:8px;
+}
+
+.spell-section-title-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:8px;
+}
+.spell-section-title-row .spell-section-title{
+  margin-bottom:0;
+}
+.ritual-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  font-weight:700;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--parchment);
+  background:color-mix(in srgb, var(--cardc,var(--gold)) 35%, var(--ink-2));
+  border:1px solid var(--cardc,var(--gold));
+  border-radius:5px;
+  padding:4px 9px;
+  white-space:nowrap;
 }
 
 .spell-head{
@@ -119,12 +166,88 @@
 }
 .class-pill{
   font-family:'JetBrains Mono',monospace;
-  font-size:.68rem;
+  font-size:.78rem;
   text-transform: capitalize;
   padding:5px 8px;
   border-radius:20px;
   background:var(--ink-2);
   border:1px solid var(--hairline);
+  color:var(--parchment-dim);
+}
+.class-pill-damage{
+  position:relative;
+  cursor:copy;
+  border-color:color-mix(in srgb, var(--cardc,var(--gold)) 85%, var(--hairline));
+  transition:background .15s, border-color .15s;
+}
+.class-pill-damage:hover{
+  border-color:var(--cardc,var(--gold));
+}
+.class-pill-damage.copied{
+  background:rgba(196,162,77,0.18);
+}
+
+.class-pill-split{
+  overflow:hidden;
+}
+.pill-halves{
+  position:absolute;
+  inset:0;
+  display:flex;
+  opacity:0;
+  transition:opacity .12s;
+}
+.class-pill-split:hover .pill-halves{
+  opacity:1;
+}
+.pill-half{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  font-size:.78rem;
+  color:var(--parchment);
+  background:var(--ink-2);
+  cursor:copy;
+  transition:background .12s;
+}
+.pill-half-2{
+  border-left:1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+}
+.pill-half:hover{
+  background:color-mix(in srgb, var(--cardc,var(--gold)) 65%, var(--ink-2));
+}
+.pill-half.copied{
+  background:rgba(196,162,77,0.4);
+}
+
+.hover-tooltip{
+  position:fixed;
+  transform:translate(-50%,-100%);
+  background:var(--dark-gold);
+  color:var(--parchment);
+  padding:6px 10px;
+  border-radius:6px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  font-weight:700;
+  text-align:center;
+  line-height:1.5;
+  pointer-events:none;
+  box-shadow:0 6px 18px rgba(0,0,0,0.4);
+  opacity:0;
+  transition:opacity .15s, transform .15s;
+  z-index:9999;
+  max-width:240px;
+  white-space:normal;
+}
+.hover-tooltip.show{
+  opacity:1;
+  transform:translate(-50%,-112%);
+}
+.hover-tooltip-value{
   color:var(--parchment-dim);
 }
 

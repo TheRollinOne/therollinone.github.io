@@ -134,9 +134,9 @@ body{
 }
 .filter-label{
   font-family:'JetBrains Mono',monospace;
-  font-size:.74rem;
+  font-size:1rem;
   letter-spacing:.14em;
-  text-transform:uppercase;
+  font-variant-caps: small-caps;
   color:var(--parchment);
   display:flex;
   justify-content:space-between;
@@ -429,7 +429,7 @@ select.select-filter:focus{border-color:var(--gold);}
   position:fixed;
   transform:translate(-50%,-140%);
   background:var(--dark-gold);
-  color:var(--ink);
+  color:var(--parchment);
   padding:6px 10px;
   border-radius:6px;
   font-family:'JetBrains Mono',monospace;
@@ -442,38 +442,75 @@ select.select-filter:focus{border-color:var(--gold);}
   z-index:9999;
 }
 .copy-tooltip.show{opacity:1; transform:translate(-50%,-170%);}
+
 /* ---------- Theme toggle (shared across all pages) ---------- */
-/* Sits inside .page-title-desktop, which is already a flex row with
-   justify-content:space-between — this becomes the right-hand flex item,
-   so its right edge lines up with .main's padding (same edge as .list/
-   .stat-grid below it). Index.html additionally floats a copy of this
-   over the hero image via its own page-specific position:fixed override. */
 .theme-toggle{
-  display:flex;
-  gap:0;
+  position:relative;
   flex-shrink:0;
-  border:1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
-  border-radius:20px;
-  overflow:hidden;
-  background:var(--ink-2);
 }
-.theme-toggle-btn{
-  border:none;
-  background:transparent;
-  color:var(--parchment-dim);
-  font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
-  font-weight:700;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  padding:6px 16px;
-  cursor:pointer;
-  transition:background .18s, color .18s;
-}
-.theme-toggle-btn:hover{
-  color:var(--parchment);
-}
-.theme-toggle-btn.active{
+.theme-toggle-main{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  border:1px solid color-mix(in srgb, var(--ink) 35%, transparent);
   background:var(--gold);
-  color:var(--ink);
+  cursor:pointer;
+  padding:0;
+  box-shadow:0 1px 3px rgba(0,0,0,.35);
+  transition:transform .12s, box-shadow .15s;
+}
+.theme-toggle-main:hover{
+  transform:scale(1.06);
+}
+.theme-toggle-main:focus-visible{
+  outline:2px solid var(--parchment);
+  outline-offset:2px;
+}
+
+.theme-toggle-popup{
+  position:absolute;
+  top:calc(100% + 8px);
+  right:0;
+  display:flex;
+  gap:8px;
+  padding:8px;
+  background:var(--ink-2);
+  border:1px solid var(--hairline);
+  border-radius:12px;
+  box-shadow:0 10px 24px rgba(0,0,0,.45);
+  z-index:20;
+}
+.theme-toggle-popup[hidden]{
+  display:none;
+}
+
+.theme-swatch{
+  position:relative;
+  width:26px;
+  height:26px;
+  border-radius:50%;
+  border:1px solid rgba(0,0,0,.3);
+  cursor:pointer;
+  padding:0;
+  transition:transform .12s;
+}
+.theme-swatch:hover{
+  transform:scale(1.1);
+}
+.theme-swatch:focus-visible{
+  outline:2px solid var(--parchment);
+  outline-offset:2px;
+}
+.theme-swatch[data-theme-choice="gold"]{background:#d3ac43;}
+.theme-swatch[data-theme-choice="blue"]{background:#4f9dde;}
+.theme-swatch[data-theme-choice="green"]{background:#5cd486;}
+.theme-swatch[data-theme-choice="orange"]{background:#e0812f;}
+.theme-swatch[data-theme-choice="red"]{background:#e14b4b;}
+
+.theme-swatch.active::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:50%;
+  border:2px solid var(--parchment);
 }

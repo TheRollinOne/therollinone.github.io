@@ -13,26 +13,38 @@
   --dark-gold:#3d7fb8;
 }
 
+/* ===== Green theme ===== */
+[data-theme="green"]{
+  --ink:#091311;
+  --ink-2:#101e19;
+  --ink-3:#182a22;
+  --parchment:#e9f7ee;
+  --parchment-dim:#c2dfcb;
+  --hairline:#294238;
+  --gold:#5cd486;
+  --dark-gold:#4caf6e;
+}
+
 /* ===== Orange theme ===== */
 [data-theme="orange"]{
-  --ink:#180f0a;
-  --ink-2:#251710;
-  --ink-3:#332018;
+  --ink:#120c18;
+  --ink-2:#1c1224;
+  --ink-3:#28192f;
   --parchment:#fbeee2;
   --parchment-dim:#e8cdb5;
-  --hairline:#4a3324;
+  --hairline:#45304d;
   --gold:#e0812f;
   --dark-gold:#b5661f;
 }
 
-/* ===== Green theme ===== */
-[data-theme="green"]{
-  --ink:#0a140f;
-  --ink-2:#122019;
-  --ink-3:#1a2c23;
-  --parchment:#e9f7ee;
-  --parchment-dim:#c2dfcb;
-  --hairline:#2a4536;
-  --gold:#5cd486;
-  --dark-gold:#4caf6e;
+/* ===== Red theme ===== */
+[data-theme="red"]{
+  --ink:#180b0d;
+  --ink-2:#1d090bea;
+  --ink-3:#33171b;
+  --parchment:#eee0d4;
+  --parchment-dim:#dbcfca;
+  --hairline:#4a282d;
+  --gold:#df3636;
+  --dark-gold:#963737;
 }
