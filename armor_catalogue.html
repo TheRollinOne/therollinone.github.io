@@ -20,17 +20,6 @@
 </head>
 <body>
 
-<!-- ===== sidebar ===== -->
-<div class="shell">
-  <nav class="catalogue-menu" aria-label="Catalogue navigation">
-    <a class="catalogue-menu-button catalogue-menu-home" href="index.html">Homepage</a>
-    <span class="catalogue-menu-current" aria-current="page">Armor Catalogue</span>
-    <a class="catalogue-menu-button" href="feat_library.html">Feat Library</a>
-    <a class="catalogue-menu-button" href="rune_repository.html">Rune Repository</a>
-    <a class="catalogue-menu-button" href="spell_compendium.html">Spell Compendium</a>
-    <a class="catalogue-menu-button" href="weapon_arsenal.html">Weapon Arsenal</a>
-  </nav>
-
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
@@ -156,7 +145,14 @@
   <main class="main">
     <div class="page-title-desktop">
       <h1 id="listTitle">56 Armors & Shields Listed</h1>
-      <div class="theme-toggle" id="themeToggle">
+      <nav class="top-menu-nav" aria-label="Site navigation">
+        <a class="top-menu-link" href="index.html">Homepage</a>
+        <a class="top-menu-link current" href="armor_catalogue.html">Armors</a>
+        <a class="top-menu-link" href="feat_library.html">Feats</a>
+        <a class="top-menu-link" href="rune_repository.html">Runes</a>
+        <a class="top-menu-link" href="spell_compendium.html">Spells</a>
+        <a class="top-menu-link" href="weapon_arsenal.html">Weapons</a>
+        <div class="theme-toggle" id="themeToggle">
   <button
     class="theme-toggle-main"
     id="themeToggleBtn"
@@ -177,11 +173,10 @@
   </div>
 </div>
 
+      </nav>
     </div>
     <div class="list" id="armorList"></div>
   </main>
-</div>
-
 </div>
 
 <!-- ===== scripts ===== -->

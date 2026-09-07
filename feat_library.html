@@ -15,20 +15,10 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/base.css">
 <link rel="stylesheet" href="css/themes.css">
+<link rel="stylesheet" href="css/theme-toggle.css">
 <link rel="stylesheet" href="css/feats.css">
 </head>
 <body>
-
-<!-- ===== sidebar ===== -->
-<div class="shell">
-  <nav class="catalogue-menu" aria-label="Catalogue navigation">
-    <a class="catalogue-menu-button catalogue-menu-home" href="index.html">Homepage</a>
-    <a class="catalogue-menu-button" href="armor_catalogue.html">Armor Catalogue</a>
-    <span class="catalogue-menu-current" aria-current="page">Feat Library</span>
-    <a class="catalogue-menu-button" href="rune_repository.html">Rune Repository</a>
-    <a class="catalogue-menu-button" href="spell_compendium.html">Spell Compendium</a>
-    <a class="catalogue-menu-button" href="weapon_arsenal.html">Weapon Arsenal</a>
-  </nav>
 
 <div class="app">
   <aside class="sidebar">
@@ -94,7 +84,14 @@
   <main class="main">
     <div class="page-title-desktop">
       <h1 id="listTitle">587 Feats Listed</h1>
-      <div class="theme-toggle" id="themeToggle">
+      <nav class="top-menu-nav" aria-label="Site navigation">
+        <a class="top-menu-link" href="index.html">Homepage</a>
+        <a class="top-menu-link" href="armor_catalogue.html">Armors</a>
+        <a class="top-menu-link current" href="feat_library.html">Feats</a>
+        <a class="top-menu-link" href="rune_repository.html">Runes</a>
+        <a class="top-menu-link" href="spell_compendium.html">Spells</a>
+        <a class="top-menu-link" href="weapon_arsenal.html">Weapons</a>
+        <div class="theme-toggle" id="themeToggle">
   <button
     class="theme-toggle-main"
     id="themeToggleBtn"
@@ -115,6 +112,7 @@
   </div>
 </div>
 
+      </nav>
     </div>
     <div class="list" id="featList"></div>
   </main>

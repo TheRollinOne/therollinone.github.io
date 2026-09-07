@@ -33,8 +33,8 @@
   --parchment:#fbeee2;
   --parchment-dim:#e8cdb5;
   --hairline:#45304d;
-  --gold:#e0812f;
-  --dark-gold:#b5661f;
+  --gold:#f18d35;
+  --dark-gold:#ce7629;
 }
 
 /* ===== Red theme ===== */
@@ -52,7 +52,7 @@
 /* ===== Parchment theme ===== */
 [data-theme="parchment"]{
   --ink:#271e0d;
-  --ink-2:#362a12;
+  --ink-2:#1f180a;
   --ink-3:#55411c73;
   --parchment:#e7c59d;
   --parchment-dim: #f1d7b8;

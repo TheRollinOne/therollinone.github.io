@@ -13,11 +13,11 @@
   width:34px;
   height:34px;
   border-radius:50%;
-  border:1px solid color-mix(in srgb, var(--ink) 35%, transparent);
+  border:3px solid color-mix(in srgb, var(--hairline) 85%, transparent);
   background:var(--gold);
   cursor:pointer;
   padding:0;
-  box-shadow:0 1px 3px rgba(0,0,0,.35);
+  
   transition:transform .12s, box-shadow .15s;
 }
 .theme-toggle-main:hover{
