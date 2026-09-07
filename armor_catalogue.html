@@ -20,6 +20,16 @@
 <body>
 
 <!-- ===== sidebar ===== -->
+<div class="shell">
+  <nav class="catalogue-menu" aria-label="Catalogue navigation">
+    <a class="catalogue-menu-button catalogue-menu-home" href="index.html">Homepage</a>
+    <span class="catalogue-menu-current" aria-current="page">Armor Catalogue</span>
+    <a class="catalogue-menu-button" href="feat_library.html">Feat Library</a>
+    <a class="catalogue-menu-button" href="rune_repository.html">Rune Repository</a>
+    <a class="catalogue-menu-button" href="spell_compendium.html">Spell Compendium</a>
+    <a class="catalogue-menu-button" href="weapon_arsenal.html">Weapon Arsenal</a>
+  </nav>
+
 <div class="app">
   <aside class="sidebar">
     <div class="brand">
@@ -137,16 +147,6 @@
             </select>
           </div>
         </div>
-
-         <div class="jump-section">
-          <div class="filters-summary">
-            <span>Back To</span>
-          </div>
-          <a class="jump-btn" href="index.html">
-            <span class="jump-btn-main">D20 Revamp</span>
-            <span class="jump-btn-sub">Homepage</span>
-          </a>
-        </div> 
       </div>
     </div>
   </aside>
@@ -172,12 +172,15 @@
     <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="green" aria-label="Green theme"></button>
     <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="orange" aria-label="Orange theme"></button>
     <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="red" aria-label="Red theme"></button>
+    <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="parchment" aria-label="Parchment theme"></button>
   </div>
 </div>
 
     </div>
     <div class="list" id="armorList"></div>
   </main>
+</div>
+
 </div>
 
 <!-- ===== scripts ===== -->

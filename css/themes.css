@@ -48,3 +48,15 @@
   --gold:#df3636;
   --dark-gold:#963737;
 }
+
+/* ===== Parchment theme ===== */
+[data-theme="parchment"]{
+  --ink:#271e0d;
+  --ink-2:#362a12;
+  --ink-3:#55411c73;
+  --parchment:#e7c59d;
+  --parchment-dim: #f1d7b8;
+  --hairline:#79694f;
+  --gold:#d6be90;
+  --dark-gold:#aa956f;
+}

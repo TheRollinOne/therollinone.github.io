@@ -11,15 +11,23 @@
 }
 
 .save-chip-row{
-  display:grid;
-  grid-template-columns:repeat(4, 1fr);
+  display:flex;
+  flex-wrap:wrap;
   gap:6px;
 }
 .save-chip-row .chip{
-  width:auto;
+  width:86px;
   justify-content:center;
 }
-
+.save-chip-row .chip{ /* Will & None */
+  width:50px;
+}
+.save-chip-row .chip[data-save="Fortitude"]{
+  width:84px;
+}
+.save-chip-row .chip[data-save="Reflex"]{
+  width:62px;
+}
 .ritual-chip-row{
   display:grid;
   grid-template-columns:repeat(2, 1fr);
