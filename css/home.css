@@ -22,6 +22,17 @@ body{
 }
 ::selection{background:var(--gold);color:var(--ink);}
 
+/* ---------- Theme toggle wrapper (home-page layout only) ----------
+   Floats top-right over the hero image. The button/popup/swatch
+   appearance itself is shared across ALL pages via css/theme-toggle.css —
+   that's the only file to touch for color changes. */
+.theme-toggle{
+  position:fixed;
+  top:16px;
+  right:16px;
+  z-index:3;
+}
+
 .hero{
   position:relative;
   width:1000px;

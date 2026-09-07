@@ -527,75 +527,11 @@ select.select-filter:focus{border-color:var(--gold);}
 }
 .copy-tooltip.show{opacity:1; transform:translate(-50%,-170%);}
 
-/* ---------- Theme toggle (shared across all pages) ---------- */
+/* ---------- Theme toggle wrapper (catalogue-page layout only) ----------
+   Sits inline in .page-title-desktop's flex row on catalogue pages. The
+   button/popup/swatch appearance itself is shared across ALL pages via
+   css/theme-toggle.css — that's the only file to touch for color changes. */
 .theme-toggle{
   position:relative;
   flex-shrink:0;
-}
-.theme-toggle-main{
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  border:1px solid color-mix(in srgb, var(--ink) 35%, transparent);
-  background:var(--gold);
-  cursor:pointer;
-  padding:0;
-  box-shadow:0 1px 3px rgba(0,0,0,.35);
-  transition:transform .12s, box-shadow .15s;
-}
-.theme-toggle-main:hover{
-  transform:scale(1.06);
-}
-.theme-toggle-main:focus-visible{
-  outline:2px solid var(--parchment);
-  outline-offset:2px;
-}
-
-.theme-toggle-popup{
-  position:absolute;
-  top:calc(100% + 8px);
-  right:0;
-  display:flex;
-  gap:8px;
-  padding:8px;
-  background:var(--ink-2);
-  border:1px solid var(--hairline);
-  border-radius:12px;
-  box-shadow:0 10px 24px rgba(0,0,0,.45);
-  z-index:20;
-}
-.theme-toggle-popup[hidden]{
-  display:none;
-}
-
-.theme-swatch{
-  position:relative;
-  width:26px;
-  height:26px;
-  border-radius:50%;
-  border:1px solid rgba(0,0,0,.3);
-  cursor:pointer;
-  padding:0;
-  transition:transform .12s;
-}
-.theme-swatch:hover{
-  transform:scale(1.1);
-}
-.theme-swatch:focus-visible{
-  outline:2px solid var(--parchment);
-  outline-offset:2px;
-}
-.theme-swatch[data-theme-choice="gold"]{background:#d3ac43;}
-.theme-swatch[data-theme-choice="blue"]{background:#4f9dde;}
-.theme-swatch[data-theme-choice="green"]{background:#5cd486;}
-.theme-swatch[data-theme-choice="orange"]{background:#e0812f;}
-.theme-swatch[data-theme-choice="red"]{background:#e14b4b;}
-.theme-swatch[data-theme-choice="parchment"]{background:#d6be90;}
-
-.theme-swatch.active::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  border:2px solid var(--parchment);
 }

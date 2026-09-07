@@ -15,29 +15,31 @@
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/home.css">
 <link rel="stylesheet" href="css/themes.css">
+<link rel="stylesheet" href="css/theme-toggle.css">
 </head>
 <body>
 
   <div class="theme-toggle" id="themeToggle">
-    <button
-      class="theme-toggle-main"
-      id="themeToggleBtn"
-      type="button"
-      aria-haspopup="true"
-      aria-expanded="false"
-      aria-controls="themeTogglePopup"
-      aria-label="Change color theme"
-    ></button>
+  <button
+    class="theme-toggle-main"
+    id="themeToggleBtn"
+    type="button"
+    aria-haspopup="true"
+    aria-expanded="false"
+    aria-controls="themeTogglePopup"
+    aria-label="Change color theme"
+  ></button>
 
-    <div class="theme-toggle-popup" id="themeTogglePopup" role="menu" hidden>
-      <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="gold" aria-label="Gold theme"></button>
-      <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="blue" aria-label="Blue theme"></button>
-      <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="green" aria-label="Green theme"></button>
-      <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="orange" aria-label="Orange theme"></button>
-      <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="red" aria-label="Red theme"></button>
-      <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="parchment" aria-label="Parchment theme"></button>
-    </div>
+  <div class="theme-toggle-popup" id="themeTogglePopup" role="menu" hidden>
+    <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="gold" aria-label="Gold theme"></button>
+    <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="blue" aria-label="Blue theme"></button>
+    <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="green" aria-label="Green theme"></button>
+    <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="orange" aria-label="Orange theme"></button>
+    <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="red" aria-label="Red theme"></button>
+    <button class="theme-swatch" type="button" role="menuitem" data-theme-choice="parchment" aria-label="Parchment theme"></button>
   </div>
+</div>
+
 
   <div class="hero">
     <div class="hero-image" id="heroImage">
@@ -69,77 +71,6 @@
       </div>
     </div>
   </div>
-
-<style>
-.theme-toggle{
-  position:fixed;
-  top:16px;
-  right:16px;
-  z-index:3;
-}
-.theme-toggle-main{
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  border:1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
-  background:var(--gold);
-  cursor:pointer;
-  padding:0;
-  box-shadow:0 1px 3px rgba(0,0,0,.4);
-  transition:transform .12s;
-}
-.theme-toggle-main:hover{
-  transform:scale(1.06);
-}
-.theme-toggle-main:focus-visible{
-  outline:2px solid var(--parchment);
-  outline-offset:2px;
-}
-.theme-toggle-popup{
-  position:absolute;
-  top:calc(100% + 8px);
-  right:0;
-  display:flex;
-  gap:8px;
-  padding:8px;
-  background:rgba(23,25,37,0.92);
-  border:1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
-  border-radius:12px;
-  box-shadow:0 10px 24px rgba(0,0,0,.45);
-}
-.theme-toggle-popup[hidden]{
-  display:none;
-}
-.theme-swatch{
-  position:relative;
-  width:26px;
-  height:26px;
-  border-radius:50%;
-  border:1px solid rgba(0,0,0,.3);
-  cursor:pointer;
-  padding:0;
-  transition:transform .12s;
-}
-.theme-swatch:hover{
-  transform:scale(1.1);
-}
-.theme-swatch:focus-visible{
-  outline:2px solid var(--parchment);
-  outline-offset:2px;
-}
-.theme-swatch[data-theme-choice="gold"]{background:#d3ac43;}
-.theme-swatch[data-theme-choice="blue"]{background:#4f9dde;}
-.theme-swatch[data-theme-choice="green"]{background:#5cd486;}
-.theme-swatch[data-theme-choice="orange"]{background:#e0812f;}
-.theme-swatch[data-theme-choice="red"]{background:#e14b4b;}
-.theme-swatch.active::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  border:2px solid var(--parchment);
-}
-</style>
 
 <script src="js/base.js"></script>
 <script>
