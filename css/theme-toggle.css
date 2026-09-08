@@ -29,14 +29,18 @@
 
 .theme-toggle-popup{
   position:absolute;
-  top:calc(100% + 8px);
-  right:0;
+  /* Offset by -padding on each side so the padding box's top-right corner
+     lands exactly on the toggle button's top-right corner: the popup
+     overlays the button and the menu bar, and the last swatch (flex row,
+     right-aligned) sits precisely over the button. */
+  top:-8px;
+  right:-8px;
   display:flex;
   gap:8px;
   padding:8px;
   background:var(--ink-2);
   border:1px solid var(--hairline);
-  border-radius:12px;
+  border-radius:16px;
   box-shadow:0 10px 24px rgba(0,0,0,.45);
   z-index:20;
 }
@@ -46,9 +50,9 @@
 
 .theme-swatch{
   position:relative;
-  width:36px;
-  height:22px;
-  border-radius:6px;
+  width:34px;
+  height:34px;
+  border-radius:50%;
   border:1px solid rgba(0,0,0,.3);
   cursor:pointer;
   padding:0;
@@ -63,17 +67,17 @@
 }
 
 /* ---- Swatch colors: the part that changes when themes change ---- */
-.theme-swatch[data-theme-choice="gold"]{background:linear-gradient(to right, #d3ac43 50%, var(--ink) 50%);}
-.theme-swatch[data-theme-choice="blue"]{background:linear-gradient(to right, #4f9dde 50%, var(--ink) 50%);}
-.theme-swatch[data-theme-choice="green"]{background:linear-gradient(to right, #5cd486 50%, var(--ink) 50%);}
-.theme-swatch[data-theme-choice="orange"]{background:linear-gradient(to right, #f18d35 50%, var(--ink) 50%);}
-.theme-swatch[data-theme-choice="red"]{background:linear-gradient(to right, #e14b4b 50%, var(--ink) 50%);}
-.theme-swatch[data-theme-choice="parchment"]{background:linear-gradient(to right, #d6be90 50%, var(--ink) 50%);}
+.theme-swatch[data-theme-choice="gold"]{background:#d3ac43;}
+.theme-swatch[data-theme-choice="blue"]{background:#4f9dde;}
+.theme-swatch[data-theme-choice="green"]{background:#5cd486;}
+.theme-swatch[data-theme-choice="orange"]{background:#f18d35;}
+.theme-swatch[data-theme-choice="red"]{background:#e14b4b;}
+.theme-swatch[data-theme-choice="parchment"]{background:#d6be90;}
 
 .theme-swatch.active::after{
   content:"";
   position:absolute;
   inset:0;
-  border-radius:6px;
+  border-radius:50%;
   border:2px solid var(--parchment);
 }
