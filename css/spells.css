@@ -73,6 +73,12 @@
 .spell-section-title-row .spell-section-title{
   margin-bottom:0;
 }
+.spell-badges{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-shrink:0;
+}
 .ritual-tag{
   font-family:'JetBrains Mono',monospace;
   font-size:.72rem;

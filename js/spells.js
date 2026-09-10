@@ -20,7 +20,7 @@
     s._classes = s.level_entries.map(le=>le.class);
     s._blob = [
       s.name, s.school, s.level_raw, s._classes.join(' '), s.casting_time,
-      s.components, s.range, s.target_effect_area, s.duration, s.save, s.sr,
+      s.components, s.range, s.target, s.effect, s.area, s.duration, s.save, s.sr,
       s.description, (s.heightened||[]).join(' '), s.ritual || ''
     ].join(' ').toLowerCase();
   });
@@ -191,6 +191,31 @@
   wireHoverCopyTooltip('spellList', '.class-pill-damage:not(.class-pill-split)');
   wireHoverCopyTooltip('spellList', '.pill-half');
 
+  // Builds the Roll20 clipboard payload: every top-level spell field except
+  // level_entries (and internal _-prefixed helper fields), one "Label: value"
+  // per line, in the field's original JSON order. `overrides` lets callers
+  // substitute already-bolded text (e.g. description/heightened) instead of
+  // the raw field value.
+  const ROLL20_SKIP_FIELDS = new Set(['level_entries']);
+  function buildRoll20Text(s, overrides){
+    overrides = overrides || {};
+    const lines = [];
+    Object.keys(s).forEach(key=>{
+      if(key.startsWith('_') || ROLL20_SKIP_FIELDS.has(key)) return;
+      let val;
+      if(Object.prototype.hasOwnProperty.call(overrides, key)){
+        val = overrides[key];
+      } else {
+        val = s[key];
+        if(Array.isArray(val)) val = val.join(' | ');
+        if(val === null || val === undefined) val = '';
+      }
+      const label = key.split('_').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
+      lines.push(`${label}: ${val}`);
+    });
+    return lines.join('\n');
+  }
+
   function matchesQuery(spell, query){
     return matchesQueryOnBlob(spell._blob, query);
   }
@@ -212,7 +237,9 @@
       ['Casting Time', s.casting_time],
       ['Components', s.components],
       ['Range', s.range],
-      [s.target_effect_area ? s.target_effect_area.split(':')[0] : 'Target', s.target_effect_area ? s.target_effect_area.split(':').slice(1).join(':').trim() : ''],
+      ['Target', s.target || ''],
+      ['Effect', s.effect || ''],
+      ['Area', s.area || ''],
       ['Duration', s.duration],
       ['Save', s.save],
       ['SR', s.sr]
@@ -240,7 +267,11 @@
       return m ? `**${m[1]}** ${boldLeadingLabelText(m[2])}` : boldLeadingLabelText(h);
     }).join('\n') : '';
 
-    const descHtml = `<div class="spell-section-title-row"><div class="spell-section-title">Description</div>${ritualTagHTML}</div><div>${boldLeadingLabel((s.description || '').trim())}</div>`;
+    const roll20Text = buildRoll20Text(s, {description: descText, heightened: heightenedText});
+    const roll20TagHTML = `<span class="ritual-tag roll20-tag copyable" data-copy="${escapeHtml(roll20Text)}">Roll20</span>`;
+    const badgesHTML = `<div class="spell-badges">${ritualTagHTML}${roll20TagHTML}</div>`;
+
+    const descHtml = `<div class="spell-section-title-row"><div class="spell-section-title">Description</div>${badgesHTML}</div><div>${boldLeadingLabel((s.description || '').trim())}</div>`;
 
     const heightenedItemsHtml = (s.heightened && s.heightened.length) ? s.heightened.map(h=>{
       const m = h.match(/^\s*(\([^)]*\))\s*(.*)$/s);
