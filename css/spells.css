@@ -92,6 +92,9 @@
   padding:4px 9px;
   white-space:nowrap;
 }
+.roll20-tag{
+  opacity:.9;
+}
 
 .spell-head{
   display:flex;

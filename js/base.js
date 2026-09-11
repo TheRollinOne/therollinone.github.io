@@ -147,6 +147,12 @@ function wireCardToggle(listEl, state, cardClass, nameClass){
         }
         return;
       }
+      const otherCopyEl = e.target.closest('.copyable');
+      if(otherCopyEl && otherCopyEl !== nameEl){
+        // Let the click bubble to the delegated copyable handler instead
+        // of toggling the card open/closed (e.g. the head's Roll20 button).
+        return;
+      }
       if(isOpen) state.open.delete(idx); else state.open.add(idx);
       const card = listEl.querySelector(`.${cardClass}[data-idx="${idx}"]`);
       card.classList.toggle('open');
