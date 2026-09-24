@@ -18,6 +18,44 @@ function matchesQueryOnBlob(blob, query){
   return rx.test(blob);
 }
 
+// Advanced search: whole-word/phrase terms with "+" (must contain) and "-"
+// (must NOT contain). An operator only counts at the very start of the input
+// or right after whitespace, and only when a non-space character follows it,
+// so hyphens inside words ("spell-like") stay plain text. Text before the
+// first operator is a required term ("cat +fly" == "+cat +fly"). A term runs
+// until the next operator, so "bronze dragon" stays one phrase.
+// Returns compiled regexes so callers can parse once, then test many blobs.
+function parseSearchQuery(query){
+  const q = String(query || '').trim().toLowerCase();
+  const must = [], not = [];
+  if(!q) return {must, not};
+  const isOp = ch => ch === '+' || ch === '-' || ch === '\u2013' || ch === '\u2212';
+  const ops = [];
+  for(let i = 0; i < q.length; i++){
+    if(!isOp(q[i])) continue;
+    const startOk = i === 0 || /\s/.test(q[i-1]);
+    const next = q[i+1];
+    if(startOk && next && !/\s/.test(next)) ops.push(i);
+  }
+  function add(negative, text){
+    // drop a dangling operator left at the end while typing ("poison -")
+    const t = text.replace(/(^|\s)[+\-\u2013\u2212]$/, '').trim();
+    if(!t) return;
+    const rx = new RegExp('\\b' + escapeRegExp(t) + '\\b');
+    (negative ? not : must).push(rx);
+  }
+  add(false, q.slice(0, ops.length ? ops[0] : q.length));
+  ops.forEach((pos, k) => {
+    const end = k + 1 < ops.length ? ops[k+1] : q.length;
+    add(q[pos] !== '+', q.slice(pos + 1, end));
+  });
+  return {must, not};
+}
+
+function matchesParsedQuery(blob, parsed){
+  return parsed.must.every(rx => rx.test(blob)) && !parsed.not.some(rx => rx.test(blob));
+}
+
 // Formats a block of prose for HTML display: a leading ">> Heading" line
 // becomes a bold heading, and a short leading "Label:" prefix on any other
 // line gets bolded (used for auto-formatted stat blocks lifted from source
@@ -129,34 +167,50 @@ function wireCopyableList(listId, nameClass){
 }
 
 // Card open/close + "click name while open to copy" toggle — shared shape
-// between feat cards, spell cards, and rune cards (only the class names differ).
-function wireCardToggle(listEl, state, cardClass, nameClass){
-  listEl.querySelectorAll('[data-toggle]').forEach(el=>{
-    el.addEventListener('click', (e)=>{
-      const idx = parseInt(el.dataset.toggle,10);
-      const isOpen = state.open.has(idx);
-      const nameEl = e.target.closest('.'+nameClass);
-      if(nameEl && isOpen){
-        const text = nameEl.dataset.copy;
-        if(text){
-          navigator.clipboard.writeText(text).then(()=>{
-            nameEl.classList.add('copied');
-            try{ showCopiedTooltip(e.clientX, e.clientY); }catch(err){}
-            setTimeout(()=>nameEl.classList.remove('copied'), 500);
-          }).catch(()=>{});
-        }
-        return;
+// between feat cards, spell cards, monster cards and rune cards (only the
+// class names differ).
+//
+// Uses ONE delegated click listener on listEl instead of one per card, so it
+// stays cheap with thousands of cards. Safe to call after every render: the
+// listener is attached once per list element, and each call just refreshes
+// the config it reads (state, class names, onOpen).
+// Optional onOpen(idx, cardEl) runs right after a card is opened (used for
+// lazily building card bodies).
+function wireCardToggle(listEl, state, cardClass, nameClass, onOpen){
+  listEl._cardToggleCfg = { state, cardClass, nameClass, onOpen };
+  if(listEl._cardToggleWired) return;
+  listEl._cardToggleWired = true;
+
+  listEl.addEventListener('click', (e)=>{
+    const el = e.target.closest('[data-toggle]');
+    if(!el || !listEl.contains(el)) return;
+    const { state, cardClass, nameClass, onOpen } = listEl._cardToggleCfg;
+
+    const idx = parseInt(el.dataset.toggle,10);
+    const isOpen = state.open.has(idx);
+    const nameEl = e.target.closest('.'+nameClass);
+    if(nameEl && isOpen){
+      const text = nameEl.dataset.copy;
+      if(text){
+        navigator.clipboard.writeText(text).then(()=>{
+          nameEl.classList.add('copied');
+          try{ showCopiedTooltip(e.clientX, e.clientY); }catch(err){}
+          setTimeout(()=>nameEl.classList.remove('copied'), 500);
+        }).catch(()=>{});
       }
-      const otherCopyEl = e.target.closest('.copyable');
-      if(otherCopyEl && otherCopyEl !== nameEl){
-        // Let the click bubble to the delegated copyable handler instead
-        // of toggling the card open/closed (e.g. the head's Roll20 button).
-        return;
-      }
-      if(isOpen) state.open.delete(idx); else state.open.add(idx);
-      const card = listEl.querySelector(`.${cardClass}[data-idx="${idx}"]`);
-      card.classList.toggle('open');
-    });
+      return;
+    }
+    const otherCopyEl = e.target.closest('.copyable');
+    if(otherCopyEl && otherCopyEl !== nameEl){
+      // Let the click bubble to the delegated copyable handler instead
+      // of toggling the card open/closed (e.g. the head's Roll20 button).
+      return;
+    }
+    if(isOpen) state.open.delete(idx); else state.open.add(idx);
+    const card = el.closest('.'+cardClass)
+      || listEl.querySelector(`.${cardClass}[data-idx="${idx}"]`);
+    card.classList.toggle('open');
+    if(!isOpen && onOpen) onOpen(idx, card);
   });
 }
 
