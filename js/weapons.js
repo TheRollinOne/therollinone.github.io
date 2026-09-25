@@ -135,6 +135,8 @@
     render: () => render()
   });
 
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'longsword +slashing -reach');
+
   document.getElementById('clearAll').addEventListener('click', (e) => {
     e.stopPropagation();
     state.query = '';
@@ -159,8 +161,9 @@
 
   wireCopyableList('weaponList', 'weapon-name');
 
+  const queryMatch = createQueryMatcher();
   function matchesQuery(weapon, query) {
-    return matchesQueryOnBlob(weapon._blob, query);
+    return queryMatch(weapon._blob, query);
   }
 
   function parseLeadingNumber(str){

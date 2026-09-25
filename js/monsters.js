@@ -348,39 +348,7 @@
   });
 
   // ---- Search help tooltip (hover; hidden while the box has focus) ----
-  // Uses the site's .hover-tooltip look (label line + .hover-tooltip-value
-  // line); positioned like wireHoverCopyTooltip: fixed, centered above the
-  // element, clamped to the viewport (flips below if there's no room above).
-  (function(){
-    let tip = null;
-    function remove(){ if(tip){ tip.remove(); tip = null; } }
-    function show(){
-      if(tip || document.activeElement === searchInputEl) return;
-      tip = document.createElement('div');
-      tip.className = 'hover-tooltip search-tip';
-      tip.innerHTML =
-        '<div>Matches whole words or phrases only.</div>' +
-        '<div>Use + to require more terms and - to exclude terms.</div>' +
-        '<div class="hover-tooltip-value">Example: poison +fly -swim</div>';
-      document.body.appendChild(tip);
-      const r = searchWrapEl.getBoundingClientRect();
-      const t = tip.getBoundingClientRect();
-      const margin = 8, half = t.width / 2;
-      const left = Math.min(Math.max(r.left + r.width / 2, half + margin), window.innerWidth - half - margin);
-      tip.style.left = left + 'px';
-      if(t.height + margin * 2 > r.top){
-        tip.classList.add('below');
-        tip.style.top = (r.bottom + margin) + 'px';
-      } else {
-        tip.style.top = (r.top - margin) + 'px';
-      }
-      requestAnimationFrame(() => { if(tip) tip.classList.add('show'); });
-    }
-    searchWrapEl.addEventListener('mouseenter', show);
-    searchWrapEl.addEventListener('mouseleave', remove);
-    searchInputEl.addEventListener('focus', remove);
-    window.addEventListener('scroll', remove, true);
-  })();
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'demon +regeneration -grab +aquan');
 
   // ---- Clear all ----
   document.getElementById('clearAll').addEventListener('click', (e) => {
@@ -414,8 +382,8 @@
     state.spellcasting.clear();
     spellcastingChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
 
-    state.publishers.clear();
-    publisherChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
+    // Publishers are intentionally left untouched by "clear all";
+    // they only reset via their own "clear" button.
 
     render();
   });
@@ -425,11 +393,9 @@
 
   wireCopyableList('monsterList', 'monster-name');
 
-  // Parse the query once per change, not once per monster.
-  let parsedFor = null, parsedQuery = null;
+  const queryMatch = createQueryMatcher();
   function matchesQuery(monster, query){
-    if(query !== parsedFor){ parsedFor = query; parsedQuery = parseSearchQuery(query); }
-    return matchesParsedQuery(monster._blob, parsedQuery);
+    return queryMatch(monster._blob, query);
   }
 
   function matchesRange(value, rangeState){

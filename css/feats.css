@@ -30,6 +30,55 @@
 }
 .search-wrap-sm.has-query input{padding-right:30px;}
 
+/* Spacer between the stacked Prerequisites sub-filters (None/At least one,
+   Ability Scores, BAB/Skill Ranks, Class Feature) — no rule, just gap. */
+.prereq-divider{
+  height:2px;
+}
+
+/* Ability Scores: fixed 3-column grid, 2 rows (Str/Dex/Con, Int/Wis/Cha) */
+.ability-chip-row{
+  display:grid;
+  grid-template-columns:repeat(3, 1fr);
+  gap:6px;
+}
+.ability-chip-row .chip{
+  width:auto;
+  justify-content:center;
+}
+
+/* BAB / Skill Ranks: 2 equal-width chips in a single row */
+.babskill-chip-row{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:6px;
+}
+.babskill-chip-row .chip{
+  width:auto;
+  justify-content:center;
+}
+
+/* Class Feature: label + select, on a single line */
+.class-feature-row{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.class-feature-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+  flex-shrink:0;
+}
+.class-feature-row select.select-filter{
+  flex:1;
+  width:auto;
+  min-width:0;
+}
+
 .feat-card{
   background:var(--ink-2);
   border:1px solid var(--hairline);

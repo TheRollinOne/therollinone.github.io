@@ -58,6 +58,49 @@
             <div class="chip" data-prereq="none">None</div>
             <div class="chip" data-prereq="some">At least one</div>
           </div>
+
+          <div class="prereq-divider"></div>
+
+          <div class="ability-chip-row" id="abilityChips">
+            <div class="chip" data-ability="str">Str</div>
+            <div class="chip" data-ability="dex">Dex</div>
+            <div class="chip" data-ability="con">Con</div>
+            <div class="chip" data-ability="int">Int</div>
+            <div class="chip" data-ability="wis">Wis</div>
+            <div class="chip" data-ability="cha">Cha</div>
+          </div>
+
+          <div class="prereq-divider"></div>
+
+          <div class="babskill-chip-row" id="babSkillChips">
+            <div class="chip" data-flag="bab">BAB</div>
+            <div class="chip" data-flag="skillRanks">Skill Ranks</div>
+          </div>
+
+          <div class="prereq-divider"></div>
+
+          <div class="class-feature-row">
+            <label class="class-feature-label" for="classFeatureSelect">Class Feature:</label>
+            <select class="select-filter" id="classFeatureSelect">
+              <option value="">Any</option>
+              <option value="channelEnergy">Channel Energy</option>
+              <option value="animalCompanion">Animal Companion</option>
+              <option value="domain">Domain</option>
+              <option value="gritPanache">Grit / Panache</option>
+              <option value="familiar">Familiar</option>
+              <option value="layOnHands">Lay on Hands</option>
+              <option value="rage">Rage</option>
+              <option value="bardicPerformance">Bardic Performance</option>
+              <option value="weaponTraining">Weapon Training</option>
+              <option value="armorTraining">Armor Training</option>
+              <option value="wildShape">Wild Shape / Empathy</option>
+              <option value="flurryOfBlows">Flurry of Blows</option>
+              <option value="sneakAttack">Sneak Attack</option>
+              <option value="judgment">Judgment</option>
+              <option value="uncannyDodge">Uncanny Dodge</option>
+              <option value="arcaneSchool">Arcane School</option>
+            </select>
+          </div>
         </div>
 
         <div class="filters-summary" id="sortingSummary">

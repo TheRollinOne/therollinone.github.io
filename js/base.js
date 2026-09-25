@@ -56,6 +56,56 @@ function matchesParsedQuery(blob, parsed){
   return parsed.must.every(rx => rx.test(blob)) && !parsed.not.some(rx => rx.test(blob));
 }
 
+// Wraps parseSearchQuery/matchesParsedQuery with a one-slot cache so the
+// query string is parsed once per change, not once per item (matchesQuery
+// is normally called from inside a list's .filter() callback).
+function createQueryMatcher(){
+  let parsedFor = null, parsedQuery = null;
+  return function matches(blob, query){
+    if(query !== parsedFor){ parsedFor = query; parsedQuery = parseSearchQuery(query); }
+    return matchesParsedQuery(blob, parsedQuery);
+  };
+}
+
+// Search help tooltip (hover; hidden while the box has focus) — shared by
+// every catalogue page, only the "Example: ..." text differs per page.
+// Uses the site's .hover-tooltip look (label lines + .hover-tooltip-value
+// line); positioned like wireHoverCopyTooltip: fixed, centered above the
+// search box, clamped to the viewport (flips below if there's no room
+// above). Relies on the .hover-tooltip.search-tip CSS rules (currently
+// defined in monsters.css); a page needs that block in its own stylesheet
+// for this to render styled.
+function wireSearchTooltip(searchInputEl, searchWrapEl, exampleText){
+  let tip = null;
+  function remove(){ if(tip){ tip.remove(); tip = null; } }
+  function show(){
+    if(tip || document.activeElement === searchInputEl) return;
+    tip = document.createElement('div');
+    tip.className = 'hover-tooltip search-tip';
+    tip.innerHTML =
+      '<div>Matches whole words or phrases only.</div>' +
+      '<div>Use + to require more terms and - to exclude terms.</div>' +
+      `<div class="hover-tooltip-value">Example: ${escapeHtml(exampleText)}</div>`;
+    document.body.appendChild(tip);
+    const r = searchWrapEl.getBoundingClientRect();
+    const t = tip.getBoundingClientRect();
+    const margin = 8, half = t.width / 2;
+    const left = Math.min(Math.max(r.left + r.width / 2, half + margin), window.innerWidth - half - margin);
+    tip.style.left = left + 'px';
+    if(t.height + margin * 2 > r.top){
+      tip.classList.add('below');
+      tip.style.top = (r.bottom + margin) + 'px';
+    } else {
+      tip.style.top = (r.top - margin) + 'px';
+    }
+    requestAnimationFrame(() => { if(tip) tip.classList.add('show'); });
+  }
+  searchWrapEl.addEventListener('mouseenter', show);
+  searchWrapEl.addEventListener('mouseleave', remove);
+  searchInputEl.addEventListener('focus', remove);
+  window.addEventListener('scroll', remove, true);
+}
+
 // Formats a block of prose for HTML display: a leading ">> Heading" line
 // becomes a bold heading, and a short leading "Label:" prefix on any other
 // line gets bolded (used for auto-formatted stat blocks lifted from source

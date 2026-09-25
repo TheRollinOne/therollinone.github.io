@@ -19,9 +19,9 @@
     s._idx = i;
     s._classes = s.level_entries.map(le=>le.class);
     s._blob = [
-      s.name, s.school, s.level_raw, s._classes.join(' '), s.casting_time,
-      s.components, s.range, s.target, s.effect, s.area, s.duration, s.save, s.sr,
-      s.description, (s.heightened||[]).join(' '), s.ritual || ''
+      s.name, s.school, s._classes.join(' '), s.casting_time,
+      s.components, s.range, s.target, s.effect, s.area, s.duration, s.save,
+      s.description
     ].join(' ').toLowerCase();
   });
 
@@ -167,6 +167,8 @@
     render: ()=>render()
   });
 
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'fireball +evocation -verbal');
+
   document.getElementById('clearAll').addEventListener('click', (e)=>{
     e.stopPropagation();
     state.query = '';
@@ -216,8 +218,9 @@
     return lines.join('\n');
   }
 
+  const queryMatch = createQueryMatcher();
   function matchesQuery(spell, query){
-    return matchesQueryOnBlob(spell._blob, query);
+    return queryMatch(spell._blob, query);
   }
 
   function cardHTML(s){

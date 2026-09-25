@@ -15,7 +15,7 @@
     ARMORS_DATA.forEach((a, i) => {
       a._idx = i;
       a._blob = [
-        a.name, a.category, a.armor_bonus, a.max_dex, a.acp, a.spell_failure, a.description
+        a.name, a.category, a.description
       ].filter(Boolean).join(' ').toLowerCase();
     });
   }
@@ -65,6 +65,8 @@
     render: () => render()
   });
 
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'chain shirt +light -heavy');
+
   document.getElementById('clearAll').addEventListener('click', (e) => {
     e.stopPropagation();
     state.query = '';
@@ -81,8 +83,9 @@
 
   wireCopyableList('armorList', 'armor-name');
 
+  const queryMatch = createQueryMatcher();
   function matchesQuery(armor, query) {
-    return matchesQueryOnBlob(armor._blob, query);
+    return queryMatch(armor._blob, query);
   }
 
   function parseLeadingNumber(str){

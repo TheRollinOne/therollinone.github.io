@@ -352,33 +352,3 @@
   padding:2px 4px;
 }
 
-/* Search help tooltip — self-contained so it renders even on pages that
-   don't load the shared .hover-tooltip rules. */
-.hover-tooltip.search-tip{
-  position:fixed;
-  transform:translate(-50%,-100%);
-  width:max-content;
-  max-width:min(340px, calc(100vw - 16px));
-  background:var(--ink-3);
-  border:1px solid var(--gold);
-  border-radius:6px;
-  padding:8px 12px;
-  font-family:'JetBrains Mono',monospace;
-  font-size:.74rem;
-  line-height:1.5;
-  color:var(--parchment);
-  text-align:left;
-  white-space:normal;
-  pointer-events:none;
-  box-shadow:0 6px 18px rgba(0,0,0,0.4);
-  opacity:0;
-  transition:opacity .15s;
-  z-index:9999;
-}
-.hover-tooltip.search-tip.below{transform:translate(-50%,0);}
-.hover-tooltip.search-tip.show{opacity:1;}
-.hover-tooltip.search-tip .hover-tooltip-value{
-  margin-top:4px;
-  color:var(--gold);
-  font-weight:700;
-}

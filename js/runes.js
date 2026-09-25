@@ -17,7 +17,7 @@
     r._idx = i;
     r._slug = slugify(r.category);
     r._blob = [
-      r.name, r.category, r.bonus, r.short_description, r.description, r.aura
+      r.name, r.category, r.short_description, r.description, r.aura
     ].filter(Boolean).join(' ').toLowerCase();
   });
 
@@ -67,6 +67,8 @@
     render: () => render()
   });
 
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'flaming +keen -bane');
+
   document.getElementById('clearAll').addEventListener('click', (e) => {
     e.stopPropagation();
     state.query = '';
@@ -83,8 +85,9 @@
 
   wireCopyableList('runeList', 'rune-name');
 
+  const queryMatch = createQueryMatcher();
   function matchesQuery(rune, query) {
-    return matchesQueryOnBlob(rune._blob, query);
+    return queryMatch(rune._blob, query);
   }
 
   function formatCasterLevel(cl){

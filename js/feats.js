@@ -8,8 +8,41 @@
     categories:new Set(),
     prereq:null, // null | 'none' | 'some'
     prereqQuery:'',
+    abilities:new Set(), // any of: str, dex, con, int, wis, cha
+    bab:false,
+    skillRanks:false,
+    classFeature:'', // '' = Any, else a key into CLASS_FEATURE_RX
     sort:'name',
     open:new Set()
+  };
+
+  const ABILITY_RX = {
+    str: /\bstr\s+\d+/i,
+    dex: /\bdex\s+\d+/i,
+    con: /\bcon\s+\d+/i,
+    int: /\bint\s+\d+/i,
+    wis: /\bwis\s+\d+/i,
+    cha: /\bcha\s+\d+/i
+  };
+  const BAB_RX = /\bbab\b|\bbase attack bonus\b/i;
+  const SKILL_RANKS_RX = /\b\d+\s+ranks?\b/i;
+  const CLASS_FEATURE_RX = {
+    animalCompanion: /animal companion/i,
+    arcaneSchool: /arcane school/i,
+    armorTraining: /armor training/i,
+    bardicPerformance: /bardic performance/i,
+    channelEnergy: /channel (positive |negative )?energy/i,
+    domain: /\bdomain\b/i,
+    familiar: /\bfamiliar\b/i,
+    flurryOfBlows: /flurry of blows/i,
+    gritPanache: /\bgrit\b|\bpanache\b/i,
+    judgment: /\bjudgment\b/i,
+    layOnHands: /lay on hands/i,
+    rage: /\brage\b/i,
+    sneakAttack: /sneak attack/i,
+    uncannyDodge: /uncanny dodge/i,
+    weaponTraining: /weapon training/i,
+    wildShape: /wild shape|wild empathy/i
   };
 
   document.getElementById('brandSub').textContent = `Feat Library · ${FEATS_DATA.length} Feats`;
@@ -18,8 +51,13 @@
     f._idx = i;
     f._slug = slugify(f.category);
     f._prereqBlob = (f.prerequisites||'').toLowerCase();
+    const p = f.prerequisites || '';
+    f._abilities = new Set(Object.keys(ABILITY_RX).filter(k=>ABILITY_RX[k].test(p)));
+    f._hasBab = BAB_RX.test(p);
+    f._hasSkillRanks = SKILL_RANKS_RX.test(p);
+    f._classFeatures = new Set(Object.keys(CLASS_FEATURE_RX).filter(k=>CLASS_FEATURE_RX[k].test(p)));
     f._blob = [
-      f.name, f.category, f.flavor_text, f.prerequisites, f.benefits,
+      f.name, f.category, f.prerequisites, f.benefits,
       f.normal, f.special
     ].filter(Boolean).join(' ').toLowerCase();
   });
@@ -61,6 +99,33 @@
     });
   });
 
+  const abilityChips = document.getElementById('abilityChips');
+  abilityChips.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const val = chip.dataset.ability;
+      if(state.abilities.has(val)) state.abilities.delete(val);
+      else state.abilities.add(val);
+      chip.classList.toggle('active');
+      render();
+    });
+  });
+
+  const babSkillChips = document.getElementById('babSkillChips');
+  babSkillChips.querySelectorAll('.chip').forEach(chip=>{
+    chip.addEventListener('click', ()=>{
+      const flag = chip.dataset.flag;
+      state[flag] = !state[flag];
+      chip.classList.toggle('active');
+      render();
+    });
+  });
+
+  const classFeatureSelectEl = document.getElementById('classFeatureSelect');
+  classFeatureSelectEl.addEventListener('change', e=>{
+    state.classFeature = e.target.value;
+    render();
+  });
+
   initMobileFiltersCollapse();
 
   document.getElementById('clearCategories').addEventListener('click', ()=>{
@@ -80,6 +145,8 @@
     render: ()=>render()
   });
 
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'power attack +combat -fighter');
+
   const prereqSearchInputEl = document.getElementById('prereqSearchInput');
   const prereqSearchWrapEl = document.getElementById('prereqSearchWrap');
   const prereqSearchClearIcon = document.getElementById('prereqSearchClearIcon');
@@ -97,6 +164,13 @@
     state.prereqQuery = '';
     prereqSearchInputEl.value = '';
     syncPrereqSearchClearIcon();
+    state.abilities.clear();
+    document.querySelectorAll('#abilityChips .chip').forEach(el=>el.classList.remove('active'));
+    state.bab = false;
+    state.skillRanks = false;
+    document.querySelectorAll('#babSkillChips .chip').forEach(el=>el.classList.remove('active'));
+    state.classFeature = '';
+    classFeatureSelectEl.value = '';
     render();
   });
 
@@ -112,6 +186,13 @@
     state.prereqQuery = '';
     prereqSearchInputEl.value = '';
     syncPrereqSearchClearIcon();
+    state.abilities.clear();
+    document.querySelectorAll('#abilityChips .chip').forEach(el=>el.classList.remove('active'));
+    state.bab = false;
+    state.skillRanks = false;
+    document.querySelectorAll('#babSkillChips .chip').forEach(el=>el.classList.remove('active'));
+    state.classFeature = '';
+    classFeatureSelectEl.value = '';
     render();
   });
 
@@ -119,12 +200,14 @@
 
   wireCopyableList('featList', 'feat-name');
 
+  const queryMatch = createQueryMatcher();
   function matchesQuery(feat, query){
-    return matchesQueryOnBlob(feat._blob, query);
+    return queryMatch(feat._blob, query);
   }
 
+  const prereqQueryMatch = createQueryMatcher();
   function matchesPrereqQuery(feat, query){
-    return matchesQueryOnBlob(feat._prereqBlob, query);
+    return prereqQueryMatch(feat._prereqBlob, query);
   }
 
   function cardHTML(f){
@@ -171,6 +254,21 @@
     }
     if(state.prereqQuery){
       list = list.filter(f=>matchesPrereqQuery(f, state.prereqQuery));
+    }
+    if(state.abilities.size){
+      list = list.filter(f=>{
+        for(const a of state.abilities){ if(f._abilities.has(a)) return true; }
+        return false;
+      });
+    }
+    if(state.bab){
+      list = list.filter(f=>f._hasBab);
+    }
+    if(state.skillRanks){
+      list = list.filter(f=>f._hasSkillRanks);
+    }
+    if(state.classFeature){
+      list = list.filter(f=>f._classFeatures.has(state.classFeature));
     }
     const sorted = list.slice();
     if(state.sort==='name'){
