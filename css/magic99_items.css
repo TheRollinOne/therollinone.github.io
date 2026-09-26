@@ -1,0 +1,131 @@
+:root{
+--cat-artifact: #ffd700;
+--cat-wand: #9b8cff;
+--cat-rod: #ff8c69;
+--cat-weapon: #41c3f5;
+--cat-staff: #78dc6e;
+--cat-potion: #ff6ec7;
+--cat-legendary-weapon: #ff4b4b;
+--cat-shadow-piercing: #b0b0b0;
+--cat-armor: #c489ff;
+--cat-cursed: #e05252;
+--cat-magical-tattoo: #50e4c4;
+--cat-ring: #f0d050;
+--cat-ammunition: #50a0ff;
+--cat-wondrous-item: #ff9b50;
+--cat-other: #f0f0f0b4;
+}
+
+.item-card{
+  background:var(--ink-2);
+  border:1px solid var(--hairline);
+  border-left:5px solid var(--cardc,var(--gold));
+  border-radius:8px;
+  overflow:hidden;
+  transition:border-color .15s;
+}
+.item-card.open{
+  border-color:var(--cardc,var(--gold));
+}
+
+.item-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:8px 18px;
+  cursor:pointer;
+}
+.item-head:hover{background:rgba(255,255,255,0.02);}
+
+.item-title-block{
+  display:flex;
+  align-items:baseline;
+  gap:12px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.item-name{
+  font-family:'Cinzel',serif;
+  font-weight:600;
+  font-size:1.08rem;
+  color:var(--parchment);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.item-category-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.76rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--cardc,var(--gold));
+  white-space:nowrap;
+}
+
+.item-right{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-shrink:0;
+}
+.item-badge{
+  font-family:'Crimson Pro',serif;
+  font-style:italic;
+  font-size:1rem;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+}
+
+.item-card.open .chevron{transform:rotate(180deg);}
+
+.item-body{
+  display:none;
+  padding:0 18px 20px;
+  border-top:1px solid var(--hairline);
+}
+.item-card.open{
+  background:color-mix(in srgb, var(--cardc, var(--gold)) 5%, var(--ink-2));
+}
+.item-card.open .item-body{
+  display:block;
+  padding-top:16px;
+}
+.item-card.open .item-head{
+  background:color-mix(in srgb, var(--cardc, var(--gold)) 25%, var(--ink-2));
+}
+
+.item-section{
+  margin-top:10px;
+  padding-top:14px;
+}
+.item-section-title{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.86rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:8px;
+}
+.item-desc{
+  font-size:1.1rem;
+  color:var(--parchment-dim);
+  white-space:pre-wrap;
+}
+
+.empty-state{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:60px 20px;
+  color:var(--parchment-dim);
+  font-family:'Crimson Pro',serif;
+  text-align:center;
+}
+.empty-state .big{
+  font-family:'Cinzel',serif;
+  font-size:1.2rem;
+  color:var(--gold);
+}

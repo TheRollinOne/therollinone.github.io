@@ -1,0 +1,178 @@
+/* Slot chip colors: same 9-color palette, same order, as feats.css's
+   category colors (--cat-*). Slot labels are assigned to these in JS,
+   cycling back to the start once all 9 are used. */
+
+/* Slot: fixed 2-column grid, color-coded like feat categories. */
+.slot-chip-row{
+  display:grid;
+  grid-template-columns:repeat(2, 1fr);
+  gap:6px;
+}
+.slot-chip-row .chip{
+  width:auto;
+  justify-content:left;
+}
+
+/* Price: operator select + up to two numeric inputs, same shape as the
+   Monsters page's CR/HD range filters (see monsters.css). */
+.range-filter-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:nowrap;
+}
+.range-filter-row select.select-filter{
+  flex:0 0 50%;
+  width:40%;
+  min-width:0;
+  padding-left:6px;
+  padding-right:6px;
+}
+.range-input{
+  width:48px;
+  flex:0 0 48px;
+  min-width:0;
+  background:var(--ink-3);
+  border:1px solid var(--parchment-dim);
+  color:var(--parchment);
+  font-family:'Crimson Pro',serif;
+  font-size:.95rem;
+  padding:9px 4px;
+  border-radius:6px;
+  outline:none;
+  text-align:center;
+  transition:border-color .15s;
+  -moz-appearance:textfield;
+  appearance:textfield;
+}
+.range-input::-webkit-outer-spin-button,
+.range-input::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+.range-input:focus{border-color:var(--gold);}
+.range-input[hidden]{display:none;}
+.range-and{
+  flex:0 0 auto;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+}
+.range-and[hidden]{display:none;}
+
+.item-card{
+  background:var(--ink-2);
+  border:1px solid var(--hairline);
+  border-left:5px solid var(--cardc,var(--gold));
+  border-radius:8px;
+  overflow:hidden;
+  transition:border-color .15s;
+}
+.item-card.open{
+  border-color:var(--cardc,var(--gold));
+}
+
+.item-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:8px 18px;
+  cursor:pointer;
+}
+.item-head:hover{background:rgba(255,255,255,0.02);}
+
+.item-title-block{
+  display:flex;
+  align-items:baseline;
+  gap:12px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.item-name{
+  font-family:'Cinzel',serif;
+  font-weight:600;
+  font-size:1.08rem;
+  color:var(--parchment);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.item-category-tag{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.76rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--cardc,var(--gold));
+  white-space:nowrap;
+}
+
+.item-right{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-shrink:0;
+}
+.item-badge{
+  font-family:'Crimson Pro',serif;
+  font-style:italic;
+  font-size:1rem;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+}
+
+.item-card.open .chevron{transform:rotate(180deg);}
+
+.item-body{
+  display:none;
+  padding:0 18px 20px;
+  border-top:1px solid var(--hairline);
+}
+.item-card.open{
+  background:color-mix(in srgb, var(--cardc, var(--gold)) 5%, var(--ink-2));
+}
+.item-card.open .item-body{
+  display:block;
+  padding-top:16px;
+}
+.item-card.open .item-head{
+  background:color-mix(in srgb, var(--cardc, var(--gold)) 25%, var(--ink-2));
+}
+
+.item-section{
+  margin-top:10px;
+  padding-top:14px;
+}
+.item-section-title{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.86rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:8px;
+}
+.item-desc{
+  font-size:1.1rem;
+  color:var(--parchment-dim);
+  white-space:pre-wrap;
+}
+
+.empty-state{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:60px 20px;
+  color:var(--parchment-dim);
+  font-family:'Crimson Pro',serif;
+  text-align:center;
+}
+.empty-state .big{
+  font-family:'Cinzel',serif;
+  font-size:1.2rem;
+  color:var(--gold);
+}
