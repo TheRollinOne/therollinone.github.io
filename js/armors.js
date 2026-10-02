@@ -1,4 +1,12 @@
 (function(){
+  // Canonical display order for the category chips (not alphabetical).
+  // Any category found in the data that isn't listed here is appended,
+  // title-cased and alphabetized, after these (see buildTypeColorMap
+  // in base.js).
+  const CATEGORY_ORDER = ['Light Armor', 'Shield', 'Medium Armor', 'Extra', 'Heavy Armor'];
+  let categoryColorOf = {};
+  let orderedCategories = [];
+
   const state = {
     query: '',
     categories: new Set(),
@@ -14,21 +22,52 @@
     document.getElementById('brandSub').textContent = `Armor Catalogue · ${ARMORS_DATA.length} Armors`;
     ARMORS_DATA.forEach((a, i) => {
       a._idx = i;
+      a._category = titleCase(a.category);
       a._blob = [
-        a.name, a.category, a.description
+        a.name, a._category, a.description
       ].filter(Boolean).join(' ').toLowerCase();
     });
+
+    categoryColorOf = buildTypeColorMap(ARMORS_DATA.map(a => a._category), CATEGORY_ORDER);
+    orderedCategories = Object.keys(categoryColorOf);
+    ARMORS_DATA.forEach(a => { a._cardColor = categoryColorOf[a._category]; });
   }
 
   initMobileFiltersCollapse();
   initThemeToggle();
+  initSidebarArt();
 
-  // Categories, Armor Bonus, Max Dexterity, Armor Check Penalty, and
-  // Arcana Spell Failure all follow the same "toggle a chip -> toggle a
-  // value in a Set" shape, each wired against its own state field/
-  // container/clear-button trio.
+  // Category chips are generated dynamically (colors depend on the data),
+  // the same way feats.js builds its category chips.
+  const categoryChips = document.getElementById('categoryChips');
+  orderedCategories.forEach(cat => {
+      const color = categoryColorOf[cat];
+      const chip = document.createElement('div');
+      chip.className = 'chip';
+      chip.style.setProperty('--dotc', color);
+      chip.style.setProperty('--chipc', color);
+      chip.dataset.category = cat;
+      chip.innerHTML = `<span class="dot"></span>${escapeHtml(cat)}`;
+      chip.addEventListener('click', () => {
+        if (state.categories.has(cat)) state.categories.delete(cat);
+        else state.categories.add(cat);
+        chip.classList.toggle('active');
+        render();
+      });
+      categoryChips.appendChild(chip);
+  });
+  document.getElementById('clearCategories').addEventListener('click', () => {
+    state.categories.clear();
+    categoryChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
+    render();
+  });
+
+  // Armor Bonus, Max Dexterity, Armor Check Penalty, and Arcana Spell
+  // Failure all follow the same "toggle a chip -> toggle a value in a Set"
+  // shape, each wired against its own state field/container/clear-button
+  // trio. Unlike Category, these chips are static markup (a small fixed
+  // set of values), so they're just wired up here rather than generated.
   const chipGroups = [
-    { key: 'categories', containerId: 'categoryChips', clearId: 'clearCategories', dataAttr: 'category' },
     { key: 'armorBonuses', containerId: 'armorBonusChips', clearId: 'clearArmorBonus', dataAttr: 'armorBonus' },
     { key: 'maxDexes', containerId: 'maxDexChips', clearId: 'clearMaxDex', dataAttr: 'maxDex' },
     { key: 'acps', containerId: 'acpChips', clearId: 'clearACP', dataAttr: 'acp' },
@@ -72,6 +111,8 @@
     state.query = '';
     searchInputEl.value = '';
     searchWrapEl.classList.remove('has-query');
+    state.categories.clear();
+    categoryChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
     chipGroups.forEach(group => {
       state[group.key].clear();
       group.containerEl.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
@@ -79,7 +120,17 @@
     render();
   });
 
-  wireSortSelect(state, () => render());
+  // Sort buttons in the page header.
+  const sortBtns = document.querySelectorAll('#sortBar .sort-btn');
+  sortBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.sort = btn.dataset.sort;
+      render();
+    });
+  });
+  function syncSortButtons(){
+    sortBtns.forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
+  }
 
   wireCopyableList('armorList', 'armor-name');
 
@@ -91,12 +142,6 @@
   function parseLeadingNumber(str){
     const n = parseFloat(str);
     return Number.isNaN(n) ? -1 : n;
-  }
-
-  // Maps a raw category string ("Light Armor", "Shield", ...) to the CSS
-  // color-variable slug defined in armors.css (--cat-light, --cat-shield, ...).
-  function categoryColorSlug(category){
-    return (category || '').toLowerCase().replace(/\s*armor\s*$/, '').trim().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
   }
 
   function speedReductionText(a){
@@ -141,11 +186,10 @@
   }
 
   function cardHTML(a){
-    const slug = categoryColorSlug(a.category);
-    const cardStyle = slug ? ` style="--cardc:var(--cat-${slug})"` : '';
+    const cardStyle = a._cardColor ? ` style="--cardc:${a._cardColor}"` : '';
     const isOpen = state.open.has(a._idx);
 
-    const categoryTagHtml = a.category ? `<span class="armor-category-tag">${escapeHtml(a.category)}</span>` : '';
+    const categoryTagHtml = a._category ? `<span class="armor-category-tag">${escapeHtml(a._category)}</span>` : '';
 
     const statFields = buildStatFields(a);
     const statGridHtml = statFields.map(([l,v]) =>
@@ -185,7 +229,7 @@
       list = list.filter(a => matchesQuery(a, state.query));
     }
     if (state.categories.size) {
-      list = list.filter(a => state.categories.has(a.category));
+      list = list.filter(a => state.categories.has(a._category));
     }
     if (state.armorBonuses.size) {
       list = list.filter(a => state.armorBonuses.has(a.armor_bonus));
@@ -202,8 +246,10 @@
     const sorted = list.slice();
     if (state.sort === 'name') {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (state.sort === 'name_desc') {
+      sorted.sort((a, b) => b.name.localeCompare(a.name));
     } else if (state.sort === 'category') {
-      sorted.sort((a, b) => (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name));
+      sorted.sort((a, b) => (a._category || '').localeCompare(b._category || '') || a.name.localeCompare(b.name));
     } else if (state.sort === 'cost') {
       sorted.sort((a, b) => parseLeadingNumber(a.cost) - parseLeadingNumber(b.cost) || a.name.localeCompare(b.name));
     } else if (state.sort === 'cost_desc') {
@@ -226,6 +272,7 @@
 
   function render(){
     if (typeof ARMORS_DATA === 'undefined') return;
+    syncSortButtons();
     const results = filtered();
     document.getElementById('listTitle').textContent = `${results.length} Armor${results.length !== 1 ? 's' : ''} & Shield${results.length !== 1 ? 's' : ''} Listed`;
     const listEl = document.getElementById('armorList');
@@ -233,8 +280,13 @@
       listEl.innerHTML = `<div class="empty-state"><span class="big">No armor found</span>Try a different search term or clear a filter.</div>`;
       return;
     }
-    listEl.innerHTML = results.map(cardHTML).join('');
+    const shown = paginate(state, results);
+    listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Armors & Shields');
     wireCardToggle(listEl, state, 'armor-card', 'armor-name');
+    wireShowMore(listEl, {
+      onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
+      onShowAll: () => { state.visibleCount = results.length; render(); }
+    });
   }
 
   render();

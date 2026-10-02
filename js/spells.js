@@ -25,7 +25,15 @@
     ].join(' ').toLowerCase();
   });
 
+  // Universal doesn't take a slot in the round-robin palette — it always
+  // gets the neutral gray fallback instead.
+  const schoolsForColor = SCHOOL_ORDER.filter(sch => sch !== 'universal' && SPELLS_DATA.some(s=>s.school===sch));
+  const schoolColorOf = buildTypeColorMap(schoolsForColor, SCHOOL_ORDER);
+  schoolColorOf.universal = TYPE_GRAY;
+  SPELLS_DATA.forEach(s=>{ s._cardColor = schoolColorOf[s.school || 'universal'] || TYPE_GRAY; });
+
   initThemeToggle();
+  initSidebarArt();
 
   const allClasses = Array.from(new Set(SPELLS_DATA.flatMap(s=>s._classes))).sort();
   const classChips = document.getElementById('classChips');
@@ -120,8 +128,9 @@
     if(!SPELLS_DATA.some(s=>s.school===sch)) return;
     const chip = document.createElement('div');
     chip.className='chip';
-    chip.style.setProperty('--dotc', `var(--${sch})`);
-    chip.style.setProperty('--chipc', `var(--${sch})`);
+    const color = schoolColorOf[sch] || TYPE_GRAY;
+    chip.style.setProperty('--dotc', color);
+    chip.style.setProperty('--chipc', color);
     chip.dataset.school = sch;
     chip.innerHTML = `<span class="dot"></span>${SCHOOL_LABEL[sch]}`;
     chip.addEventListener('click', ()=>{
@@ -187,7 +196,16 @@
     render();
   });
 
-  wireSortSelect(state, ()=>render());
+  // ---- Sort (header buttons) ----
+  document.querySelectorAll('#sortBar .sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.sort = btn.dataset.sort;
+      render();
+    });
+  });
+  function syncSortButtons(){
+    document.querySelectorAll('#sortBar .sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
+  }
 
   wireCopyableList('spellList', 'spell-name');
   wireHoverCopyTooltip('spellList', '.class-pill-damage:not(.class-pill-split)');
@@ -225,7 +243,7 @@
 
   function cardHTML(s){
     const sch = s.school || 'universal';
-    const cVar = `var(--${sch})`;
+    const cVar = s._cardColor || TYPE_GRAY;
     const isOpen = state.open.has(s._idx);
     let displayLevel = s.min_level;
     if(state.classes.size){
@@ -314,6 +332,12 @@
     const sorted = list.slice();
     if(state.sort==='name'){
       sorted.sort((a,b)=>a.name.localeCompare(b.name));
+    } else if(state.sort==='name_desc'){
+      sorted.sort((a,b)=>b.name.localeCompare(a.name));
+    } else if(state.sort==='level_desc'){
+      sorted.sort((a,b)=>(b.min_level-a.min_level) || a.name.localeCompare(b.name));
+    } else if(state.sort==='school_desc'){
+      sorted.sort((a,b)=>(b.school||'').localeCompare(a.school||'') || a.name.localeCompare(b.name));
     } else if(state.sort==='level'){
       sorted.sort((a,b)=>(a.min_level-b.min_level) || a.name.localeCompare(b.name));
     } else if(state.sort==='school'){
@@ -323,6 +347,7 @@
   }
 
   function render(){
+    syncSortButtons();
     const results = filtered();
     document.getElementById('listTitle').textContent = `${results.length} Spell${results.length!==1?'s':''} Listed`;
     const listEl = document.getElementById('spellList');
@@ -330,8 +355,13 @@
       listEl.innerHTML = `<div class="empty-state"><span class="big">No spells found</span>Try a different search term or clear a filter.</div>`;
       return;
     }
-    listEl.innerHTML = results.map(cardHTML).join('');
+    const shown = paginate(state, results);
+    listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Spells');
     wireCardToggle(listEl, state, 'spell-card', 'spell-name');
+    wireShowMore(listEl, {
+      onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
+      onShowAll: () => { state.visibleCount = results.length; render(); }
+    });
   }
 
   render();

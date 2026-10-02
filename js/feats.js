@@ -3,6 +3,8 @@
     return (str||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
   }
 
+  // CATEGORY_COLORS moved to base.js's shared TYPE_COLORS/buildTypeColorMap.
+
   const state = {
     query:'',
     categories:new Set(),
@@ -49,7 +51,6 @@
 
   FEATS_DATA.forEach((f,i)=>{
     f._idx = i;
-    f._slug = slugify(f.category);
     f._prereqBlob = (f.prerequisites||'').toLowerCase();
     const p = f.prerequisites || '';
     f._abilities = new Set(Object.keys(ABILITY_RX).filter(k=>ABILITY_RX[k].test(p)));
@@ -63,15 +64,19 @@
   });
 
   initThemeToggle();
+  initSidebarArt();
 
-  const allCategories = Array.from(new Set(FEATS_DATA.map(f=>f.category))).sort();
+  const categoryColorOf = buildTypeColorMap(FEATS_DATA.map(f=>f.category));
+  const allCategories = Object.keys(categoryColorOf);
+  FEATS_DATA.forEach(f=>{ f._cardColor = categoryColorOf[f.category]; });
+
   const categoryChips = document.getElementById('categoryChips');
   allCategories.forEach(cat=>{
-    const slug = slugify(cat);
+    const color = categoryColorOf[cat];
     const chip = document.createElement('div');
     chip.className='chip';
-    chip.style.setProperty('--dotc', `var(--cat-${slug})`);
-    chip.style.setProperty('--chipc', `var(--cat-${slug})`);
+    chip.style.setProperty('--dotc', color);
+    chip.style.setProperty('--chipc', color);
     chip.dataset.cat = cat;
     chip.innerHTML = `<span class="dot"></span>${cat}`;
     chip.addEventListener('click', ()=>{
@@ -121,6 +126,12 @@
   });
 
   const classFeatureSelectEl = document.getElementById('classFeatureSelect');
+  // Capture the full option list (value + label, in HTML order) once; the
+  // <select> is then rebuilt on every render() from the class features
+  // present in the base-filtered set — see updateClassFeatureOptions().
+  const ALL_CLASS_FEATURE_OPTIONS = Array.from(classFeatureSelectEl.options)
+    .filter(o=>o.value)
+    .map(o=>({ value:o.value, label:o.textContent }));
   classFeatureSelectEl.addEventListener('change', e=>{
     state.classFeature = e.target.value;
     render();
@@ -196,7 +207,17 @@
     render();
   });
 
-  wireSortSelect(state, ()=>render());
+  // Sort buttons in the page header.
+  const sortBtns = document.querySelectorAll('#sortBar .sort-btn');
+  sortBtns.forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.sort = btn.dataset.sort;
+      render();
+    });
+  });
+  function syncSortButtons(){
+    sortBtns.forEach(b=>b.classList.toggle('active', b.dataset.sort === state.sort));
+  }
 
   wireCopyableList('featList', 'feat-name');
 
@@ -211,7 +232,7 @@
   }
 
   function cardHTML(f){
-    const cVar = `var(--cat-${f._slug})`;
+    const cVar = f._cardColor;
     const isOpen = state.open.has(f._idx);
 
     const flavorHtml = f.flavor_text ? `<p class="feat-flavor copyable" data-copy="${escapeHtml(f.flavor_text)}">${escapeHtml(f.flavor_text)}</p>` : '';
@@ -239,7 +260,9 @@
     return `\n    <div class="feat-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${f._idx}">\n      <div class="feat-head" data-toggle="${f._idx}">\n        <div class="feat-title-block">\n          <span class="feat-name copyable" data-copy="${escapeHtml(f.name)}">${escapeHtml(f.name)}</span>\n          <span class="feat-category-tag">${escapeHtml(f.category)}</span>\n        </div>\n        <div class="feat-right">\n          <span class="feat-badge" title="${escapeHtml(f.flavor_text||'')}">${escapeHtml(f.flavor_text||'')}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="feat-body">\n        ${flavorHtml}${prereqHtml}${groupHtml}\n      </div>\n    </div>`;
   }
 
-  function filtered(){
+  // Every filter except Class Feature — the population the Class Feature
+  // dropdown's own options are computed from.
+  function baseFiltered(){
     let list = FEATS_DATA;
     if(state.query){
       list = list.filter(f=>matchesQuery(f, state.query));
@@ -267,19 +290,40 @@
     if(state.skillRanks){
       list = list.filter(f=>f._hasSkillRanks);
     }
-    if(state.classFeature){
-      list = list.filter(f=>f._classFeatures.has(state.classFeature));
-    }
+    return list;
+  }
+
+  // Rebuilds the Class Feature <select> keeping only features that appear
+  // in the prerequisites of `list`. Resets to "Any" if the selection vanished.
+  function updateClassFeatureOptions(list){
+    const present = new Set();
+    list.forEach(f=>f._classFeatures.forEach(k=>present.add(k)));
+    if(state.classFeature && !present.has(state.classFeature)) state.classFeature = '';
+    classFeatureSelectEl.innerHTML = '<option value="">Any</option>' +
+      ALL_CLASS_FEATURE_OPTIONS.filter(o=>present.has(o.value))
+        .map(o=>`<option value="${o.value}">${escapeHtml(o.label)}</option>`).join('');
+    classFeatureSelectEl.value = state.classFeature;
+  }
+
+  function filtered(){
+    const base = baseFiltered();
+    updateClassFeatureOptions(base);
+    const list = state.classFeature ? base.filter(f=>f._classFeatures.has(state.classFeature)) : base;
     const sorted = list.slice();
     if(state.sort==='name'){
       sorted.sort((a,b)=>a.name.localeCompare(b.name));
+    } else if(state.sort==='name_desc'){
+      sorted.sort((a,b)=>b.name.localeCompare(a.name));
     } else if(state.sort==='category'){
       sorted.sort((a,b)=>(a.category||'').localeCompare(b.category||'') || a.name.localeCompare(b.name));
+    } else if(state.sort==='category_desc'){
+      sorted.sort((a,b)=>(b.category||'').localeCompare(a.category||'') || a.name.localeCompare(b.name));
     }
     return sorted;
   }
 
   function render(){
+    syncSortButtons();
     const results = filtered();
     document.getElementById('listTitle').textContent = `${results.length} Feat${results.length!==1?'s':''} Listed`;
     const listEl = document.getElementById('featList');
@@ -287,8 +331,13 @@
       listEl.innerHTML = `<div class="empty-state"><span class="big">No feats found</span>Try a different search term or clear a filter.</div>`;
       return;
     }
-    listEl.innerHTML = results.map(cardHTML).join('');
+    const shown = paginate(state, results);
+    listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Feats');
     wireCardToggle(listEl, state, 'feat-card', 'feat-name');
+    wireShowMore(listEl, {
+      onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
+      onShowAll: () => { state.visibleCount = results.length; render(); }
+    });
   }
 
   render();

@@ -1,5 +1,56 @@
 // Shared helpers + wiring reused across the Feats, Spells, and Runes pages.
 
+// Debounce: returns a wrapped version of fn that only actually runs after
+// `delay` ms have passed with no further calls (e.g. typing in a search box
+// or a CR/HD number input). Used so filtering/rendering doesn't run on
+// every single keystroke, only once typing pauses.
+function debounce(fn, delay){
+  let timer = null;
+  return function(...args){
+    clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
+
+// Shared 16-color palette (base.css's --type-1 .. --type-16), used by any
+// page that color-codes cards/chips by a category-like field (Slot on
+// Magic Items, Category on Feats and Armors, etc).
+const TYPE_COLORS = Array.from({length: 16}, (_, i) => `var(--type-${i + 1})`);
+// Neutral fallback color (base.css's --type-gray) for a catch-all/"other"
+// value that shouldn't consume a slot in the main palette (e.g. the
+// Universal school on the Spells page).
+const TYPE_GRAY = 'var(--type-gray)';
+
+// Builds a {label: color} map from TYPE_COLORS, cycling back to the start
+// once all 16 are used.
+// - labels: the raw list of labels needing a color (duplicates/any order OK).
+// - preferredOrder: optional array giving a canonical order for some labels
+//   (e.g. ['Light Armor','Shield','Medium Armor','Extra','Heavy Armor']).
+//   Labels found in it come first, in that order; any other labels present
+//   in the data are appended afterward, alphabetically. Omit it (or pass
+//   nothing) to just sort every label alphabetically.
+function buildTypeColorMap(labels, preferredOrder){
+  const unique = Array.from(new Set(labels));
+  let ordered;
+  if(preferredOrder && preferredOrder.length){
+    const known = preferredOrder.filter(l => unique.includes(l));
+    const extras = unique.filter(l => !preferredOrder.includes(l)).sort();
+    ordered = known.concat(extras);
+  } else {
+    ordered = unique.slice().sort();
+  }
+  const map = {};
+  ordered.forEach((label, i) => { map[label] = TYPE_COLORS[i % TYPE_COLORS.length]; });
+  return map;
+}
+
+// Title-cases a string ("light armor" -> "Light Armor"), used to normalize
+// category/type-like fields that may come from the data with inconsistent
+// casing, before they're used as chip labels / color-map keys.
+function titleCase(str){
+  return (str||'').replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+}
+
 function escapeHtml(str){
   return (str||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -104,6 +155,69 @@ function wireSearchTooltip(searchInputEl, searchWrapEl, exampleText){
   searchWrapEl.addEventListener('mouseleave', remove);
   searchInputEl.addEventListener('focus', remove);
   window.addEventListener('scroll', remove, true);
+}
+
+// ---- Pagination ("Load more") ----
+// Caps how many results actually get rendered/put in the DOM at once,
+// since on the big lists (spells, monsters, magic items...) that's what's
+// slow — not the .filter() itself. Show 100 at a time; a "Load More..."
+// button reveals the next 100, or "Show All" reveals the rest in one go.
+const PAGE_SIZE = 100;
+
+// Detects whether any *filter/sort* state changed since the last render,
+// so paginate() can jump back to page 1 automatically whenever the result
+// set changes — without every individual chip/select/search handler having
+// to remember to reset the page itself. `open` (which cards are expanded)
+// and `visibleCount` (the pagination cursor) are excluded on purpose: those
+// changing shouldn't reset pagination, only an actual filter/sort/search
+// change should. Any state key npcs/monsters/etc. add later is covered
+// automatically as long as it doesn't start with `_` and isn't `open` or
+// `visibleCount`.
+function filtersChanged(state){
+  const snapshot = {};
+  Object.keys(state).forEach(key => {
+    if(key === 'open' || key === 'visibleCount' || key.startsWith('_')) return;
+    const val = state[key];
+    snapshot[key] = (val instanceof Set) ? Array.from(val).sort() : val;
+  });
+  const sig = JSON.stringify(snapshot);
+  const changed = sig !== state._filterSig;
+  state._filterSig = sig;
+  return changed;
+}
+
+// Returns the slice of `results` that should actually be rendered this
+// pass, resetting to the first page if the filters changed since last time.
+function paginate(state, results){
+  if(filtersChanged(state) || !state.visibleCount) state.visibleCount = PAGE_SIZE;
+  return results.slice(0, state.visibleCount);
+}
+
+// Builds the "Show All" + "Load More..." button row, or '' once everything
+// is already shown. Styled like the top-menu-nav links (.top-menu-link) in
+// base.css. itemLabelPlural is the plural noun to show, e.g. "Spells".
+function showMoreButtonHTML(results, state, itemLabelPlural){
+  const shownCount = Math.min(state.visibleCount, results.length);
+  const remaining = results.length - shownCount;
+  if(remaining <= 0) return '';
+  const nextBatch = Math.min(PAGE_SIZE, remaining);
+  return `<div class="show-more-row">
+    <button type="button" class="show-more-btn show-all-btn" data-show-all>Show All ${escapeHtml(itemLabelPlural)}</button>
+    <button type="button" class="show-more-btn" data-show-more>Load ${nextBatch} More <span class="show-more-remaining">(${remaining} left)</span></button>
+  </div>`;
+}
+
+// Delegated click handling for the "Load More..." / "Show All" buttons —
+// safe to call every render() (like wireCardToggle: the listener is only
+// attached once per list element, since the buttons themselves get
+// replaced by innerHTML on every render). Pass { onLoadMore, onShowAll }.
+function wireShowMore(listEl, { onLoadMore, onShowAll }){
+  if(listEl._showMoreWired) return;
+  listEl._showMoreWired = true;
+  listEl.addEventListener('click', e => {
+    if(e.target.closest('[data-show-more]')) onLoadMore();
+    else if(e.target.closest('[data-show-all]')) onShowAll();
+  });
 }
 
 // Formats a block of prose for HTML display: a leading ">> Heading" line
@@ -285,21 +399,25 @@ function initMobileFiltersCollapse(){
 // Wires a text input + its "has-query" wrapper + clear icon to a query
 // setter and a re-render. Returns the sync function so callers (e.g. a
 // "clear all" button) can re-sync the clear-icon visibility manually.
-function wireSearchInput({inputEl, wrapEl, clearIconEl, onQuery, render}){
+function wireSearchInput({inputEl, wrapEl, clearIconEl, onQuery, render, debounceMs = 200}){
+  const debouncedRender = debounce(render, debounceMs);
   function syncClearIcon(){
     wrapEl.classList.toggle('has-query', inputEl.value.length > 0);
   }
   inputEl.addEventListener('input', e=>{
+    // onQuery + syncClearIcon stay immediate so the box itself feels
+    // instant (clear-icon, styling); only the actual filter/render is
+    // debounced, since that's the expensive part on a big list.
     onQuery(e.target.value.trim().toLowerCase());
     syncClearIcon();
-    render();
+    debouncedRender();
   });
   clearIconEl.addEventListener('click', ()=>{
     inputEl.value = '';
     onQuery('');
     syncClearIcon();
     inputEl.focus();
-    render();
+    render(); // explicit clear click -> render right away, no debounce
   });
   return syncClearIcon;
 }
@@ -363,4 +481,41 @@ function initThemeToggle(onThemeChange){
 
   const savedTheme = localStorage.getItem('theme') || 'gold';
   applyTheme(savedTheme);
+}
+
+ /* ---------- Sidebar art (auto show/hide) ----------
+  Shows the decorative .sidebar-art image at the bottom of the left sidebar
+  only when it fits without causing a vertical scrollbar. CSS alone can't
+  detect overflow, so this measures the free space below the last sidebar
+  section (with the art temporarily hidden) and shows the art only if that
+  space can hold the art's height plus the normal flex gap above it.
+  Art is square and as wide as the sidebar's content box, so its height
+  equals that width.
+
+  Re-checks whenever the window or any sidebar section changes size
+  (Filters expanding/collapsing, selects appearing, fonts loading), so it
+  appears and disappears on its own. Hide/measure/show happens in a single
+  synchronous pass, so nothing flickers.
+
+  Usage: call initSidebarArt() once per page, next to initThemeToggle().
+  Does nothing on pages without a .sidebar-art element. */
+  function initSidebarArt(){
+  const sidebar = document.querySelector('.sidebar');
+  const art = sidebar && sidebar.querySelector('.sidebar-art');
+  if(!art) return;
+
+  function update(){
+    // Try it with the art visible; if the sidebar would scroll, hide it.
+    // Show/test/hide all happen synchronously, so nothing flickers.
+    art.style.display = '';
+    const overflows = sidebar.scrollHeight > sidebar.clientHeight;
+    if(overflows) art.style.display = 'none';
+  }
+
+  // Re-check when the window resizes or any sidebar section changes size
+  // (filters collapsing/expanding, chips being rendered, fonts loading).
+  const ro = new ResizeObserver(update);
+  ro.observe(sidebar);
+  [...sidebar.children].forEach(el => { if(el !== art) ro.observe(el); });
+  update();
 }

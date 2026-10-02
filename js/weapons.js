@@ -1,7 +1,8 @@
 (function(){
-  function slugify(str){
-    return (str||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-  }
+  // Canonical display order for the category chips (matches the old
+  // --cat-* var order in weapons.css). Any category present in the data
+  // that isn't listed here is appended afterward, alphabetically.
+  const CATEGORY_ORDER = ['Unarmed', 'Light', 'One-Handed', 'Two-Handed', 'Ranged', 'Ammunition'];
 
   const state = {
     query: '',
@@ -25,8 +26,12 @@
     ].filter(Boolean).join(' ').toLowerCase();
   });
 
+  const categoryColorOf = buildTypeColorMap(WEAPONS_DATA.map(w => w.category).filter(cat => cat != null), CATEGORY_ORDER);
+  WEAPONS_DATA.forEach(w => { w._cardColor = categoryColorOf[w.category]; });
+
   initMobileFiltersCollapse();
   initThemeToggle();
+  initSidebarArt();
 
   const proficiencyChips = document.getElementById('proficiencyChips');
   proficiencyChips.querySelectorAll('.chip').forEach(chip => {
@@ -44,15 +49,25 @@
     render();
   });
 
+  // Category chips are generated dynamically (colors depend on the data),
+  // the same way feats.js/armors.js build their category chips.
   const categoryChips = document.getElementById('categoryChips');
-  categoryChips.querySelectorAll('.chip').forEach(chip => {
+  Object.keys(categoryColorOf).forEach(cat => {
+    const color = categoryColorOf[cat];
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.style.setProperty('--dotc', color);
+    chip.style.setProperty('--chipc', color);
+    chip.dataset.category = cat;
+    const displayCat = cat.replace(/\b\w/g, c => c.toUpperCase());
+    chip.innerHTML = `<span class="dot"></span>${escapeHtml(displayCat)}`;
     chip.addEventListener('click', () => {
-      const val = chip.dataset.category;
-      if (state.categories.has(val)) state.categories.delete(val);
-      else state.categories.add(val);
+      if (state.categories.has(cat)) state.categories.delete(cat);
+      else state.categories.add(cat);
       chip.classList.toggle('active');
       render();
     });
+    categoryChips.appendChild(chip);
   });
   document.getElementById('clearCategories').addEventListener('click', () => {
     state.categories.clear();
@@ -157,7 +172,16 @@
     render();
   });
 
-  wireSortSelect(state, () => render());
+  // ---- Sort (header buttons) ----
+  document.querySelectorAll('#sortBar .sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.sort = btn.dataset.sort;
+      render();
+    });
+  });
+  function syncSortButtons(){
+    document.querySelectorAll('#sortBar .sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
+  }
 
   wireCopyableList('weaponList', 'weapon-name');
 
@@ -221,8 +245,7 @@
   }
 
   function cardHTML(w){
-    const slug = slugify(w.category);
-    const cardStyle = slug ? ` style="--cardc:var(--cat-${slug})"` : '';
+    const cardStyle = w._cardColor ? ` style="--cardc:${w._cardColor}"` : '';
     const isOpen = state.open.has(w._idx);
 
     const categoryTagHtml = w.category ? `<span class="weapon-category-tag">${escapeHtml(w.category)}</span>` : '';
@@ -287,6 +310,10 @@
     const sorted = list.slice();
     if (state.sort === 'name') {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (state.sort === 'name_desc') {
+      sorted.sort((a, b) => b.name.localeCompare(a.name));
+    } else if (state.sort === 'category_desc') {
+      sorted.sort((a, b) => (b.category || '').localeCompare(a.category || '') || a.name.localeCompare(b.name));
     } else if (state.sort === 'category') {
       sorted.sort((a, b) => (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name));
     } else if (state.sort === 'cost') {
@@ -302,6 +329,7 @@
   }
 
   function render(){
+    syncSortButtons();
     const results = filtered();
     document.getElementById('listTitle').textContent = `${results.length} Weapon${results.length !== 1 ? 's' : ''} Listed`;
     const listEl = document.getElementById('weaponList');
@@ -309,8 +337,13 @@
       listEl.innerHTML = `<div class="empty-state"><span class="big">No weapons found</span>Try a different search term or clear a filter.</div>`;
       return;
     }
-    listEl.innerHTML = results.map(cardHTML).join('');
+    const shown = paginate(state, results);
+    listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Weapons');
     wireCardToggle(listEl, state, 'weapon-card', 'weapon-name');
+    wireShowMore(listEl, {
+      onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
+      onShowAll: () => { state.visibleCount = results.length; render(); }
+    });
   }
 
   render();

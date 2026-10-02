@@ -1,7 +1,8 @@
 (function(){
-  function slugify(str){
-    return (str||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-  }
+  // Canonical display order for the category chips (matches the old
+  // --cat-* var order in runes.css). Any category present in the data
+  // that isn't listed here is appended afterward, alphabetically.
+  const CATEGORY_ORDER = ['Armor', 'Shield', 'Melee Weapon', 'Ranged Weapon', 'Ammunition'];
 
   const state = {
     query: '',
@@ -15,14 +16,18 @@
 
   RUNES_DATA.forEach((r, i) => {
     r._idx = i;
-    r._slug = slugify(r.category);
+    r._category = titleCase(r.category);
     r._blob = [
-      r.name, r.category, r.short_description, r.description, r.aura
+      r.name, r._category, r.short_description, r.description, r.aura
     ].filter(Boolean).join(' ').toLowerCase();
   });
 
+  const categoryColorOf = buildTypeColorMap(RUNES_DATA.map(r => r._category), CATEGORY_ORDER);
+  RUNES_DATA.forEach(r => { r._cardColor = categoryColorOf[r._category]; });
+
   initMobileFiltersCollapse();
   initThemeToggle();
+  initSidebarArt();
 
   const bonusChips = document.getElementById('bonusChips');
   bonusChips.querySelectorAll('.chip').forEach(chip => {
@@ -40,15 +45,24 @@
     render();
   });
 
+  // Category chips are generated dynamically (colors depend on the data),
+  // the same way feats.js/armors.js build their category chips.
   const categoryChips = document.getElementById('categoryChips');
-  categoryChips.querySelectorAll('.chip').forEach(chip => {
+  Object.keys(categoryColorOf).forEach(cat => {
+    const color = categoryColorOf[cat];
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.style.setProperty('--dotc', color);
+    chip.style.setProperty('--chipc', color);
+    chip.dataset.category = cat;
+    chip.innerHTML = `<span class="dot"></span>${escapeHtml(cat)}`;
     chip.addEventListener('click', () => {
-      const val = chip.dataset.category;
-      if (state.categories.has(val)) state.categories.delete(val);
-      else state.categories.add(val);
+      if (state.categories.has(cat)) state.categories.delete(cat);
+      else state.categories.add(cat);
       chip.classList.toggle('active');
       render();
     });
+    categoryChips.appendChild(chip);
   });
   document.getElementById('clearCategories').addEventListener('click', () => {
     state.categories.clear();
@@ -81,7 +95,16 @@
     render();
   });
 
-  wireSortSelect(state, () => render());
+  // ---- Sort (header buttons) ----
+  document.querySelectorAll('#sortBar .sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.sort = btn.dataset.sort;
+      render();
+    });
+  });
+  function syncSortButtons(){
+    document.querySelectorAll('#sortBar .sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
+  }
 
   wireCopyableList('runeList', 'rune-name');
 
@@ -115,7 +138,7 @@
   }
 
   function cardHTML(r){
-    const cVar = `var(--cat-${r._slug})`;
+    const cVar = r._cardColor;
     const isOpen = state.open.has(r._idx);
 
     const spellsText = (r.crafting.spells && r.crafting.spells.length) ? r.crafting.spells.join(', ') : '';
@@ -157,7 +180,7 @@
         <div class="rune-title-block">
           <span class="rune-name copyable" data-copy="${escapeHtml(r.name)}">${escapeHtml(r.name)}</span>
           <span class="rune-bonus-tag">${escapeHtml(r.bonus||'')}</span>
-          <span class="rune-category-tag">${escapeHtml(r.category)}</span>
+          <span class="rune-category-tag">${escapeHtml(r._category)}</span>
         </div>
         <div class="rune-right">
           <span class="rune-badge" title="${escapeHtml(r.short_description||'')}">${escapeHtml(r.short_description||'')}</span>
@@ -180,13 +203,19 @@
       list = list.filter(r => state.bonus.has(String(parseInt(r.bonus, 10))));
     }
     if (state.categories.size) {
-      list = list.filter(r => state.categories.has(r.category));
+      list = list.filter(r => state.categories.has(r._category));
     }
     const sorted = list.slice();
     if (state.sort === 'name') {
       sorted.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (state.sort === 'name_desc') {
+      sorted.sort((a, b) => b.name.localeCompare(a.name));
+    } else if (state.sort === 'category_desc') {
+      sorted.sort((a, b) => (b._category || '').localeCompare(a._category || '') || a.name.localeCompare(b.name));
+    } else if (state.sort === 'bonus_desc') {
+      sorted.sort((a, b) => (parseInt(b.bonus, 10) || 0) - (parseInt(a.bonus, 10) || 0) || a.name.localeCompare(b.name));
     } else if (state.sort === 'category') {
-      sorted.sort((a, b) => (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name));
+      sorted.sort((a, b) => (a._category || '').localeCompare(b._category || '') || a.name.localeCompare(b.name));
     } else if (state.sort === 'bonus') {
       sorted.sort((a, b) => (parseInt(a.bonus, 10) || 0) - (parseInt(b.bonus, 10) || 0) || a.name.localeCompare(b.name));
     }
@@ -194,6 +223,7 @@
   }
 
   function render(){
+    syncSortButtons();
     const results = filtered();
     document.getElementById('listTitle').textContent = `${results.length} Rune${results.length !== 1 ? 's' : ''} Listed`;
     const listEl = document.getElementById('runeList');
@@ -201,8 +231,13 @@
       listEl.innerHTML = `<div class="empty-state"><span class="big">No runes found</span>Try a different search term or clear a filter.</div>`;
       return;
     }
-    listEl.innerHTML = results.map(cardHTML).join('');
+    const shown = paginate(state, results);
+    listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Runes');
     wireCardToggle(listEl, state, 'rune-card', 'rune-name');
+    wireShowMore(listEl, {
+      onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
+      onShowAll: () => { state.visibleCount = results.length; render(); }
+    });
   }
 
   render();

@@ -1,10 +1,36 @@
-:root{
---cat-armor: #78dc6e;
---cat-shield: #32d2b4;
---cat-melee-weapon: #41c3f5;
---cat-ranged-weapon: #c489ff;
---cat-ammunition: #ff96c8;
+/* Sticky page header — rolled out from Armor Catalogue. Stacks
+   .page-title-top (nav) above .page-title-bottom (item count + theme
+   toggle — both defined in base.css) and pins the whole header in place
+   while the list scrolls beneath it. The margin-top/padding-top pair
+   cancels out .main's own top padding and re-adds the same amount as
+   this element's own padding, so the gap above the header is part of the
+   sticky box itself and does not disappear/jump once it pins to the
+   viewport top (see base.css's sticky-header comment for the full
+   explanation). This file is only ever loaded on this page, so this rule
+   scopes the sticky/stacking behavior here without needing a shared
+   change in base.css. */
+.page-title-desktop{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:var(--ink);
+  margin-top:-10px;
+  padding-top:10px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--hairline);
 }
+@media (max-width:900px){
+  .page-title-desktop{
+    margin-top:-20px;
+    padding-top:20px;
+  }
+}
+
+/* Category chip colors: same 16-color palette, same order, as base.css's
+   --type-* colors. Category labels are assigned to these in JS. */
 
 /* Categories: fixed 2-column grid so the 5 items lay out as
    armor/shield, melee weapon/ranged weapon, ammunition (alone) */

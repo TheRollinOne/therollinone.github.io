@@ -7,6 +7,24 @@
 --hairline:#36394d;
 --gold:#d3ac43;
 --dark-gold:#b69028;
+
+--type-1: #78dc6e;
+--type-2: #32d2b4;
+--type-3: #41c3f5;
+--type-4: #c489ff;
+--type-5: #ff96c8;
+--type-6: #ff4b4b;
+--type-7: #ff9b50;
+--type-8: #e4c450;
+--type-9: #2f9925;
+--type-10: #0b9c82;
+--type-11: #0984b4;
+--type-12: #7632b9;
+--type-13: #a8326b;
+--type-14: #c52323;
+--type-15: #c0641e;
+--type-16: #b39427;
+--type-gray: #f0f0f0b4;
 }
 *{box-sizing:border-box;}
 html,body{
@@ -323,6 +341,150 @@ select.select-filter:focus{border-color:var(--gold);}
   gap:8px;
   flex-wrap:wrap;
 }
+
+/* ---------- Page-title top row (nav, centered) ----------
+   Wraps the top-menu-nav so it can be centered as a group on its own row,
+   independent of the item-count row below it. Real, permanent shared rule
+   (not opt-in like the sticky block below): it does nothing on any page
+   whose HTML doesn't wrap its nav in a `.page-title-top` div, so it's safe
+   to sit here even though only Armor Catalogue's markup uses it right now.
+   Add the same wrapper to another page's HTML to pick it up there too. */
+.page-title-top{
+  display:flex;
+  justify-content:center;
+}
+
+/* ---------- Page-title bottom row (count + theme toggle) ----------
+   Wraps the "<N> Foo Listed" heading and the theme toggle on one row, with
+   the toggle pushed to the far right via justify-content:space-between.
+   Same status as .page-title-top above: inert until a page's HTML wraps
+   these two in a `.page-title-bottom` div. */
+.page-title-bottom{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  width:100%;
+  gap:10px;
+}
+.page-title-bottom .theme-toggle{
+  margin-left:auto;
+}
+
+/* ---------- Header sort bar (shared) ----------
+   "SORT BY: [btn] [btn] ..." group that sits inside .page-title-bottom,
+   between the item-count heading and the theme toggle. flex:1 lets it take
+   the free space and justify-content:center puts it midway between the two.
+   Intentionally quieter than .top-menu-link: smaller, thinner, dimmed
+   border and text, and only a soft tint (not the solid gold fill) when
+   active. Each page supplies its own buttons via data-sort="<key>" and
+   its own JS; the styling here is page-agnostic. */
+.sort-bar{
+  flex:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:6px;
+  min-width:0;
+}
+.sort-bar-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--parchment-dim);
+  opacity:.7;
+  margin-right:4px;
+  white-space:nowrap;
+}
+.sort-btn{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.76rem;
+  white-space:nowrap;
+  color:var(--parchment-dim);
+  background:transparent;
+  border:1px solid color-mix(in srgb, var(--parchment-dim) 30%, transparent);
+  border-radius:6px;
+  padding:4px 10px;
+  cursor:pointer;
+  opacity:.8;
+  transition:background .15s, border-color .15s, color .15s, opacity .15s;
+}
+.sort-btn:hover{
+  opacity:1;
+  border-color:color-mix(in srgb, var(--gold) 45%, transparent);
+}
+.sort-btn.active{
+  opacity:1;
+  color:var(--parchment);
+  background:color-mix(in srgb, var(--gold) 22%, transparent);
+  border-color:color-mix(in srgb, var(--gold) 50%, transparent);
+}
+/* Optional: a labelled up/down pair (e.g. "Cost [↑][↓]") inside .sort-bar. */
+.sort-group{
+  display:inline-flex;
+  align-items:center;
+  gap:3px;
+  margin-left:8px;
+}
+.sort-group-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.76rem;
+  color:var(--parchment-dim);
+  opacity:.85;
+  margin-right:2px;
+  white-space:nowrap;
+}
+.sort-group .sort-btn{padding:4px 8px;min-width:26px;}
+.page-title-bottom .sort-bar + .theme-toggle{margin-left:0;}
+@media (max-width:900px){
+  .page-title-bottom{flex-wrap:wrap;}
+  .sort-bar{order:3;flex-basis:100%;}
+}
+
+/* ---------- Sticky page header (opt-in) ----------
+   Stacks .page-title-desktop's two rows (.page-title-top, then
+   .page-title-bottom) and pins the whole thing in place while the card
+   list scrolls beneath it. Deliberately NOT applied to the
+   .page-title-desktop rule above — that class is shared by every page, and
+   this is only live on Armor Catalogue right now (see armors.css) while we
+   test it. To roll out to another page: give that page's HTML the same
+   .page-title-top / .page-title-bottom wrappers Armor uses (see
+   armors.html), then copy this exact block into that page's own CSS file.
+   Once every page has it, merge it straight into the .page-title-desktop
+   rule above and delete this comment.
+
+   The margin-top/padding-top pair below isn't decorative — it fixes a real
+   bug: .main's own top padding is what currently creates the gap above the
+   header, but that padding lives OUTSIDE this element, so the instant
+   position:sticky pins the header to the viewport's top edge, that gap
+   disappears and the header visibly jumps. Cancelling .main's padding with
+   a matching negative margin, then re-adding the same amount as this
+   element's OWN padding-top, moves the gap to inside the sticky box itself
+   — so it's part of what gets pinned, and stays constant whether the page
+   is scrolled or not. Keep this pair in sync with .main's own padding-top
+   (10px desktop / 20px at the ≤900px breakpoint) if that ever changes.
+
+   .page-title-desktop{
+     display:flex;
+     flex-direction:column;
+     gap:8px;
+     position:sticky;
+     top:0;
+     z-index:10;
+     background:var(--ink);
+     margin-top:-10px;
+     padding-top:10px;
+     padding-bottom:10px;
+     border-bottom:1px solid var(--hairline);
+   }
+   @media (max-width:900px){
+     .page-title-desktop{
+       margin-top:-20px;
+       padding-top:20px;
+     }
+   }
+*/
 .top-menu-link{
   display:flex;
   align-items:center;
@@ -366,6 +528,55 @@ select.select-filter:focus{border-color:var(--gold);}
     padding:5px 4px;
     font-size:.68rem;
   }
+}
+
+/* ---------- "Load More..." / "Show All" pagination controls ----------
+   Sit centered below the list once it's paginated (see paginate() /
+   showMoreButtonHTML() in base.js). Styled to match .top-menu-link above
+   rather than introducing a new button style. */
+.show-more-row{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  padding:18px 0 4px;
+}
+.show-more-btn{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  width:auto;
+  flex:0 0 auto;
+  padding:7px 16px;
+  text-decoration:none;
+  white-space:nowrap;
+  color:var(--parchment-dim);
+  font-family:'JetBrains Mono',monospace;
+  font-size:.76rem;
+  font-weight:600;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  background:var(--ink-3);
+  border:1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
+  border-radius:8px;
+  cursor:pointer;
+  transition:border-color .15s, background .15s, color .15s;
+}
+.show-more-btn:hover{
+  border-color:var(--gold);
+  background:color-mix(in srgb, var(--gold) 8%, var(--ink-3));
+  color:var(--parchment);
+}
+.show-more-remaining{
+  opacity:.75;
+  font-weight:400;
+  letter-spacing:.02em;
+  text-transform:none;
+}
+@media (max-width:900px){
+  .show-more-row{flex-wrap:wrap;}
+  .show-more-btn{padding:5px 12px; font-size:.68rem;}
 }
 
 /* ---------- Main / list ---------- */
@@ -487,10 +698,34 @@ select.select-filter:focus{border-color:var(--gold);}
 }
 
 /* ---------- Theme toggle wrapper (catalogue-page layout only) ----------
-   Sits inline in .page-title-desktop's flex row on catalogue pages. The
+   Sits inline in the top nav row — inside .top-menu-nav on most pages, or
+   inside .page-title-bottom (next to the item-count heading) on pages
+   using that newer wrapper (see Armor Catalogue). Either way the
    button/popup/swatch appearance itself is shared across ALL pages via
    css/theme-toggle.css — that's the only file to touch for color changes. */
 .theme-toggle{
   position:relative;
   flex-shrink:0;
+}
+
+/* ---------- Sidebar art (bottom of left sidebar) ----------
+   Copy of the home page hero image. margin-top:auto pins it to the bottom
+   of the sidebar's flex column when the filters are short; when they are
+   long it simply follows them and scrolls with the sidebar. The image
+   follows the active theme via the same data-theme attribute the rest of
+   the site uses (gold = no attribute). */
+.sidebar-art{
+  flex:0 0 auto;
+  margin-top:auto;
+  width:100%;
+  aspect-ratio:1 / 1;
+  background:url('../pictures/d20.png') center / 100% 100% no-repeat;
+  opacity:.5;
+}
+html[data-theme="blue"]   .sidebar-art{background-image:url('../pictures/d20_blue.png');}
+html[data-theme="orange"] .sidebar-art{background-image:url('../pictures/d20_orange.png');}
+html[data-theme="green"]  .sidebar-art{background-image:url('../pictures/d20_green.png');}
+html[data-theme="red"]    .sidebar-art{background-image:url('../pictures/d20_red.png');}
+@media (max-width:900px){
+  .sidebar-art{max-width:320px;margin:0 auto;}
 }

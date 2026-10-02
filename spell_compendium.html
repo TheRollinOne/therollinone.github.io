@@ -61,40 +61,47 @@
           <div class="filter-label"><span>Saves</span><button id="clearSaves" type="button">clear</button></div>
           <div class="chip-row save-chip-row" id="saveChips"></div>
         </div>
-
-        <div class="filters-summary" id="sortingSummary">
-          <span>Sort By</span>
-          <div class="filters-header-actions">
-            <span class="fs-arrow">▾</span>
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <div class="sort-row">
-            <select class="select-filter" id="sortSelect">
-              <option value="name">Name (A–Z)</option>
-              <option value="level">Level (low–high)</option>
-              <option value="school">School</option>
-            </select>
-          </div>
-        </div>
       </div>
     </div>
+    <div class="sidebar-art" aria-hidden="true"></div>
   </aside>
 
 <!-- ===== main ===== -->
   <main class="main">
     <div class="page-title-desktop">
-      <h1 id="listTitle">573 Spells Listed</h1>
-      <nav class="top-menu-nav" aria-label="Site navigation">
-        <a class="top-menu-link" href="index.html">Homepage</a>
-        <a class="top-menu-link" href="armor_catalogue.html">Armors</a>
-        <a class="top-menu-link" href="feat_library.html">Feats</a>
-        <a class="top-menu-link" href="magic_items_Vault.html">Magic Items</a>
-        <a class="top-menu-link" href="monster_bestiary.html">Monsters</a>
-        <a class="top-menu-link" href="rune_repository.html">Runes</a>
-        <a class="top-menu-link current" href="spell_compendium.html">Spells</a>
-        <a class="top-menu-link" href="weapon_arsenal.html">Weapons</a>
+      <div class="page-title-top">
+        <nav class="top-menu-nav" aria-label="Site navigation">
+          <a class="top-menu-link" href="index.html">Homepage</a>
+          <a class="top-menu-link" href="armor_catalogue.html">Armors</a>
+          <a class="top-menu-link" href="feat_library.html">Feats</a>
+          <a class="top-menu-link" href="magic_items_Vault.html">Magic Items</a>
+          <a class="top-menu-link" href="monster_bestiary.html">Monsters</a>
+          <a class="top-menu-link" href="npc_registry.html">NPCs</a>
+          <a class="top-menu-link" href="rune_repository.html">Runes</a>
+          <a class="top-menu-link current" href="spell_compendium.html">Spells</a>
+          <a class="top-menu-link" href="weapon_arsenal.html">Weapons</a>
+        </nav>
+      </div>
+      <div class="page-title-bottom">
+        <h1 id="listTitle">573 Spells Listed</h1>
+        <div class="sort-bar" id="sortBar" role="group" aria-label="Sort spells">
+          <span class="sort-bar-label">Sort:</span>
+          <span class="sort-group">
+            <span class="sort-group-label">Name</span>
+            <button type="button" class="sort-btn" data-sort="name" aria-label="Name ascending">↑</button>
+            <button type="button" class="sort-btn" data-sort="name_desc" aria-label="Name descending">↓</button>
+          </span>
+          <span class="sort-group">
+            <span class="sort-group-label">Level</span>
+            <button type="button" class="sort-btn" data-sort="level" aria-label="Level ascending">↑</button>
+            <button type="button" class="sort-btn" data-sort="level_desc" aria-label="Level descending">↓</button>
+          </span>
+          <span class="sort-group">
+            <span class="sort-group-label">School</span>
+            <button type="button" class="sort-btn" data-sort="school" aria-label="School ascending">↑</button>
+            <button type="button" class="sort-btn" data-sort="school_desc" aria-label="School descending">↓</button>
+          </span>
+        </div>
         <div class="theme-toggle" id="themeToggle">
   <button
     class="theme-toggle-main"
@@ -116,7 +123,7 @@
   </div>
 </div>
 
-      </nav>
+      </div>
     </div>
     <div class="list" id="spellList"></div>
   </main>

@@ -56,47 +56,49 @@
         <div class="filter-group">
           <div class="filter-label"><span>Categories</span><button id="clearCategories" type="button">clear</button></div>
           <div class="chip-row category-chip-row" id="categoryChips">
-            <div class="chip" data-category="armor" style="--dotc:var(--cat-armor);--chipc:var(--cat-armor);"><span class="dot"></span>Armor</div>
-            <div class="chip" data-category="shield" style="--dotc:var(--cat-shield);--chipc:var(--cat-shield);"><span class="dot"></span>Shield</div>
-            <div class="chip" data-category="melee weapon" style="--dotc:var(--cat-melee-weapon);--chipc:var(--cat-melee-weapon);"><span class="dot"></span>Melee Weapon</div>
-            <div class="chip" data-category="ranged weapon" style="--dotc:var(--cat-ranged-weapon);--chipc:var(--cat-ranged-weapon);"><span class="dot"></span>Ranged Weapon</div>
-            <div class="chip" data-category="ammunition" style="--dotc:var(--cat-ammunition);--chipc:var(--cat-ammunition);"><span class="dot"></span>Ammunition</div>
-          </div>
-        </div>
-
-        <div class="filters-summary" id="sortingSummary">
-          <span>Sort By</span>
-          <div class="filters-header-actions">
-            <span class="fs-arrow">▾</span>
-          </div>
-        </div>
-
-        <div class="filter-group">
-          <div class="sort-row">
-            <select class="select-filter" id="sortSelect">
-              <option value="name">Name (A–Z)</option>
-              <option value="category">Category</option>
-              <option value="bonus">Bonus (low–high)</option>
-            </select>
           </div>
         </div>
       </div>
     </div>
+    <div class="sidebar-art" aria-hidden="true"></div>
   </aside>
 
 <!-- ===== main (placeholder — list rendering comes in the next step) ===== -->
   <main class="main">
     <div class="page-title-desktop">
-      <h1 id="listTitle">248 Runes Listed</h1>
-      <nav class="top-menu-nav" aria-label="Site navigation">
-        <a class="top-menu-link" href="index.html">Homepage</a>
-        <a class="top-menu-link" href="armor_catalogue.html">Armors</a>
-        <a class="top-menu-link" href="feat_library.html">Feats</a>
-        <a class="top-menu-link" href="magic_items_Vault.html">Magic Items</a>
-        <a class="top-menu-link" href="monster_bestiary.html">Monsters</a>
-        <a class="top-menu-link current" href="rune_repository.html">Runes</a>
-        <a class="top-menu-link" href="spell_compendium.html">Spells</a>
-        <a class="top-menu-link" href="weapon_arsenal.html">Weapons</a>
+      <div class="page-title-top">
+        <nav class="top-menu-nav" aria-label="Site navigation">
+          <a class="top-menu-link" href="index.html">Homepage</a>
+          <a class="top-menu-link" href="armor_catalogue.html">Armors</a>
+          <a class="top-menu-link" href="feat_library.html">Feats</a>
+          <a class="top-menu-link" href="magic_items_Vault.html">Magic Items</a>
+          <a class="top-menu-link" href="monster_bestiary.html">Monsters</a>
+          <a class="top-menu-link" href="npc_registry.html">NPCs</a>
+          <a class="top-menu-link current" href="rune_repository.html">Runes</a>
+          <a class="top-menu-link" href="spell_compendium.html">Spells</a>
+          <a class="top-menu-link" href="weapon_arsenal.html">Weapons</a>
+        </nav>
+      </div>
+      <div class="page-title-bottom">
+        <h1 id="listTitle">248 Runes Listed</h1>
+        <div class="sort-bar" id="sortBar" role="group" aria-label="Sort runes">
+          <span class="sort-bar-label">Sort:</span>
+          <span class="sort-group">
+            <span class="sort-group-label">Name</span>
+            <button type="button" class="sort-btn" data-sort="name" aria-label="Name ascending">↑</button>
+            <button type="button" class="sort-btn" data-sort="name_desc" aria-label="Name descending">↓</button>
+          </span>
+          <span class="sort-group">
+            <span class="sort-group-label">Category</span>
+            <button type="button" class="sort-btn" data-sort="category" aria-label="Category ascending">↑</button>
+            <button type="button" class="sort-btn" data-sort="category_desc" aria-label="Category descending">↓</button>
+          </span>
+          <span class="sort-group">
+            <span class="sort-group-label">Bonus</span>
+            <button type="button" class="sort-btn" data-sort="bonus" aria-label="Bonus ascending">↑</button>
+            <button type="button" class="sort-btn" data-sort="bonus_desc" aria-label="Bonus descending">↓</button>
+          </span>
+        </div>
         <div class="theme-toggle" id="themeToggle">
   <button
     class="theme-toggle-main"
@@ -118,7 +120,7 @@
   </div>
 </div>
 
-      </nav>
+      </div>
     </div>
     <div class="list" id="runeList"></div>
   </main>
