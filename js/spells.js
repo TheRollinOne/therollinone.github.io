@@ -241,6 +241,53 @@
     return queryMatch(spell._blob, query);
   }
 
+
+  // Renders a spell description as HTML. Lines starting with ">>" open a
+  // table: the text after ">>" is the header (columns split by "/"), and
+  // every following line containing "|" is a row (cells split by "|").
+  // The table ends at the first line without "|" (blank line, "**..." line,
+  // or plain text); that line is then rendered normally. A ">>" line with
+  // no "|" rows after it falls back to the usual bold heading. Display only:
+  // the copied text (data-copy) is built separately and is unchanged.
+  function renderDescriptionHtml(text){
+    const lines = (text || '').split('\n');
+    const pieces = [];
+    let buf = [];
+    let afterTable = false;   // true right after a table: its trailing blank line(s) are dropped
+    // Text that comes right before a table keeps its own newlines exactly:
+    // one trailing "\n" is added for the line break into the table, so a
+    // single "\n" in the data shows no gap and "\n\n" shows one blank line.
+    const flush = (beforeTable) => {
+      if(buf.length) pieces.push(boldLeadingLabel(buf.join('\n')) + (beforeTable ? '\n' : ''));
+      buf = [];
+    };
+    for(let i = 0; i < lines.length; i++){
+      const head = lines[i].match(/^\s*>>\s*(.*)$/);
+      if(head && i + 1 < lines.length && lines[i+1].includes('|') && !/^\s*\*\*/.test(lines[i+1])){
+        const headers = head[1].split('/').map(h => h.trim());
+        const rows = [];
+        let j = i + 1;
+        while(j < lines.length && lines[j].includes('|') && !/^\s*\*\*/.test(lines[j])){
+          rows.push(lines[j].split('|').map(c => c.trim()));
+          j++;
+        }
+        flush(true);
+        const cols = Math.max(headers.length, ...rows.map(r => r.length));
+        const cell = (tag, v) => `<${tag}>${escapeHtml(v || '')}</${tag}>`;
+        const pad = arr => Array.from({length: cols}, (_, k) => arr[k]);
+        pieces.push(`<div class="desc-table-wrap"><table class="desc-table"><thead><tr>${pad(headers).map(h => cell('th', h)).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${pad(r).map(c => cell('td', c)).join('')}</tr>`).join('')}</tbody></table></div>`);
+        afterTable = true;
+        i = j - 1;
+      } else {
+        if(afterTable && !lines[i].trim()) continue;
+        afterTable = false;
+        buf.push(lines[i]);
+      }
+    }
+    flush(false);
+    return pieces.join('');
+  }
+
   function cardHTML(s){
     const sch = s.school || 'universal';
     const cVar = s._cardColor || TYPE_GRAY;
@@ -292,7 +339,7 @@
     const roll20TagHTML = `<span class="ritual-tag roll20-tag copyable" data-copy="${escapeHtml(roll20Text)}">Copy</span>`;
     const badgesHTML = `<div class="spell-badges">${ritualTagHTML}</div>`;
 
-    const descHtml = `<div class="spell-section-title-row"><div class="spell-section-title">Description</div>${badgesHTML}</div><div>${boldLeadingLabel((s.description || '').trim())}</div>`;
+    const descHtml = `<div class="spell-section-title-row"><div class="spell-section-title">Description</div>${badgesHTML}</div><div>${renderDescriptionHtml((s.description || '').trim())}</div>`;
 
     const heightenedItemsHtml = (s.heightened && s.heightened.length) ? s.heightened.map(h=>{
       const m = h.match(/^\s*(\([^)]*\))\s*(.*)$/s);
