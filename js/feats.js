@@ -1,12 +1,7 @@
 (function(){
-  function slugify(str){
-    return (str||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-  }
-
-  // CATEGORY_COLORS moved to base.js's shared TYPE_COLORS/buildTypeColorMap.
-
   const state = {
     query:'',
+    searchScope:SEARCH_SCOPE_NAMES,
     categories:new Set(),
     prereq:null, // null | 'none' | 'some'
     prereqQuery:'',
@@ -57,14 +52,15 @@
     f._hasBab = BAB_RX.test(p);
     f._hasSkillRanks = SKILL_RANKS_RX.test(p);
     f._classFeatures = new Set(Object.keys(CLASS_FEATURE_RX).filter(k=>CLASS_FEATURE_RX[k].test(p)));
+    f._nameBlob = (f.name || '').toLowerCase();
     f._blob = [
       f.name, f.category, f.prerequisites, f.benefits,
       f.normal, f.special
     ].filter(Boolean).join(' ').toLowerCase();
   });
 
+  initMobileFiltersCollapse();
   initThemeToggle();
-  initSidebarArt();
 
   const categoryColorOf = buildTypeColorMap(FEATS_DATA.map(f=>f.category));
   const allCategories = Object.keys(categoryColorOf);
@@ -137,8 +133,6 @@
     render();
   });
 
-  initMobileFiltersCollapse();
-
   document.getElementById('clearCategories').addEventListener('click', ()=>{
     state.categories.clear();
     document.querySelectorAll('#categoryChips .chip').forEach(el=>el.classList.remove('active'));
@@ -153,10 +147,12 @@
     wrapEl: searchWrapEl,
     clearIconEl: searchClearIcon,
     onQuery: (q)=>{ state.query = q; },
-    render: ()=>render()
+    render: ()=>render(),
+    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
   });
 
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'power attack +combat -fighter');
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'power attack +combat -fighter', { prefix: true });
+  initSearchScope(searchWrapEl, (scope)=>{ state.searchScope = scope; render(); });
 
   const prereqSearchInputEl = document.getElementById('prereqSearchInput');
   const prereqSearchWrapEl = document.getElementById('prereqSearchWrap');
@@ -166,7 +162,8 @@
     wrapEl: prereqSearchWrapEl,
     clearIconEl: prereqSearchClearIcon,
     onQuery: (q)=>{ state.prereqQuery = q; },
-    render: ()=>render()
+    render: ()=>render(),
+    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
   });
 
   document.getElementById('clearPrereq').addEventListener('click', ()=>{
@@ -221,12 +218,12 @@
 
   wireCopyableList('featList', 'feat-name');
 
-  const queryMatch = createQueryMatcher();
+  const queryMatch = createQueryMatcher({ prefix: true });
   function matchesQuery(feat, query){
-    return queryMatch(feat._blob, query);
+    return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? feat._blob : feat._nameBlob, query);
   }
 
-  const prereqQueryMatch = createQueryMatcher();
+  const prereqQueryMatch = createQueryMatcher({ prefix: true });
   function matchesPrereqQuery(feat, query){
     return prereqQueryMatch(feat._prereqBlob, query);
   }
@@ -237,7 +234,7 @@
 
     const flavorHtml = f.flavor_text ? `<p class="feat-flavor copyable" data-copy="${escapeHtml(f.flavor_text)}">${escapeHtml(f.flavor_text)}</p>` : '';
 
-    const prereqHtml = (f.prerequisites && f.prerequisites.length>0) ? `\n        <div class="feat-section copyable" data-copy="${escapeHtml(boldLeadingLabelText(f.prerequisites))}">\n          <div class="feat-section-title">Prerequisites</div>\n          <div class="feat-desc"><div>${boldLeadingLabel(f.prerequisites)}</div></div>\n        </div>` : '';
+    const prereqHtml = (f.prerequisites && f.prerequisites.length>0) ? `\n        <div class="feat-section copyable" data-copy="${escapeHtml(clipboardFormatText(f.prerequisites))}">\n          <div class="feat-section-title">Prerequisites</div>\n          <div class="feat-desc"><div>${htmlFormatText(f.prerequisites)}</div></div>\n        </div>` : '';
 
     const groupFields = [
       ['Benefits', f.benefits],
@@ -246,10 +243,10 @@
     ].filter(([label,val])=>val && val.length>0);
 
     const groupInnerHtml = groupFields.map(([label,val])=>{
-      return `\n        <div class="feat-section">\n          <div class="feat-section-title">${escapeHtml(label)}</div>\n          <div class="feat-desc"><div>${boldLeadingLabel(val)}</div></div>\n        </div>`;
+      return `\n        <div class="feat-section">\n          <div class="feat-section-title">${escapeHtml(label)}</div>\n          <div class="feat-desc"><div>${htmlFormatText(val)}</div></div>\n        </div>`;
     }).join('');
 
-    const combinedCopyText = boldLeadingLabelText(
+    const combinedCopyText = clipboardFormatText(
       groupFields.map(([label,val])=> label==='Benefits' ? val : `${label}: ${val}`).join('\n\n')
     );
 
@@ -302,6 +299,7 @@
     classFeatureSelectEl.innerHTML = '<option value="">Any</option>' +
       ALL_CLASS_FEATURE_OPTIONS.filter(o=>present.has(o.value))
         .map(o=>`<option value="${o.value}">${escapeHtml(o.label)}</option>`).join('');
+    sortSelectOptions(classFeatureSelectEl);
     classFeatureSelectEl.value = state.classFeature;
   }
 

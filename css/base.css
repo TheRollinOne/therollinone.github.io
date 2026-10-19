@@ -137,6 +137,24 @@ body{
 .search-wrap.has-query .search-clear-icon{display:block;}
 .search-wrap.has-query input{padding-right:36px;}
 
+/* ---------- Search scope toggle (shared) ----------
+   "Names Only | All Fields" two-button toggle injected right under the
+   search box by initSearchScope() in base.js. Buttons reuse .sort-btn's
+   look (colors, hover, .active tint) and just stretch to 50%/50% and get
+   a bit more height. The negative margin tucks it closer to the search
+   box than the sidebar's normal 22px section gap. */
+.search-scope{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:6px;
+  margin-top:-12px;
+}
+.search-scope .sort-btn{
+  width:100%;
+  padding:3px 10px;
+  text-align:center;
+}
+
 .search-hint{
   font-family:'JetBrains Mono',monospace;
   font-size:.68rem;
@@ -579,6 +597,54 @@ select.select-filter:focus{border-color:var(--gold);}
   .show-more-btn{padding:5px 12px; font-size:.68rem;}
 }
 
+/* ---------- Description tables (shared) ----------
+   Rendered by renderDescriptionHtml() in base.js on any page. */
+.desc-table-wrap{
+  overflow-x:auto;
+  margin:0 0 14px;
+  white-space:normal;
+}
+.desc-table{
+  border-collapse:collapse;
+  width:auto;            /* sized by content, not stretched to full width */
+  max-width:100%;
+  font-size:1.02rem;
+}
+.desc-table th,
+.desc-table td{
+  min-width:150px;       /* minimum column width */
+  border:1px solid var(--hairline);
+  padding:6px 12px;
+  text-align:left;
+  vertical-align:top;
+}
+.desc-table th{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.8rem;
+  font-weight:700;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--parchment);
+  background:color-mix(in srgb, var(--cardc,var(--gold)) 35%, var(--ink-2));
+  border-color: color-mix(in srgb, var(--cardc, var(--gold)) 60%, var(--ink-2));
+  white-space:nowrap;
+}
+.desc-table td{
+  color:var(--parchment);
+}
+/* odd rows: same dark tone as the stat boxes (school, casting time, ...) */
+.desc-table tbody tr:nth-child(odd) td{
+  background:var(--ink-2);
+}
+.desc-table tbody tr:nth-child(even) td{
+  background:transparent;
+}
+/* Outer table border: header color, dimmed. Header row excluded. */
+.desc-table{ --table-edge:color-mix(in srgb, var(--cardc,var(--gold)) 60%, var(--ink-2)); }
+.desc-table tbody tr > td:first-child{ border-left-color:var(--table-edge); }
+.desc-table tbody tr > td:last-child{ border-right-color:var(--table-edge); }
+.desc-table tbody tr:last-child > td{ border-bottom-color:var(--table-edge); }
+
 /* ---------- Main / list ---------- */
 .main{
   padding:10px 20px 80px;
@@ -715,17 +781,20 @@ select.select-filter:focus{border-color:var(--gold);}
    follows the active theme via the same data-theme attribute the rest of
    the site uses (gold = no attribute). */
 .sidebar-art{
-  flex:0 0 auto;
-  margin-top:auto;
-  width:100%;
-  aspect-ratio:1 / 1;
+  position:fixed;
+  left:22px;
+  bottom:20px;
+  width:276px;
+  height:276px;
+  z-index:-1;
+  pointer-events:none;
   background:url('../pictures/d20.png') center / 100% 100% no-repeat;
-  opacity:.5;
+  opacity:.3;
 }
 html[data-theme="blue"]   .sidebar-art{background-image:url('../pictures/d20_blue.png');}
 html[data-theme="orange"] .sidebar-art{background-image:url('../pictures/d20_orange.png');}
 html[data-theme="green"]  .sidebar-art{background-image:url('../pictures/d20_green.png');}
 html[data-theme="red"]    .sidebar-art{background-image:url('../pictures/d20_red.png');}
 @media (max-width:900px){
-  .sidebar-art{max-width:320px;margin:0 auto;}
+  .sidebar-art{display:none;}
 }

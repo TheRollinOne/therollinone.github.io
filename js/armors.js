@@ -9,6 +9,7 @@
 
   const state = {
     query: '',
+    searchScope: SEARCH_SCOPE_NAMES,
     categories: new Set(),
     armorBonuses: new Set(),
     maxDexes: new Set(),
@@ -22,7 +23,8 @@
     document.getElementById('brandSub').textContent = `Armor Catalogue · ${ARMORS_DATA.length} Armors`;
     ARMORS_DATA.forEach((a, i) => {
       a._idx = i;
-      a._category = titleCase(a.category);
+      a._category = formatTitleCase(a.category);
+      a._nameBlob = (a.name || '').toLowerCase();
       a._blob = [
         a.name, a._category, a.description
       ].filter(Boolean).join(' ').toLowerCase();
@@ -35,8 +37,7 @@
 
   initMobileFiltersCollapse();
   initThemeToggle();
-  initSidebarArt();
-
+  
   // Category chips are generated dynamically (colors depend on the data),
   // the same way feats.js builds its category chips.
   const categoryChips = document.getElementById('categoryChips');
@@ -101,10 +102,17 @@
     wrapEl: searchWrapEl,
     clearIconEl: searchClearIcon,
     onQuery: (q) => { state.query = q; },
-    render: () => render()
+    render: () => render(),
+    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
   });
 
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'chain shirt +light -heavy');
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'chain sh +light -heavy', { prefix: true });
+
+  // "Names Only | All Fields" toggle under the search box (default: names).
+  initSearchScope(searchWrapEl, (scope) => {
+    state.searchScope = scope;
+    render();
+  });
 
   document.getElementById('clearAll').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -134,9 +142,12 @@
 
   wireCopyableList('armorList', 'armor-name');
 
-  const queryMatch = createQueryMatcher();
+  // Live search (Armor only, for now): terms match from the start of a word,
+  // so results narrow as the user types instead of waiting for a full word.
+  const queryMatch = createQueryMatcher({ prefix: true });
   function matchesQuery(armor, query) {
-    return queryMatch(armor._blob, query);
+    const blob = state.searchScope === SEARCH_SCOPE_ALL ? armor._blob : armor._nameBlob;
+    return queryMatch(blob, query);
   }
 
   function parseLeadingNumber(str){
@@ -196,11 +207,11 @@
       `<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`
     ).join('');
 
-    const descText = boldLeadingLabelText(a.description || '');
+    const descText = clipboardFormatText(a.description || '');
     const descHtml = a.description ? `
       <div class="armor-section copyable" data-copy="${escapeHtml(descText)}">
         <div class="armor-section-title">Description</div>
-        <div class="armor-desc"><div>${boldLeadingLabel(a.description)}</div></div>
+        <div class="armor-desc"><div>${htmlFormatDescription(a.description)}</div></div>
       </div>` : '';
 
     return `
@@ -288,6 +299,6 @@
       onShowAll: () => { state.visibleCount = results.length; render(); }
     });
   }
-
+  
   render();
 })();

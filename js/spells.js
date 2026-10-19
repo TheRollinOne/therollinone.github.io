@@ -1,10 +1,26 @@
 (function(){
   const SCHOOL_ORDER = ['abjuration','conjuration','divination','enchantment','evocation','illusion','necromancy','transmutation','universal'];
   const SCHOOL_LABEL = {abjuration:'Abjuration',conjuration:'Conjuration',divination:'Divination',enchantment:'Enchantment',evocation:'Evocation',illusion:'Illusion',necromancy:'Necromancy',transmutation:'Transmutation',universal:'Universal'};
+  // subschool is a list, e.g. ["Figment","Glamer"] or []
+  const subschoolText = s => (s.subschool || []).join(', ');
+  // school + subschool, e.g. "illusion (Figment, Glamer)"; no empty "()" when the list is empty
+  const schoolDisplay = s => {
+    const sub = subschoolText(s);
+    return sub ? `${s.school || ''} (${sub})` : (s.school || '');
+  };
+  // sr + sr_extra, e.g. "no (harmless)"; no trailing space when sr_extra is blank
+  const srDisplay = s => {
+    const extra = (s.sr_extra || '').trim();
+    return extra ? `${s.sr || ''} ${extra}` : (s.sr || '');
+  };
+  // ritual is now numeric: 1 = ritual, 0 = not (tolerates "1" string too)
+  const isRitual = s => Number(s.ritual) === 1;
 
   const state = {
     query:'',
+    searchScope:SEARCH_SCOPE_NAMES,
     schools:new Set(),
+    subschool:'',
     classes:new Set(),
     levels:new Set(),
     saves:new Set(),
@@ -18,9 +34,10 @@
   SPELLS_DATA.forEach((s,i)=>{
     s._idx = i;
     s._classes = s.level_entries.map(le=>le.class);
+    s._nameBlob = (s.name || '').toLowerCase();
     s._blob = [
-      s.name, s.school, s._classes.join(' '), s.casting_time,
-      s.components, s.range, s.target, s.effect, s.area, s.duration, s.save,
+      s.name, schoolDisplay(s), s._classes.join(' '), s.casting_time,
+      s.components, s.range, s.target, s.effect, s.area, s.duration, s.save, srDisplay(s),
       s.description
     ].join(' ').toLowerCase();
   });
@@ -32,8 +49,8 @@
   schoolColorOf.universal = TYPE_GRAY;
   SPELLS_DATA.forEach(s=>{ s._cardColor = schoolColorOf[s.school || 'universal'] || TYPE_GRAY; });
 
+  initMobileFiltersCollapse();
   initThemeToggle();
-  initSidebarArt();
 
   const allClasses = Array.from(new Set(SPELLS_DATA.flatMap(s=>s._classes))).sort();
   const classChips = document.getElementById('classChips');
@@ -41,7 +58,7 @@
     const chip = document.createElement('div');
     chip.className='chip';
     chip.dataset.cls = c;
-    chip.textContent = c.charAt(0).toUpperCase()+c.slice(1);
+    chip.textContent = formatCapitalize(c);
     chip.addEventListener('click', ()=>{
       if(state.classes.has(c)){
         state.classes.delete(c);
@@ -142,7 +159,18 @@
     schoolChips.appendChild(chip);
   });
 
-  initMobileFiltersCollapse();
+  // Subschool select: options are rebuilt on every render() from the spells
+  // left by all the OTHER filters (see updateSubschoolOptions()).
+  const subschoolSelect = document.getElementById('subschoolSelect');
+  subschoolSelect.addEventListener('change', ()=>{
+    state.subschool = subschoolSelect.value;
+    render();
+  });
+  document.getElementById('clearSubschool').addEventListener('click', ()=>{
+    state.subschool = '';
+    subschoolSelect.value = '';
+    render();
+  });
 
   document.getElementById('clearSchools').addEventListener('click', ()=>{
     state.schools.clear();
@@ -173,10 +201,12 @@
     wrapEl: searchWrapEl,
     clearIconEl: searchClearIcon,
     onQuery: (q)=>{ state.query = q; },
-    render: ()=>render()
+    render: ()=>render(),
+    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
   });
 
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'fireball +evocation -verbal');
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'fireball +evocation -verbal', { prefix: true });
+  initSearchScope(searchWrapEl, (scope)=>{ state.searchScope = scope; render(); });
 
   document.getElementById('clearAll').addEventListener('click', (e)=>{
     e.stopPropagation();
@@ -185,6 +215,8 @@
     syncSearchClearIcon();
     state.schools.clear();
     document.querySelectorAll('#schoolChips .chip').forEach(el=>el.classList.remove('active'));
+    state.subschool = '';
+    subschoolSelect.value = '';
     state.classes.clear();
     document.querySelectorAll('#classChips .chip').forEach(el=>el.classList.remove('active'));
     state.levels.clear();
@@ -236,56 +268,9 @@
     return lines.join('\n');
   }
 
-  const queryMatch = createQueryMatcher();
+  const queryMatch = createQueryMatcher({ prefix: true });
   function matchesQuery(spell, query){
-    return queryMatch(spell._blob, query);
-  }
-
-
-  // Renders a spell description as HTML. Lines starting with ">>" open a
-  // table: the text after ">>" is the header (columns split by "/"), and
-  // every following line containing "|" is a row (cells split by "|").
-  // The table ends at the first line without "|" (blank line, "**..." line,
-  // or plain text); that line is then rendered normally. A ">>" line with
-  // no "|" rows after it falls back to the usual bold heading. Display only:
-  // the copied text (data-copy) is built separately and is unchanged.
-  function renderDescriptionHtml(text){
-    const lines = (text || '').split('\n');
-    const pieces = [];
-    let buf = [];
-    let afterTable = false;   // true right after a table: its trailing blank line(s) are dropped
-    // Text that comes right before a table keeps its own newlines exactly:
-    // one trailing "\n" is added for the line break into the table, so a
-    // single "\n" in the data shows no gap and "\n\n" shows one blank line.
-    const flush = (beforeTable) => {
-      if(buf.length) pieces.push(boldLeadingLabel(buf.join('\n')) + (beforeTable ? '\n' : ''));
-      buf = [];
-    };
-    for(let i = 0; i < lines.length; i++){
-      const head = lines[i].match(/^\s*>>\s*(.*)$/);
-      if(head && i + 1 < lines.length && lines[i+1].includes('|') && !/^\s*\*\*/.test(lines[i+1])){
-        const headers = head[1].split('/').map(h => h.trim());
-        const rows = [];
-        let j = i + 1;
-        while(j < lines.length && lines[j].includes('|') && !/^\s*\*\*/.test(lines[j])){
-          rows.push(lines[j].split('|').map(c => c.trim()));
-          j++;
-        }
-        flush(true);
-        const cols = Math.max(headers.length, ...rows.map(r => r.length));
-        const cell = (tag, v) => `<${tag}>${escapeHtml(v || '')}</${tag}>`;
-        const pad = arr => Array.from({length: cols}, (_, k) => arr[k]);
-        pieces.push(`<div class="desc-table-wrap"><table class="desc-table"><thead><tr>${pad(headers).map(h => cell('th', h)).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${pad(r).map(c => cell('td', c)).join('')}</tr>`).join('')}</tbody></table></div>`);
-        afterTable = true;
-        i = j - 1;
-      } else {
-        if(afterTable && !lines[i].trim()) continue;
-        afterTable = false;
-        buf.push(lines[i]);
-      }
-    }
-    flush(false);
-    return pieces.join('');
+    return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? spell._blob : spell._nameBlob, query);
   }
 
   function cardHTML(s){
@@ -300,7 +285,7 @@
     const levelDisp = displayLevel===0 ? 'Cantrip' : `Lvl ${displayLevel}`;
 
     const statFields = [
-      ['School', s.school],
+      ['School', schoolDisplay(s)],
       ['Descriptor', s.descriptor || ''],
       ['Casting Time', s.casting_time],
       ['Components', s.components],
@@ -310,7 +295,7 @@
       ['Area', s.area || ''],
       ['Duration', s.duration],
       ['Save', s.save],
-      ['SR', s.sr]
+      ['SR', srDisplay(s)]
     ].filter(([label,val])=>val && val.length>0);
 
     const classesHTML = s.level_entries.map(le=>{
@@ -327,36 +312,54 @@
     }).join('');
     const classLevelInline = s.level_entries.map(le=>`${le.class} ${le.level}`).join(', ');
     const shortDescInline = s.short_description || classLevelInline;
-    const ritualTagHTML = s.ritual ? `<span class="ritual-tag">Ritual</span>` : '';
+    const ritualTagHTML = isRitual(s) ? `<span class="ritual-tag">Ritual</span>` : '';
 
-    const descText = boldLeadingLabelText((s.description || '').trim());
+    const descText = clipboardFormatText((s.description || '').trim());
     const heightenedText = (s.heightened && s.heightened.length) ? s.heightened.map(h=>{
       const m = h.match(/^\s*(\([^)]*\))\s*(.*)$/s);
-      return m ? `**${m[1]}** ${boldLeadingLabelText(m[2])}` : boldLeadingLabelText(h);
+      return m ? `**${m[1]}** ${clipboardFormatText(m[2])}` : clipboardFormatText(h);
     }).join('\n') : '';
 
-    const roll20Text = buildRoll20Text(s, {description: descText, heightened: heightenedText});
+    const roll20Text = buildRoll20Text(s, {description: descText, heightened: heightenedText, subschool: subschoolText(s)});
     const roll20TagHTML = `<span class="ritual-tag roll20-tag copyable" data-copy="${escapeHtml(roll20Text)}">Copy</span>`;
     const badgesHTML = `<div class="spell-badges">${ritualTagHTML}</div>`;
 
-    const descHtml = `<div class="spell-section-title-row"><div class="spell-section-title">Description</div>${badgesHTML}</div><div>${renderDescriptionHtml((s.description || '').trim())}</div>`;
+    const descHtml = `<div class="spell-section-title-row"><div class="spell-section-title">Description</div>${badgesHTML}</div><div>${htmlFormatDescription((s.description || '').trim())}</div>`;
 
     const heightenedItemsHtml = (s.heightened && s.heightened.length) ? s.heightened.map(h=>{
       const m = h.match(/^\s*(\([^)]*\))\s*(.*)$/s);
-      if(m) return `<div class="heightened-item"><b>${escapeHtml(m[1])}</b> ${boldLeadingLabel(m[2])}</div>`;
-      return `<div class="heightened-item">${boldLeadingLabel(h)}</div>`;
+      if(m) return `<div class="heightened-item"><b>${escapeHtml(m[1].replace(/^\(\s*|\s*\)$/g, ''))}</b>: ${htmlFormatText(m[2])}</div>`;
+      return `<div class="heightened-item">${htmlFormatText(h)}</div>`;
     }).join('') : '';
     const heightenedCopyBlock = heightenedText ? `\n      <div class="heightened-block copyable" data-copy="${escapeHtml(heightenedText)}">\n        <div class="heightened-title">Heightened</div>\n        <div class="heightened-copy">${heightenedItemsHtml}</div>\n      </div>` : '';
-    return `\n    <div class="spell-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${s._idx}">\n      <div class="spell-head" data-toggle="${s._idx}">\n        <div class="spell-title-block">\n          <span class="spell-name copyable" data-copy="${escapeHtml(s.name)}">${escapeHtml(s.name)}</span>\n          <span class="spell-meta-inline">${levelDisp}</span>\n          <span class="spell-school-tag">${escapeHtml(sch)}</span>\n        </div>\n        <div class="spell-right">\n          <span class="spell-classlevel-badge" title="${escapeHtml(shortDescInline)}">${escapeHtml(shortDescInline)}</span>\n          ${roll20TagHTML}\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="spell-body">\n        <div class="stat-grid">\n          ${statFields.map(([l,v])=>`<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`).join('')}\n        </div>\n        <div class="classes-row">${classesHTML}</div>\n        <div class="desc-copy copyable" data-copy="${escapeHtml(descText)}">${descHtml}</div>${heightenedCopyBlock}\n      </div>\n    </div>`;
+    return `\n    <div class="spell-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${s._idx}">\n      <div class="spell-head" data-toggle="${s._idx}">\n        <div class="spell-title-block">\n          <span class="spell-name copyable" data-copy="${escapeHtml(s.name)}">${escapeHtml(s.name)}</span>\n          <span class="spell-meta-inline">${levelDisp}</span>\n          <span class="spell-school-tag">${escapeHtml(schoolDisplay(s) || sch)}</span>\n        </div>\n        <div class="spell-right">\n          <span class="spell-classlevel-badge" title="${escapeHtml(shortDescInline)}">${escapeHtml(shortDescInline)}</span>\n          ${roll20TagHTML}\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="spell-body">\n        <div class="stat-grid">\n          ${statFields.map(([l,v])=>`<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`).join('')}\n        </div>\n        <div class="classes-row">${classesHTML}</div>\n        <div class="desc-copy copyable" data-copy="${escapeHtml(descText)}">${descHtml}</div>${heightenedCopyBlock}\n      </div>\n    </div>`;
   }
 
-  function filtered(){
+  // Rebuilds the Subschool <select> from the subschools present in `list`
+  // (spells passing every other filter). If the selected value is no longer
+  // present, resets it to "Any".
+  function updateSubschoolOptions(list){
+    const set = new Set();
+    list.forEach(s=>(s.subschool || []).forEach(x=>{ if(x) set.add(x); }));
+    if(state.subschool && !set.has(state.subschool)) state.subschool = '';
+    subschoolSelect.innerHTML = '<option value="">Any</option>' +
+      Array.from(set).map(x=>`<option value="${escapeHtml(x)}">${escapeHtml(x)}</option>`).join('');
+    sortSelectOptions(subschoolSelect);
+    subschoolSelect.value = state.subschool;
+  }
+
+  // Applies every filter except the one named in `skip` ('subschool'), so the
+  // Subschool options never shrink to just the chosen value.
+  function applyFilters(skip){
     let list = SPELLS_DATA;
     if(state.query){
       list = list.filter(s=>matchesQuery(s, state.query));
     }
     if(state.schools.size){
       list = list.filter(s=>state.schools.has(s.school));
+    }
+    if(skip !== 'subschool' && state.subschool){
+      list = list.filter(s=>(s.subschool || []).includes(state.subschool));
     }
     if(state.classes.size){
       list = list.filter(s=>s._classes.some(c=>state.classes.has(c)));
@@ -372,10 +375,16 @@
       list = list.filter(s=>s.save_type && state.saves.has(s.save_type));
     }
     if(state.ritual === 'yes'){
-      list = list.filter(s=>!!s.ritual);
+      list = list.filter(s=>isRitual(s));
     } else if(state.ritual === 'no'){
-      list = list.filter(s=>!s.ritual);
+      list = list.filter(s=>!isRitual(s));
     }
+    return list;
+  }
+
+  function filtered(){
+    updateSubschoolOptions(applyFilters('subschool'));
+    const list = applyFilters(null);
     const sorted = list.slice();
     if(state.sort==='name'){
       sorted.sort((a,b)=>a.name.localeCompare(b.name));

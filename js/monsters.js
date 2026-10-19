@@ -13,10 +13,11 @@
   // Colors are computed from whatever types are actually present in the
   // (initially-loaded) data, title-cased so inconsistent source casing
   // doesn't produce duplicate entries.
-  const typeColorOf = buildTypeColorMap(MONSTERS.map(m => titleCase(m.type)), TYPE_ORDER);
+  const typeColorOf = buildTypeColorMap(MONSTERS.map(m => formatTitleCase(m.type)), TYPE_ORDER);
 
   const state = {
     query: '',
+    searchScope: SEARCH_SCOPE_NAMES,
     cr: { operator: '', v1: null, v2: null },
     hd: { operator: '', v1: null, v2: null },
     types: new Set(),
@@ -37,13 +38,14 @@
   // state survives the lazy load.
   function prepare(m, i){
     m._idx = i;
-    m._type = titleCase(m.type);
+    m._type = formatTitleCase(m.type);
     m._cardColor = typeColorOf[m._type];
     // Fields are joined with " | " (also between array items) so a phrase can
     // never accidentally match across the end of one field / start of the next.
     const fmt = x => typeof x === 'string' ? x : (x && (x.type || x.name || x.spell)) || '';
     const J = arr => (arr || []).map(fmt).filter(Boolean).join(' | ');
     m._envLC = (m.environments || []).map(e => String(e).toLowerCase());
+    m._nameBlob = (m.name || '').toLowerCase();
     m._blob = [
       m.name, m.race, m._type, J(m.subtypes), m.alignment, m.size, m.group,
       J(m.senses),
@@ -64,7 +66,6 @@
 
   initMobileFiltersCollapse();
   initThemeToggle();
-  initSidebarArt();
 
   // ---- Numeric range filters (Challenge Rating, Hit Dice) ----
   // Shared behavior: an operator <select> plus up to two number inputs.
@@ -247,18 +248,20 @@
   const envGroupSelect = document.getElementById('envGroupSelect');
   const envOptionSelect = document.getElementById('envOptionSelect');
 
+  // The second select is always visible but stays disabled until a group is
+  // chosen (and for groups with no secondary list, e.g. Underground) —
+  // same behavior as the Classes filter on the NPC page.
   function syncEnvOptions(){
     const g = ENV_GROUPS[state.env.group];
-    if(!g || !g.options.length){
-      envOptionSelect.hidden = true;
-      envOptionSelect.innerHTML = '';
-      return;
-    }
+    const opts = g ? g.options : [];
     envOptionSelect.innerHTML = '<option value="">Any</option>' +
-      g.options.map(o => `<option value="${escapeHtml(o.v)}">${escapeHtml(o.l)}</option>`).join('');
+      opts.map(o => `<option value="${escapeHtml(o.v)}">${escapeHtml(o.l)}</option>`).join('');
+    sortSelectOptions(envOptionSelect);
     envOptionSelect.value = state.env.option;
     envOptionSelect.hidden = false;
+    envOptionSelect.disabled = !opts.length;
   }
+  syncEnvOptions();
   envGroupSelect.addEventListener('change', () => {
     state.env.group = envGroupSelect.value;
     state.env.option = '';
@@ -371,11 +374,13 @@
     wrapEl: searchWrapEl,
     clearIconEl: searchClearIcon,
     onQuery: (q) => { state.query = q; },
-    render: () => render()
+    render: () => render(),
+    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
   });
 
   // ---- Search help tooltip (hover; hidden while the box has focus) ----
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'demon +regeneration -grab +aquan');
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'demon +regeneration -grab +aquan', { prefix: true });
+  initSearchScope(searchWrapEl, (scope) => { state.searchScope = scope; render(); });
 
   // ---- Clear all ----
   document.getElementById('clearAll').addEventListener('click', (e) => {
@@ -428,9 +433,9 @@
 
   wireCopyableList('monsterList', 'monster-name');
 
-  const queryMatch = createQueryMatcher();
+  const queryMatch = createQueryMatcher({ prefix: true });
   function matchesQuery(monster, query){
-    return queryMatch(monster._blob, query);
+    return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? monster._blob : monster._nameBlob, query);
   }
 
   function matchesRange(value, rangeState){
@@ -496,7 +501,6 @@
   function updateSubtypeOptions(list){
     const subtypeSet = new Set();
     list.forEach(m => (m.subtypes || []).forEach(st => { if(st) subtypeSet.add(st); }));
-    const sortedSubtypes = Array.from(subtypeSet).sort((a, b) => a.localeCompare(b));
 
     if(state.subtype && !subtypeSet.has(state.subtype)){
       state.subtype = '';
@@ -504,7 +508,8 @@
 
     const current = state.subtype;
     subtypeSelect.innerHTML = '<option value="">Any</option>' +
-      sortedSubtypes.map(st => `<option value="${escapeHtml(st)}">${escapeHtml(st)}</option>`).join('');
+      Array.from(subtypeSet).map(st => `<option value="${escapeHtml(st)}">${escapeHtml(formatTitleCase(st))}</option>`).join('');
+    sortSelectOptions(subtypeSelect);
     subtypeSelect.value = current;
   }
 
@@ -537,29 +542,10 @@
     return sorted;
   }
 
-  // Card rendering comes in the next step — for now, just keep the count
-  // in the header live so the sidebar filters can be tested end-to-end.
-  // Turns decimal CRs into the fraction form used in the books
-  // (0.75 -> 3/4, 0.66 -> 2/3, 0.5 -> 1/2). Whole numbers pass through.
-  function formatCR(cr){
-    if(cr === null || cr === undefined || cr === '') return '—';
-    const n = Number(cr);
-    if(!isFinite(n)) return String(cr);
-    if(Number.isInteger(n)) return String(n);
-    const whole = Math.floor(n), frac = n - whole;
-    for(let d = 2; d <= 12; d++){
-      const num = Math.round(frac * d);
-      if(num > 0 && num < d && Math.abs(frac - num / d) < 0.01){
-        return (whole ? whole + ' ' : '') + num + '/' + d;
-      }
-    }
-    return String(cr);
-  }
-
   function quickStatsHTML(m){
     const hdText = (typeof m.hdvalue === 'number') ? String(m.hdvalue) : '';
     const boxes = [
-      ['CR', formatCR(m.cr)],
+      ['CR', formatChallengeRating(m.cr)],
       ['HD', hdText || '—'],
       ['Size', m.size || '—'],
     ];
@@ -592,17 +578,7 @@
   }
   const gap = parts => { parts.gap = true; return parts; };   // adds space above the line
   const has = v => Array.isArray(v) ? v.length > 0 : (v !== null && v !== undefined && v !== '');
-  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
-  function signed(n){
-    if(n === null || n === undefined) return '–';
-    return n >= 0 ? `+${n}` : `–${Math.abs(n)}`;
-  }
-  function ord(n){
-    const v = n % 100;
-    if(v >= 11 && v <= 13) return `${n}th`;
-    return `${n}${({1:'st',2:'nd',3:'rd'})[n % 10] || 'th'}`;
-  }
   // "type (details)" / "type value" style entries used by senses, special
   // attacks, SQ, weaknesses, etc. Plain strings pass through.
   function fmtEntry(x){
@@ -635,9 +611,9 @@
 
   function casterHeading(prefix, caster, level, conc){
     const inner = [];
-    if(level !== null && level !== undefined) inner.push(`CL ${ord(level)}`);
-    if(conc !== null && conc !== undefined && conc !== '') inner.push(`concentration ${typeof conc === 'number' ? signed(conc) : conc}`);
-    const lead = [caster ? cap(caster) : '', prefix].filter(Boolean).join(' ');
+    if(level !== null && level !== undefined) inner.push(`CL ${formatOrdinal(level)}`);
+    if(conc !== null && conc !== undefined && conc !== '') inner.push(`concentration ${typeof conc === 'number' ? formatSigned(conc) : conc}`);
+    const lead = [caster ? formatCapitalize(caster) : '', prefix].filter(Boolean).join(' ');
     return gap([{b: `${lead} (${inner.join('; ')})`}]);
   }
 
@@ -645,17 +621,17 @@
     if(!has(m.classes)) return null;
     const cls = m.classes.map(c => typeof c === 'string' ? c
       : [c.class ?? c.name ?? '', c.level ?? ''].join(' ').trim()).join('/');
-    return [[m.race ? cap(m.race) + ' ' : '', cls].join('')];
+    return [[m.race ? formatCapitalize(m.race) + ' ' : '', cls].join('')];
   }
 
   function headerLines(m){
     const lines = [];
     if(m.xp !== null && m.xp !== undefined) lines.push(labeled('XP', Number(m.xp).toLocaleString('en-US')));
     const rc = raceClassLine(m); if(rc) lines.push(rc);
-    const subs = (m.subtypes || []).length ? ` (${m.subtypes.join(', ')})` : '';
+    const subs = (m.subtypes || []).length ? ` (${m.subtypes.map(formatTitleCase).join(', ')})` : '';
     lines.push([[m.alignment, m.size, m._type].filter(Boolean).join(' ') + subs]);
 
-    const initParts = [{b:'Init'}, ' ' + signed(m.init) + (has(m.init_special) ? ` (${m.init_special})` : '')];
+    const initParts = [{b:'Init'}, ' ' + formatSigned(m.init) + (has(m.init_special) ? ` (${m.init_special})` : '')];
     if(has(m.senses)) initParts.push('; ', {b:'Senses'}, ' ' + m.senses.map(fmtEntry).join(', '));
     lines.push(initParts);
     if(has(m.auras)) lines.push(labeled('Aura', m.auras.join(', ')));
@@ -679,7 +655,7 @@
     const general = (sm && !Object.keys(perSave).length) ? (Array.isArray(sm) ? sm.join(', ') : String(sm)) : '';
     const save = (label, key) => {
       const extra = perSave[key];
-      return [{b: label}, ` ${signed(m[key])}` + (has(extra) ? `(${Array.isArray(extra) ? extra.join(', ') : extra})` : '')];
+      return [{b: label}, ` ${formatSigned(m[key])}` + (has(extra) ? `(${Array.isArray(extra) ? extra.join(', ') : extra})` : '')];
     };
     if(m.fort != null || m.ref != null || m.will != null){
       const parts = joinParts([save('Fort','fort'), save('Ref','ref'), save('Will','will')], ', ');
@@ -725,13 +701,13 @@
       lines.push(casterHeading('Spell-Like Abilities', null, m.spell_like_abilities_caster_level, m.spell_like_abilities_concentration));
       m.spell_like_abilities.forEach(g => {
         const f = String(g.frequency || '');
-        const label = /^at[- ]will$/i.test(f) ? 'At will' : cap(f);
+        const label = /^at[- ]will$/i.test(f) ? 'At will' : formatCapitalize(f);
         lines.push([{b: label}, '—', ...spellListParts(g.spells)]);
       });
     }
     // Spells known / prepared share the same per-level layout.
     const levelLabel = (g, withSlots) => {
-      const name = g.spell_level === 0 ? 'Cantrips' : ord(g.spell_level);
+      const name = g.spell_level === 0 ? 'Cantrips' : formatOrdinal(g.spell_level);
       if(!withSlots && g.spell_level !== 0) return name;
       const atWill = g.spell_level === 0 || g.spell_slots >= 99;
       if(atWill) return `${name} (at will)`;
@@ -758,8 +734,8 @@
     const ab = [['Str','strength'],['Dex','dexterity'],['Con','constitution'],['Int','intelligence'],['Wis','wisdom'],['Cha','charisma']];
     lines.push(joinParts(ab.map(([l,k]) => [{b:l}, ' ' + (m[k] ?? '–')]), ', '));
 
-    const combat = [labeled('Base Atk', signed(m.baseatk))];
-    combat.push(labeled('CMB', signed(m.cmb) + (has(m.cmb_special) ? ` (${m.cmb_special})` : '')));
+    const combat = [labeled('Base Atk', formatSigned(m.baseatk))];
+    combat.push(labeled('CMB', formatSigned(m.cmb) + (has(m.cmb_special) ? ` (${m.cmb_special})` : '')));
     combat.push(labeled('CMD', (m.cmd ?? '–') + (has(m.cmd_special) ? ` (${m.cmd_special})` : '')));
     lines.push(joinParts(combat, '; '));
 
@@ -767,7 +743,7 @@
       const feats = m.feats.map(f => f.type === 'bonus' ? [f.feat, {sup:'B'}] : [f.feat]);
       lines.push(labeled('Feats', joinParts(feats, ', ')));
     }
-    if(has(m.skills)) lines.push(labeled('Skills', m.skills.map(s => `${s.skill} ${signed(s.value)}`).join(', ')));
+    if(has(m.skills)) lines.push(labeled('Skills', m.skills.map(s => `${s.skill} ${formatSigned(s.value)}`).join(', ')));
     if(has(m.languages)) lines.push(labeled('Languages', m.languages.join(', ')));
     if(has(m.sq)) lines.push(labeled('SQ', m.sq.map(fmtEntry).join(', ')));
     if(has(m.gear)) lines.push([{b:'Gear'}, ' ', {i: m.gear}]);
@@ -857,7 +833,7 @@
       });
     }
 
-    const crText = (m.cr !== null && m.cr !== undefined) ? `CR ${formatCR(m.cr)}` : '';
+    const crText = (m.cr !== null && m.cr !== undefined) ? `CR ${formatChallengeRating(m.cr)}` : '';
     const hLines = headerLines(m);
     parts.push({
       text: [`**${m.name}${crText ? ' ' + crText : ''}**`, ...hLines.map(partsText)].join('\n'),
@@ -880,11 +856,11 @@
     const descLines = descriptionSectionLines(m, !!intro);
     if(intro || descLines.length){
       parts.push({
-        text: ['**Description**', ...(intro ? [intro] : []), ...descLines.map(partsText)].join('\n'),
+        text: ['**Description**', ...(intro ? [clipboardFormatText(intro)] : []), ...descLines.map(partsText)].join('\n'),
         html: `
       <div class="monster-section">
         <div class="monster-section-title">Description</div>
-        ${intro ? `<div class="monster-desc"><div>${escapeHtml(intro)}</div></div>` : ''}
+        ${intro ? `<div class="monster-desc"><div>${htmlFormatDescription(intro)}</div></div>` : ''}
         ${linesHtml(descLines)}
       </div>`
       });
@@ -900,7 +876,7 @@
     const cardStyle = m._cardColor ? ` style="--cardc:${m._cardColor}"` : '';
     const isOpen = state.open.has(m._idx);
 
-    const subtypesText = (m.subtypes || []).join(', ');
+    const subtypesText = (m.subtypes || []).map(formatTitleCase).join(', ');
     const typeTagHtml = m._type ? `<span class="monster-type-tag">${escapeHtml(m._type)}</span>` : '';
     const subtypeTagHtml = subtypesText ? `<span class="monster-subtype-tag">(${escapeHtml(subtypesText)})</span>` : '';
 

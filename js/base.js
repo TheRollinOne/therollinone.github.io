@@ -1,4 +1,4 @@
-// Shared helpers + wiring reused across the Feats, Spells, and Runes pages.
+// Shared helpers + wiring reused across all pages.
 
 // Debounce: returns a wrapped version of fn that only actually runs after
 // `delay` ms have passed with no further calls (e.g. typing in a search box
@@ -44,13 +44,6 @@ function buildTypeColorMap(labels, preferredOrder){
   return map;
 }
 
-// Title-cases a string ("light armor" -> "Light Armor"), used to normalize
-// category/type-like fields that may come from the data with inconsistent
-// casing, before they're used as chip labels / color-map keys.
-function titleCase(str){
-  return (str||'').replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
-}
-
 function escapeHtml(str){
   return (str||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
@@ -59,14 +52,42 @@ function escapeRegExp(str){
   return String(str).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-// Whole-word/phrase match against a precomputed lowercase search blob.
-function matchesQueryOnBlob(blob, query){
-  if(!query) return true;
-  const q = query.trim().toLowerCase();
-  if(q.length===0) return true;
-  const safe = escapeRegExp(q);
-  const rx = new RegExp('\\b' + safe + '\\b');
-  return rx.test(blob);
+// Roman-numeral-aware comparison. Standalone uppercase tokens made of
+// I/V/X (I..XXXIX) are swapped for their numeric value in the sort key only,
+// so "A I, A II, A V, A IX" sorts in numeric order. Everything else
+// keeps the usual locale-aware, case-insensitive, numeric-aware behavior.
+const ROMAN_TOKEN_RX = /\b(?=[IVX])X{0,3}(?:IX|IV|V?I{0,3})\b/g;
+function romanToInt(s){
+  const val = {I:1, V:5, X:10};
+  let total = 0;
+  for(let i = 0; i < s.length; i++){
+    const cur = val[s[i]], next = val[s[i+1]] || 0;
+    total += cur < next ? -cur : cur;
+  }
+  return total;
+}
+function naturalCompare(a, b){
+  const key = s => String(s).trim().replace(ROMAN_TOKEN_RX, m => m ? romanToInt(m) : m);
+  return key(a).localeCompare(key(b), undefined, { sensitivity: 'base', numeric: true });
+}
+
+// Sorts a <select>'s options alphabetically by their visible label.
+// - The "Any" option (empty value) always stays first.
+// - The current selection is preserved.
+// - Comparison is locale-aware, case-insensitive and numeric-aware
+//   ("Level 2" before "Level 10").
+// Call it right after (re)building a select's options, e.g.
+//   sel.innerHTML = '<option value="">Any</option>' + ...;
+//   sortSelectOptions(sel);
+function sortSelectOptions(selectEl){
+  if(!selectEl) return;
+  const selected = selectEl.value;
+  const opts = Array.from(selectEl.options);
+  const first = opts.filter(o => o.value === '');
+  const rest = opts.filter(o => o.value !== '');
+  rest.sort((a, b) => naturalCompare(a.textContent, b.textContent));
+  [...first, ...rest].forEach(o => selectEl.appendChild(o));
+  selectEl.value = selected;
 }
 
 // Advanced search: whole-word/phrase terms with "+" (must contain) and "-"
@@ -76,7 +97,15 @@ function matchesQueryOnBlob(blob, query){
 // first operator is a required term ("cat +fly" == "+cat +fly"). A term runs
 // until the next operator, so "bronze dragon" stays one phrase.
 // Returns compiled regexes so callers can parse once, then test many blobs.
-function parseSearchQuery(query){
+//
+// Optional opts.prefix (default false): "live" matching. Each term must
+// still START at a word boundary, but may end mid-word, so results appear
+// while the user is still typing ("cha" matches chain/chainmail, "chain sh"
+// matches "chain shirt"). With prefix off, terms are whole words/phrases.
+// In prefix mode, any term (plain, + or -) under 2 characters is ignored
+// until the user types more, so the list stays unfiltered at 1 letter.
+function parseSearchQuery(query, opts){
+  const prefix = !!(opts && opts.prefix);
   const q = String(query || '').trim().toLowerCase();
   const must = [], not = [];
   if(!q) return {must, not};
@@ -92,7 +121,10 @@ function parseSearchQuery(query){
     // drop a dangling operator left at the end while typing ("poison -")
     const t = text.replace(/(^|\s)[+\-\u2013\u2212]$/, '').trim();
     if(!t) return;
-    const rx = new RegExp('\\b' + escapeRegExp(t) + '\\b');
+    // live mode: ignore terms shorter than 2 characters (a single letter
+    // matches almost everything and just makes the list flicker)
+    if(prefix && t.length < 2) return;
+    const rx = new RegExp('\\b' + escapeRegExp(t) + (prefix ? '' : '\\b'));
     (negative ? not : must).push(rx);
   }
   add(false, q.slice(0, ops.length ? ops[0] : q.length));
@@ -110,12 +142,50 @@ function matchesParsedQuery(blob, parsed){
 // Wraps parseSearchQuery/matchesParsedQuery with a one-slot cache so the
 // query string is parsed once per change, not once per item (matchesQuery
 // is normally called from inside a list's .filter() callback).
-function createQueryMatcher(){
+// Pass { prefix: true } for live as-you-type matching (see parseSearchQuery).
+function createQueryMatcher(opts){
   let parsedFor = null, parsedQuery = null;
   return function matches(blob, query){
-    if(query !== parsedFor){ parsedFor = query; parsedQuery = parseSearchQuery(query); }
+    if(query !== parsedFor){ parsedFor = query; parsedQuery = parseSearchQuery(query, opts); }
     return matchesParsedQuery(blob, parsedQuery);
   };
+}
+
+// Search scope toggle: a "Names Only | All Fields" button pair placed right
+// under the search box. Names Only is the default. If the page's HTML
+// doesn't already contain #searchScope, it is created and inserted after
+// searchWrapEl, so a page only needs this one call. Styling lives in
+// base.css (.search-scope, reusing .sort-btn).
+// onChange(scope) receives 'names' or 'all'. Returns the initial scope.
+// A page keeps the value in its state (e.g. state.searchScope) and picks
+// which search blob to match against (name only vs. everything).
+const SEARCH_SCOPE_NAMES = 'names';
+const SEARCH_SCOPE_ALL = 'all';
+function initSearchScope(searchWrapEl, onChange){
+  let el = document.getElementById('searchScope');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'searchScope';
+    el.className = 'search-scope';
+    el.setAttribute('role', 'group');
+    el.setAttribute('aria-label', 'Search scope');
+    el.innerHTML =
+      `<button type="button" class="sort-btn active" data-scope="${SEARCH_SCOPE_NAMES}" aria-pressed="true">Names Only</button>` +
+      `<button type="button" class="sort-btn" data-scope="${SEARCH_SCOPE_ALL}" aria-pressed="false">All Fields</button>`;
+    searchWrapEl.insertAdjacentElement('afterend', el);
+  }
+  const btns = el.querySelectorAll('[data-scope]');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      btns.forEach(b => {
+        const on = b === btn;
+        b.classList.toggle('active', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      });
+      if(onChange) onChange(btn.dataset.scope);
+    });
+  });
+  return SEARCH_SCOPE_NAMES;
 }
 
 // Search help tooltip (hover; hidden while the box has focus) — shared by
@@ -126,7 +196,10 @@ function createQueryMatcher(){
 // above). Relies on the .hover-tooltip.search-tip CSS rules (currently
 // defined in monsters.css); a page needs that block in its own stylesheet
 // for this to render styled.
-function wireSearchTooltip(searchInputEl, searchWrapEl, exampleText){
+// Pass { prefix: true } as a 4th argument on pages using live prefix search
+// so the hint text matches how the search actually behaves.
+function wireSearchTooltip(searchInputEl, searchWrapEl, exampleText, opts){
+  const prefix = !!(opts && opts.prefix);
   let tip = null;
   function remove(){ if(tip){ tip.remove(); tip = null; } }
   function show(){
@@ -134,7 +207,9 @@ function wireSearchTooltip(searchInputEl, searchWrapEl, exampleText){
     tip = document.createElement('div');
     tip.className = 'hover-tooltip search-tip';
     tip.innerHTML =
-      '<div>Matches whole words or phrases only.</div>' +
+      (prefix
+        ? '<div>Results update as you type; terms match the start of a word.</div>'
+        : '<div>Matches whole words or phrases only.</div>') +
       '<div>Use + to require more terms and - to exclude terms.</div>' +
       `<div class="hover-tooltip-value">Example: ${escapeHtml(exampleText)}</div>`;
     document.body.appendChild(tip);
@@ -218,29 +293,6 @@ function wireShowMore(listEl, { onLoadMore, onShowAll }){
     if(e.target.closest('[data-show-more]')) onLoadMore();
     else if(e.target.closest('[data-show-all]')) onShowAll();
   });
-}
-
-// Formats a block of prose for HTML display: a leading ">> Heading" line
-// becomes a bold heading, and a short leading "Label:" prefix on any other
-// line gets bolded (used for auto-formatted stat blocks lifted from source
-// text — feat Benefits/Normal/Special, spell descriptions, rune descriptions).
-function boldLeadingLabel(text){
-  return (text||'').split('\n').map(line=>{
-    const headingMatch = line.match(/^\s*>>\s*(.*)$/);
-    if(headingMatch) return `<b>${escapeHtml(headingMatch[1])}</b>`;
-    const escaped = escapeHtml(line);
-    return escaped.replace(/^(\s*(?:-\s*)?)((?:\S+\s+){0,4}\S*?:)/, '$1<b>$2</b>');
-  }).join('\n');
-}
-
-// Same rule as boldLeadingLabel, but for plain-text clipboard output: wraps
-// the label/heading in Markdown ** ** instead of <b> and skips HTML escaping.
-function boldLeadingLabelText(text){
-  return (text||'').split('\n').map(line=>{
-    const headingMatch = line.match(/^\s*>>\s*(.*)$/);
-    if(headingMatch) return `**${headingMatch[1]}**`;
-    return line.replace(/^(\s*(?:-\s*)?)((?:\S+\s+){0,4}\S*?:)/, '$1**$2**');
-  }).join('\n');
 }
 
 // Floating "Copied to Clipboard" tooltip at a click position.
@@ -422,14 +474,6 @@ function wireSearchInput({inputEl, wrapEl, clearIconEl, onQuery, render, debounc
   return syncClearIcon;
 }
 
-// Generic "Sort by" <select> wiring.
-function wireSortSelect(state, render){
-  document.getElementById('sortSelect').addEventListener('change', e=>{
-    state.sort = e.target.value;
-    render();
-  });
-}
-
 // Wires the single-button theme toggle (a round swatch button that opens a
 // small popup of Gold/Blue/Green/Orange choices). Call once per page after
 // #themeToggle exists in the DOM. onThemeChange (optional) fires after each
@@ -481,41 +525,4 @@ function initThemeToggle(onThemeChange){
 
   const savedTheme = localStorage.getItem('theme') || 'gold';
   applyTheme(savedTheme);
-}
-
- /* ---------- Sidebar art (auto show/hide) ----------
-  Shows the decorative .sidebar-art image at the bottom of the left sidebar
-  only when it fits without causing a vertical scrollbar. CSS alone can't
-  detect overflow, so this measures the free space below the last sidebar
-  section (with the art temporarily hidden) and shows the art only if that
-  space can hold the art's height plus the normal flex gap above it.
-  Art is square and as wide as the sidebar's content box, so its height
-  equals that width.
-
-  Re-checks whenever the window or any sidebar section changes size
-  (Filters expanding/collapsing, selects appearing, fonts loading), so it
-  appears and disappears on its own. Hide/measure/show happens in a single
-  synchronous pass, so nothing flickers.
-
-  Usage: call initSidebarArt() once per page, next to initThemeToggle().
-  Does nothing on pages without a .sidebar-art element. */
-  function initSidebarArt(){
-  const sidebar = document.querySelector('.sidebar');
-  const art = sidebar && sidebar.querySelector('.sidebar-art');
-  if(!art) return;
-
-  function update(){
-    // Try it with the art visible; if the sidebar would scroll, hide it.
-    // Show/test/hide all happen synchronously, so nothing flickers.
-    art.style.display = '';
-    const overflows = sidebar.scrollHeight > sidebar.clientHeight;
-    if(overflows) art.style.display = 'none';
-  }
-
-  // Re-check when the window resizes or any sidebar section changes size
-  // (filters collapsing/expanding, chips being rendered, fonts loading).
-  const ro = new ResizeObserver(update);
-  ro.observe(sidebar);
-  [...sidebar.children].forEach(el => { if(el !== art) ro.observe(el); });
-  update();
 }

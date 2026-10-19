@@ -12,7 +12,7 @@
   // Colors are computed from whatever types are actually present in the
   // data, title-cased so inconsistent source casing doesn't produce
   // duplicate entries.
-  const typeColorOf = buildTypeColorMap(NPCS.map(m => titleCase(m.type)), TYPE_ORDER);
+  const typeColorOf = buildTypeColorMap(NPCS.map(m => formatTitleCase(m.type)), TYPE_ORDER);
 
   // ---- Class categories ----
   // `exact`    : the class string must equal the entry.
@@ -58,8 +58,6 @@
     { key: 'others', label: 'Others',
       exact: ['animal companion','eidolon'] }
   ];
-  const CLASS_CATEGORY_LABEL = {};
-  CLASS_CATEGORIES.forEach(c => { CLASS_CATEGORY_LABEL[c.key] = c.label; });
 
   // Returns [[categoryKey, classLabel], ...] for one raw class string.
   function classifyClass(raw){
@@ -78,6 +76,7 @@
 
   const state = {
     query: '',
+    searchScope: SEARCH_SCOPE_NAMES,
     cr: { operator: '', v1: null, v2: null },
     hd: { operator: '', v1: null, v2: null },
     types: new Set(),
@@ -93,7 +92,7 @@
 
   function prepare(m, i){
     m._idx = i;
-    m._type = titleCase(m.type);
+    m._type = formatTitleCase(m.type);
     m._cardColor = typeColorOf[m._type];
     // { categoryKey: Set(classLabel) } for the Classes filter
     m._classes = {};
@@ -106,6 +105,7 @@
     // never accidentally match across the end of one field / start of the next.
     const fmt = x => typeof x === 'string' ? x : (x && (x.type || x.name || x.spell)) || '';
     const J = arr => (Array.isArray(arr) ? arr : (arr ? [arr] : [])).map(fmt).filter(Boolean).join(' | ');
+    m._nameBlob = (m.name || '').toLowerCase();
     m._blob = [
       m.name, m.race, m._type, J(m.sub_types), m.alignment, m.size,
       (m.classes||[]).map(c => c.class || c.name).join(' | '),
@@ -135,7 +135,6 @@
 
   initMobileFiltersCollapse();
   initThemeToggle();
-  initSidebarArt();
 
   // ---- Numeric range filters (Challenge Rating, Hit Dice) ----
   // Shared behavior: an operator <select> plus up to two number inputs.
@@ -323,11 +322,13 @@
     wrapEl: searchWrapEl,
     clearIconEl: searchClearIcon,
     onQuery: (q) => { state.query = q; },
-    render: () => render()
+    render: () => render(),
+    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
   });
 
   // ---- Search help tooltip (hover; hidden while the box has focus) ----
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'bandit +stealth -evil +shortbow');
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'bandit +stealth -evil +shortbow', { prefix: true });
+  initSearchScope(searchWrapEl, (scope) => { state.searchScope = scope; render(); });
 
   // ---- Clear all ----
   document.getElementById('clearAll').addEventListener('click', (e) => {
@@ -372,9 +373,9 @@
 
   wireCopyableList('npcList', 'npc-name');
 
-  const queryMatch = createQueryMatcher();
+  const queryMatch = createQueryMatcher({ prefix: true });
   function matchesQuery(npc, query){
-    return queryMatch(npc._blob, query);
+    return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? npc._blob : npc._nameBlob, query);
   }
 
   function matchesRange(value, rangeState){
@@ -450,7 +451,6 @@
   function updateSubtypeOptions(list){
     const subtypeSet = new Set();
     list.forEach(m => (m.sub_types || []).forEach(st => { if(st) subtypeSet.add(st); }));
-    const sortedSubtypes = Array.from(subtypeSet).sort((a, b) => a.localeCompare(b));
 
     if(state.subtype && !subtypeSet.has(state.subtype)){
       state.subtype = '';
@@ -458,7 +458,8 @@
 
     const current = state.subtype;
     subtypeSelect.innerHTML = '<option value="">Any</option>' +
-      sortedSubtypes.map(st => `<option value="${escapeHtml(st)}">${escapeHtml(prettyName(st))}</option>`).join('');
+      Array.from(subtypeSet).map(st => `<option value="${escapeHtml(st)}">${escapeHtml(prettyName(st))}</option>`).join('');
+    sortSelectOptions(subtypeSelect);
     subtypeSelect.value = current;
   }
 
@@ -478,11 +479,13 @@
     classCategorySelect.innerHTML = '<option value="">Any</option>' +
       CLASS_CATEGORIES.filter(c => present[c.key])
         .map(c => `<option value="${c.key}">${escapeHtml(c.label)}</option>`).join('');
+    sortSelectOptions(classCategorySelect);
     classCategorySelect.value = state.classCat;
 
-    const classes = state.classCat ? Array.from(present[state.classCat]).sort((a, b) => a.localeCompare(b)) : [];
+    const classes = state.classCat ? Array.from(present[state.classCat]) : [];
     classSelect.innerHTML = '<option value="">Any</option>' +
       classes.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(prettyName(c))}</option>`).join('');
+    sortSelectOptions(classSelect);
     classSelect.value = state.cls;
     classSelect.disabled = !state.classCat;
   }
@@ -516,29 +519,10 @@
     return sorted;
   }
 
-  // Card rendering comes in the next step — for now, just keep the count
-  // in the header live so the sidebar filters can be tested end-to-end.
-  // Turns decimal CRs into the fraction form used in the books
-  // (0.75 -> 3/4, 0.66 -> 2/3, 0.5 -> 1/2). Whole numbers pass through.
-  function formatCR(cr){
-    if(cr === null || cr === undefined || cr === '') return '-';
-    const n = Number(cr);
-    if(!isFinite(n)) return String(cr);
-    if(Number.isInteger(n)) return String(n);
-    const whole = Math.floor(n), frac = n - whole;
-    for(let d = 2; d <= 12; d++){
-      const num = Math.round(frac * d);
-      if(num > 0 && num < d && Math.abs(frac - num / d) < 0.01){
-        return (whole ? whole + ' ' : '') + num + '/' + d;
-      }
-    }
-    return String(cr);
-  }
-
   function quickStatsHTML(m){
     const hdText = (typeof m.hd_value === 'number') ? String(m.hd_value) : '';
     const boxes = [
-      ['CR', formatCR(m.cr)],
+      ['CR', formatChallengeRating(m.cr, '-')],
       ['HD', hdText || '—'],
       ['Size', m.size || '—'],
     ];
@@ -571,17 +555,7 @@
   }
   const gap = parts => { parts.gap = true; return parts; };   // adds space above the line
   const has = v => Array.isArray(v) ? v.length > 0 : (v !== null && v !== undefined && v !== '');
-  const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 
-  function signed(n){
-    if(n === null || n === undefined) return '–';
-    return n >= 0 ? `+${n}` : `–${Math.abs(n)}`;
-  }
-  function ord(n){
-    const v = n % 100;
-    if(v >= 11 && v <= 13) return `${n}th`;
-    return `${n}${({1:'st',2:'nd',3:'rd'})[n % 10] || 'th'}`;
-  }
   // "type (details)" / "type value" style entries used by senses, special
   // attacks, SQ, weaknesses, etc. Plain strings pass through.
   function fmtEntry(x){
@@ -624,9 +598,9 @@
 
   function casterHeading(prefix, caster, level, conc){
     const inner = [];
-    if(level !== null && level !== undefined) inner.push(`CL ${ord(level)}`);
-    if(conc !== null && conc !== undefined && conc !== '') inner.push(`concentration ${typeof conc === 'number' ? signed(conc) : conc}`);
-    const lead = [caster ? cap(caster) : '', prefix].filter(Boolean).join(' ');
+    if(level !== null && level !== undefined) inner.push(`CL ${formatOrdinal(level)}`);
+    if(conc !== null && conc !== undefined && conc !== '') inner.push(`concentration ${typeof conc === 'number' ? formatSigned(conc) : conc}`);
+    const lead = [caster ? formatCapitalize(caster) : '', prefix].filter(Boolean).join(' ');
     return gap([{b: `${lead} (${inner.join('; ')})`}]);
   }
 
@@ -636,7 +610,7 @@
       : [c.class ?? c.name ?? '',
          has(c.archetype) ? `(${Array.isArray(c.archetype) ? c.archetype.join(', ') : c.archetype})` : '',
          c.level ?? ''].filter(x => x !== '').join(' ')).join('/');
-    return [[m.gender ? cap(m.gender) + ' ' : '', m.race ? cap(m.race) + ' ' : '', cls].join('')];
+    return [[m.gender ? formatCapitalize(m.gender) + ' ' : '', m.race ? formatCapitalize(m.race) + ' ' : '', cls].join('')];
   }
 
   function headerLines(m){
@@ -651,7 +625,7 @@
     if(Number(m.unique_monster) === 1) typeLine.push('; ', {b: 'Unique'});
     lines.push(typeLine);
 
-    const initParts = [{b:'Init'}, ' ' + signed(m.init) + (has(m.init_special) ? ` (${m.init_special})` : '')];
+    const initParts = [{b:'Init'}, ' ' + formatSigned(m.init) + (has(m.init_special) ? ` (${m.init_special})` : '')];
     if(has(m.senses)) initParts.push('; ', {b:'Senses'}, ' ' + m.senses.map(fmtEntry).join(', '));
     lines.push(initParts);
     if(has(m.auras)) lines.push(labeled('Aura', m.auras.join(', ')));
@@ -675,7 +649,7 @@
     const general = (sm && !Object.keys(perSave).length) ? (Array.isArray(sm) ? sm.join(', ') : String(sm)) : '';
     const save = (label, key) => {
       const extra = perSave[key];
-      return [{b: label}, ` ${signed(m[key])}` + (has(extra) ? `(${Array.isArray(extra) ? extra.join(', ') : extra})` : '')];
+      return [{b: label}, ` ${formatSigned(m[key])}` + (has(extra) ? `(${Array.isArray(extra) ? extra.join(', ') : extra})` : '')];
     };
     if(m.fort != null || m.ref != null || m.will != null){
       const parts = joinParts([save('Fort','fort'), save('Ref','ref'), save('Will','will')], ', ');
@@ -723,13 +697,13 @@
       lines.push(casterHeading('Spell-Like Abilities', null, m.spell_like_abilities_caster_level, m.spell_like_abilities_concentration));
       m.spell_like_abilities.forEach(g => {
         const f = String(g.frequency || '');
-        const label = /^at[- ]will$/i.test(f) ? 'At will' : cap(f);
+        const label = /^at[- ]will$/i.test(f) ? 'At will' : formatCapitalize(f);
         lines.push([{b: label}, '—', ...spellListParts(g.spells)]);
       });
     }
     // Spells known / prepared share the same per-level layout.
     const levelLabel = (g, withSlots) => {
-      const name = g.spell_level === 0 ? 'Cantrips' : ord(g.spell_level);
+      const name = g.spell_level === 0 ? 'Cantrips' : formatOrdinal(g.spell_level);
       if(!withSlots && g.spell_level !== 0) return name;
       const atWill = g.spell_level === 0 || g.spell_slots >= 99;
       if(atWill) return `${name} (at will)`;
@@ -819,8 +793,8 @@
     const ab = [['Str','strength'],['Dex','dexterity'],['Con','constitution'],['Int','intelligence'],['Wis','wisdom'],['Cha','charisma']];
     lines.push(joinParts(ab.map(([l,k]) => [{b:l}, ' ' + (m[k] ?? '–')]), ', '));
 
-    const combat = [labeled('Base Atk', signed(m.baseatk))];
-    combat.push(labeled('CMB', signed(m.cmb) + (has(m.cmb_special) ? ` (${m.cmb_special})` : '')));
+    const combat = [labeled('Base Atk', formatSigned(m.baseatk))];
+    combat.push(labeled('CMB', formatSigned(m.cmb) + (has(m.cmb_special) ? ` (${m.cmb_special})` : '')));
     combat.push(labeled('CMD', (m.cmd ?? '–') + (has(m.cmd_special) ? ` (${m.cmd_special})` : '')));
     lines.push(joinParts(combat, '; '));
 
@@ -829,7 +803,7 @@
       const feats = m.feats.map(f => f.type === 'bonus' ? [f.feat, {sup:'B'}] : [f.feat]);
       lines.push(labeled('Feats', joinParts(feats, ', ')));
     }
-    if(has(m.skills)) lines.push(labeled('Skills', m.skills.map(s => `${s.skill} ${signed(s.value)}` + (has(s.special) ? ` (${s.special})` : '')).join(', ')));
+    if(has(m.skills)) lines.push(labeled('Skills', m.skills.map(s => `${s.skill} ${formatSigned(s.value)}` + (has(s.special) ? ` (${s.special})` : '')).join(', ')));
     if(has(m.languages)) lines.push(labeled('Languages', m.languages.join(', ')));
     if(has(m.sq)) lines.push(labeled('SQ', m.sq.map(fmtEntry).join(', ')));
     if(has(m.gear)) lines.push([{b:'Gear'}, ' ', {i: m.gear}]);
@@ -889,7 +863,7 @@
       });
     }
 
-    const crText = `CR ${formatCR(m.cr)}`;
+    const crText = `CR ${formatChallengeRating(m.cr, '-')}`;
     const hLines = headerLines(m);
     parts.push({
       text: [`**${m.name}${crText ? ' ' + crText : ''}**`, ...hLines.map(partsText)].join('\n'),
@@ -911,11 +885,11 @@
     parts.push(sectionPart('Ecology', ecologyLines(m)));
     if(m.description){
       parts.push({
-        text: `**Description**\n${m.description}`,
+        text: `**Description**\n${clipboardFormatText(m.description)}`,
         html: `
       <div class="npc-section">
         <div class="npc-section-title">Description</div>
-        <div class="npc-desc"><div>${escapeHtml(m.description)}</div></div>
+        <div class="npc-desc"><div>${htmlFormatDescription(m.description)}</div></div>
       </div>`
       });
     }

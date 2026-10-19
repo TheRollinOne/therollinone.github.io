@@ -1,13 +1,4 @@
 (function(){
-  function slugify(str){
-    return (str||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/(^-|-$)/g,'');
-  }
-  function titleCase(str){
-    return (str||'').replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
-  }
-
-  // SLOT_COLORS moved to base.js's shared TYPE_COLORS/buildTypeColorMap.
-
   // The raw Slot values are messy free text ("wrist" / "wrists", "head or
   // neck", "see text", etc.) — this collapses them down to a clean, finite
   // set of filterable labels. Items now carry a *list* of raw slot strings
@@ -42,10 +33,31 @@
     return key ? 'Other' : 'None';
   }
 
+  // Weight is stored as a plain number. 0 -> "—", 1 -> "1 lb.", everything
+  // else (0.5, 5, 1,000...) -> "<n> lbs."
+  function weightLabel(w){
+    if(w === 0) return '—';
+    return `${w.toLocaleString()} ${w === 1 ? 'lb.' : 'lbs.'}`;
+  }
+
+  // Aura strength: data has "moderate or strong" (both), "varies", "none", or
+  // null; collapse to a fixed chip set.
+  const STRENGTH_ORDER = ['Faint','Moderate','Strong','Overwhelming','Varies','None'];
+  function normalizeStrengths(raw){
+    const s = (raw||'').toString().toLowerCase();
+    const out = [];
+    ['faint','moderate','strong','overwhelming'].forEach(k=>{ if(s.includes(k)) out.push(formatTitleCase(k)); });
+    if(out.length) return out;
+    return [s === 'none' ? 'None' : 'Varies'];
+  }
   const state = {
     query:'',
+    searchScope:SEARCH_SCOPE_NAMES,
     slots:new Set(),
     price:{ operator:'', v1:null, v2:null },
+    cl:{ operator:'', v1:null, v2:null },
+    strengths:new Set(),
+    pfs:null,
     group:'',
     sort:'name-asc',
     open:new Set()
@@ -59,38 +71,39 @@
     // Groups[] -> dedupe + tidy casing (data has stray lowercase entries
     // like "shield" alongside title-cased ones) while keeping distinct
     // labels distinct.
-    const rawGroups = (it.Groups && it.Groups.length) ? it.Groups : ['Other'];
+    const rawGroups = (it.groups && it.groups.length) ? it.groups : ['Other'];
     it._groups = Array.from(new Set(rawGroups.map(g => {
       const s = (g||'').toString().trim();
-      return s ? titleCase(s) : 'Other';
+      return s ? formatTitleCase(s) : 'Other';
     })));
     it._groupLabel = it._groups.join(', ');
 
     // Slots[] -> normalize each raw slot string, dedupe. First one drives
     // the card's accent color/tag (matches old single-Slot behavior for
     // the overwhelming majority of items, which only ever have one slot).
-    const rawSlots = (it.Slots && it.Slots.length) ? it.Slots : [''];
+    const rawSlots = (it.slots && it.slots.length) ? it.slots : [''];
     it._slots = Array.from(new Set(rawSlots.map(normalizeSlot)));
     it._slot = it._slots[0] || 'None';
-    it._slotLabel = rawSlots.filter(Boolean).map(titleCase).join(', ') || 'None';
+    it._slotLabel = rawSlots.filter(Boolean).map(formatTitleCase).join(', ') || 'None';
 
     // Aura used to arrive as one combined string; now it's split into
     // AuraStrength + AuraSchool.
-    it._aura = [it.AuraStrength, it.AuraSchool].filter(Boolean).join(' ');
+    it._aura = [it.aura_strength, it.aura_school].filter(Boolean).join(' ');
+    it._strengths = normalizeStrengths(it.aura_strength);
 
-    // Weight sometimes arrives as the literal string "NULL" instead of
-    // being omitted.
-    it._weight = (it.Weight !== null && it.Weight !== undefined && it.Weight !== 'NULL' && it.Weight !== '')
-      ? it.Weight : null;
+    // Weight is a number in the data (null when missing).
+    it._weight = (typeof it.weight === 'number') ? it.weight : null;
 
+    // Search blob: only text that is actually shown on the card.
+    it._nameBlob = (it.name || '').toLowerCase();
     it._blob = [
-      it.Name, it._groupLabel, it._slotLabel, it.Description, it.Requirements,
-      it._aura, it.Source, it.BaseItem, it.Destruction, it.MagicItems
+      it.name, it._groupLabel, it._slotLabel, it.description, it.requirements,
+      it._aura, it.destruction, it.magic_items
     ].filter(Boolean).join(' ').toLowerCase();
   });
 
+  initMobileFiltersCollapse();
   initThemeToggle();
-  initSidebarArt();
 
   // ---- Slot filter (multi-select chips, feats-style colors) ----
   const slotColorOf = buildTypeColorMap(MAGIC_ITEMS_DATA.map(it=>it._slot));
@@ -124,12 +137,16 @@
   // shape as the Monsters page's CR/HD range filters). Price now arrives
   // as a plain number directly on the item, so no separate PriceValue
   // field is needed. ----
-  function clampPrice(val){
-    if(val === '') return null;
-    let n = parseFloat(val);
-    if(Number.isNaN(n)) return null;
-    return Math.min(999999, Math.max(0, n));
+  function makeClamp(min, max){
+    return function(val){
+      if(val === '') return null;
+      let n = parseFloat(val);
+      if(Number.isNaN(n)) return null;
+      return Math.min(max, Math.max(min, n));
+    };
   }
+  const clampPrice = makeClamp(0, 999999);
+  const clampCL = makeClamp(1, 30);
 
   function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, clearId, clamp }){
     const operatorSelect = document.getElementById(operatorId);
@@ -195,6 +212,15 @@
     clamp: clampPrice
   });
 
+  wireRangeFilter({
+    rangeState: state.cl,
+    operatorId: 'clOperatorSelect',
+    input1Id: 'clInput1',
+    andId: 'clAndSpan',
+    input2Id: 'clInput2',
+    clearId: 'clearCL',
+    clamp: clampCL
+  });
   function matchesRange(value, rangeState){
     if(!rangeState.operator) return true;
     if(typeof value !== 'number') return false;
@@ -209,6 +235,55 @@
     }
     return true;
   }
+
+  // ---- Aura Strength (multi-select chips) ----
+  // Plain gold buttons (no per-value colors / dots): chips fall back to the
+  // default gold --chipc when active.
+  const presentStrengths = new Set(MAGIC_ITEMS_DATA.flatMap(it=>it._strengths));
+  const strengthLabels = STRENGTH_ORDER.filter(s=>presentStrengths.has(s))
+    .concat(Array.from(presentStrengths).filter(s=>!STRENGTH_ORDER.includes(s)).sort());
+  const strengthChips = document.getElementById('strengthChips');
+  strengthLabels.forEach(str=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.textContent = str;
+    chip.addEventListener('click', ()=>{
+      if(state.strengths.has(str)) state.strengths.delete(str);
+      else state.strengths.add(str);
+      chip.classList.toggle('active');
+      render();
+    });
+    strengthChips.appendChild(chip);
+  });
+  document.getElementById('clearStrength').addEventListener('click', ()=>{
+    state.strengths.clear();
+    strengthChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
+    render();
+  });
+
+  // ---- PFS Content (Yes / No, single select toggle like Spells' Ritual
+  // Casting). pfs_content is 1 for Pathfinder Society items, 0 otherwise. ----
+  const isPfs = it => Number(it.pfs_content) === 1;
+  const pfsChips = document.getElementById('pfsChips');
+  [{key:'yes', label:'Yes'}, {key:'no', label:'No'}].forEach(opt=>{
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.dataset.pfs = opt.key;
+    chip.textContent = opt.label;
+    chip.addEventListener('click', ()=>{
+      state.pfs = (state.pfs === opt.key) ? null : opt.key;
+      pfsChips.querySelectorAll('.chip').forEach(c=>{
+        c.classList.toggle('active', c.dataset.pfs === state.pfs);
+      });
+      render();
+    });
+    pfsChips.appendChild(chip);
+  });
+  document.getElementById('clearPfs').addEventListener('click', ()=>{
+    state.pfs = null;
+    pfsChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
+    render();
+  });
 
   // ---- Group filter (single select). Items can belong to more than one
   // group. Options are rebuilt on every render() from the groups present
@@ -225,8 +300,6 @@
     render();
   });
 
-  initMobileFiltersCollapse();
-
   const searchInputEl = document.getElementById('searchInput');
   const searchWrapEl = document.getElementById('searchWrap');
   const searchClearIcon = document.getElementById('searchClearIcon');
@@ -235,10 +308,12 @@
     wrapEl: searchWrapEl,
     clearIconEl: searchClearIcon,
     onQuery: (q)=>{ state.query = q; },
-    render: ()=>render()
+    render: ()=>render(),
+    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
   });
 
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'ring of protection +armor -cursed');
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'ring of protection +armor -cursed', { prefix: true });
+  initSearchScope(searchWrapEl, (scope)=>{ state.searchScope = scope; render(); });
 
   document.getElementById('clearAll').addEventListener('click', (e)=>{
     e.stopPropagation();
@@ -248,9 +323,13 @@
     state.slots.clear();
     slotChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
     document.getElementById('clearPrice').click();
+    document.getElementById('clearCL').click();
+    state.strengths.clear();
+    strengthChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
+    state.pfs = null;
+    pfsChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
     state.group = '';
     groupSelectEl.value = '';
-    state.sort = 'name-asc';
     render();
   });
 
@@ -267,13 +346,20 @@
 
   wireCopyableList('itemList', 'item-name');
 
-  const queryMatch = createQueryMatcher();
+  const queryMatch = createQueryMatcher({ prefix: true });
   function matchesQuery(item, query){
-    return queryMatch(item._blob, query);
+    return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? item._blob : item._nameBlob, query);
   }
 
   function priceLabel(it){
-    return (typeof it.Price === 'number' && it.Price > 0) ? `${it.Price.toLocaleString()} gp` : '—';
+    return (typeof it.price === 'number' && it.price > 0) ? `${it.price.toLocaleString()} gp` : '—';
+  }
+
+  // Ability/ego scores are ints in the data (null = unknown "?"), with an
+  // optional free-text note ("17 against any non-demon").
+  function statNum(val, note){
+    const base = (typeof val === 'number') ? String(val) : '?';
+    return escapeHtml(base) + (note ? ` (${escapeHtml(note)})` : '');
   }
 
   function cardHTML(it){
@@ -282,49 +368,52 @@
     const slotTagHtml = it._slot ? `<span class="item-slot-tag">${escapeHtml(it._slot)}</span>` : '';
     const groupTagHtml = it._groupLabel ? `<span class="item-category-tag">(${escapeHtml(it._groupLabel)})</span>` : '';
 
-    const descHtml = it.Description ? `\n        <div class="item-section">\n          <div class="item-section-title">Description</div>\n          <div class="item-desc">${escapeHtml(it.Description)}</div>\n        </div>` : '';
+    const descHtml = it.description ? `\n        <div class="item-section">\n          <div class="item-section-title">Description</div>\n          <div class="item-desc">${htmlFormatDescription(it.description)}</div>\n        </div>` : '';
 
     const statBits = [];
     if(it._aura) statBits.push(`<b>Aura</b> ${escapeHtml(it._aura)}`);
-    if(it.CL !== null && it.CL !== undefined) statBits.push(`<b>CL</b> ${escapeHtml(String(it.CL))}`);
+    if(typeof it.cl === 'number') statBits.push(`<b>CL</b> ${formatOrdinal(it.cl)}`);
+    else statBits.push(`<b>CL</b> varies`);
     if(it._slotLabel) statBits.push(`<b>Slot</b> ${escapeHtml(it._slotLabel)}`);
-    if(it._weight !== null) statBits.push(`<b>Weight</b> ${escapeHtml(String(it._weight))}`);
-    const statsHtml = statBits.length ? `\n        <div class="item-section">\n          <div class="item-desc">${statBits.join(' &nbsp;·&nbsp; ')}</div>\n        </div>` : '';
+    if(it._weight !== null) statBits.push(`<b>Weight</b> ${escapeHtml(weightLabel(it._weight))}`);
+    const statsHtml = statBits.length ? `\n        <div class="item-section">\n          <div class="item-desc item-stats-line">${statBits.join(' &nbsp; ')}</div>\n        </div>` : '';
 
     const constructionBits = [];
-    if(it.Requirements) constructionBits.push(`<b>Requirements</b> ${escapeHtml(it.Requirements)}`);
-    if(it.Cost) constructionBits.push(`<b>Cost</b> ${Number(it.Cost).toLocaleString()} gp`);
-    if(it.MagicItems) constructionBits.push(`<b>Made From</b> ${escapeHtml(it.MagicItems)}`);
-    if(it.Destruction) constructionBits.push(`<b>Destruction</b> ${escapeHtml(it.Destruction)}`);
+    const reqCostBits = [];
+    if(it.requirements) reqCostBits.push(`<b>Requirements</b> ${escapeHtml(it.requirements)}`);
+    if(it.cost) reqCostBits.push(`<b>Cost</b> ${Number(it.cost).toLocaleString()} gp`);
+    if(reqCostBits.length) constructionBits.push(`<span class="item-stats-line">${reqCostBits.join(' &nbsp; ')}</span>`);
+    if(it.magic_items) constructionBits.push(`<b>Made From</b> ${escapeHtml(it.magic_items)}`);
+    if(it.destruction) constructionBits.push(`<b>Destruction</b> ${escapeHtml(it.destruction)}`);
     const constructionHtml = constructionBits.length ? `\n        <div class="item-section">\n          <div class="item-section-title">Construction</div>\n          <div class="item-desc">${constructionBits.join('<br>')}</div>\n        </div>` : '';
 
-    const ii = it.IntelligentItem;
+    const ii = it.intelligent_item;
     let intelligentHtml = '';
     if(ii && typeof ii === 'object'){
       const iiLines = [];
 
       const line1 = [];
-      if(ii.AL) line1.push(`<b>Alignment</b> ${escapeHtml(ii.AL)}`);
-      if(ii.Ego !== null && ii.Ego !== undefined) line1.push(`<b>Ego</b> ${escapeHtml(String(ii.Ego))}`);
+      if(ii.al) line1.push(`<b>Alignment</b> ${escapeHtml(ii.al)}`);
+      if(ii.ego !== null && ii.ego !== undefined) line1.push(`<b>Ego</b> ${statNum(ii.ego, ii.ego_note)}`);
       if(line1.length) iiLines.push(line1.join(' &nbsp;&nbsp; '));
 
       const line2 = [];
-      if(ii.Int !== null && ii.Int !== undefined) line2.push(`<b>Int</b> ${escapeHtml(String(ii.Int))}`);
-      if(ii.Wis !== null && ii.Wis !== undefined) line2.push(`<b>Wis</b> ${escapeHtml(String(ii.Wis))}`);
-      if(ii.Cha !== null && ii.Cha !== undefined) line2.push(`<b>Cha</b> ${escapeHtml(String(ii.Cha))}`);
+      line2.push(`<b>Int</b> ${statNum(ii.int, ii.int_note)}`);
+      line2.push(`<b>Wis</b> ${statNum(ii.wis, ii.wis_note)}`);
+      line2.push(`<b>Cha</b> ${statNum(ii.cha, ii.cha_note)}`);
       if(line2.length) iiLines.push(line2.join(' &nbsp;&nbsp; '));
 
-      if(ii.Communication) iiLines.push(`<b>Communication</b> ${escapeHtml(ii.Communication)}`);
-      if(ii.Senses) iiLines.push(`<b>Senses</b> ${escapeHtml(ii.Senses)}`);
-      if(ii.Languages) iiLines.push(`<b>Languages</b> ${escapeHtml(ii.Languages)}`);
-      if(ii.Powers) iiLines.push(`<b>Powers</b> ${escapeHtml(ii.Powers)}`);
+      if(ii.communication) iiLines.push(`<b>Communication</b> ${escapeHtml(ii.communication)}`);
+      if(ii.senses) iiLines.push(`<b>Senses</b> ${escapeHtml(ii.senses)}`);
+      if(ii.languages) iiLines.push(`<b>Languages</b> ${escapeHtml(ii.languages)}`);
+      if(ii.powers) iiLines.push(`<b>Powers</b> ${escapeHtml(ii.powers)}`);
 
       if(iiLines.length){
         intelligentHtml = `\n        <div class="item-section">\n          <div class="item-section-title">Intelligent Item Stats</div>\n          <div class="item-desc">${iiLines.join('<br>')}</div>\n        </div>`;
       }
     }
 
-    return `\n    <div class="item-card${isOpen?' open':''}" style="--cardc:${it._cardColor}" data-idx="${it._idx}">\n      <div class="item-head" data-toggle="${it._idx}">\n        <div class="item-title-block">\n          <span class="item-name copyable" data-copy="${escapeHtml(it.Name)}">${escapeHtml(it.Name)}</span>\n          ${slotTagHtml}\n          ${groupTagHtml}\n        </div>\n        <div class="item-right">\n          <span class="item-badge">${escapeHtml(priceLabel(it))}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="item-body">\n        ${statsHtml}${descHtml}${constructionHtml}${intelligentHtml}\n      </div>\n    </div>`;
+    return `\n    <div class="item-card${isOpen?' open':''}" style="--cardc:${it._cardColor}" data-idx="${it._idx}">\n      <div class="item-head" data-toggle="${it._idx}">\n        <div class="item-title-block">\n          <span class="item-name copyable" data-copy="${escapeHtml(it.name)}">${escapeHtml(it.name)}</span>\n          ${slotTagHtml}\n          ${groupTagHtml}\n        </div>\n        <div class="item-right">\n          <span class="item-badge">${escapeHtml(priceLabel(it))}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="item-body">\n        ${statsHtml}${descHtml}${constructionHtml}${intelligentHtml}\n      </div>\n    </div>`;
   }
 
   // Every filter except Group — the population the Group dropdown's own
@@ -339,7 +428,18 @@
       list = list.filter(it=>it._slots.some(s=>state.slots.has(s)));
     }
     if(state.price.operator){
-      list = list.filter(it=>matchesRange(it.Price, state.price));
+      list = list.filter(it=>matchesRange(it.price, state.price));
+    }
+    if(state.cl.operator){
+      list = list.filter(it=>matchesRange(it.cl, state.cl));
+    }
+    if(state.strengths.size){
+      list = list.filter(it=>it._strengths.some(s=>state.strengths.has(s)));
+    }
+    if(state.pfs === 'yes'){
+      list = list.filter(isPfs);
+    } else if(state.pfs === 'no'){
+      list = list.filter(it=>!isPfs(it));
     }
     return list;
   }
@@ -349,10 +449,10 @@
   function updateGroupOptions(list){
     const groupSet = new Set();
     list.forEach(it=>it._groups.forEach(g=>{ if(g) groupSet.add(g); }));
-    const sortedGroups = Array.from(groupSet).sort((a,b)=>a.localeCompare(b));
     if(state.group && !groupSet.has(state.group)) state.group = '';
     groupSelectEl.innerHTML = '<option value="">Any</option>' +
-      sortedGroups.map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+      Array.from(groupSet).map(g=>`<option value="${escapeHtml(g)}">${escapeHtml(g)}</option>`).join('');
+    sortSelectOptions(groupSelectEl);
     groupSelectEl.value = state.group;
   }
 
@@ -362,13 +462,22 @@
     const list = state.group ? base.filter(it=>it._groups.includes(state.group)) : base;
     const sorted = list.slice();
     if(state.sort==='name-asc'){
-      sorted.sort((a,b)=>a.Name.localeCompare(b.Name));
+      sorted.sort((a,b)=>naturalCompare(a.name, b.name));
     } else if(state.sort==='name-desc'){
-      sorted.sort((a,b)=>b.Name.localeCompare(a.Name));
+      sorted.sort((a,b)=>naturalCompare(b.name, a.name));
     } else if(state.sort==='price-asc'){
-      sorted.sort((a,b)=>(a.Price??-1)-(b.Price??-1) || a.Name.localeCompare(b.Name));
+      sorted.sort((a,b)=>(a.price??-1)-(b.price??-1) || a.name.localeCompare(b.name));
     } else if(state.sort==='price-desc'){
-      sorted.sort((a,b)=>(b.Price??-1)-(a.Price??-1) || a.Name.localeCompare(b.Name));
+      sorted.sort((a,b)=>(b.price??-1)-(a.price??-1) || a.name.localeCompare(b.name));
+    } else if(state.sort==='cl-asc'){
+      // items with no numeric CL ("varies") always sort last
+      sorted.sort((a,b)=>(a.cl??Infinity)-(b.cl??Infinity) || a.name.localeCompare(b.name));
+    } else if(state.sort==='cl-desc'){
+      sorted.sort((a,b)=>(b.cl??-1)-(a.cl??-1) || a.name.localeCompare(b.name));
+    } else if(state.sort==='weight-asc'){
+      sorted.sort((a,b)=>(a._weight??Infinity)-(b._weight??Infinity) || a.name.localeCompare(b.name));
+    } else if(state.sort==='weight-desc'){
+      sorted.sort((a,b)=>(b._weight??-1)-(a._weight??-1) || a.name.localeCompare(b.name));
     }
     return sorted;
   }

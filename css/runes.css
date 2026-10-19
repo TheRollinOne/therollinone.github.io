@@ -44,6 +44,56 @@
   justify-content:left;
 }
 
+/* Price / Caster Level: operator select + up to two numeric inputs, same
+   shape as the Magic Items page's range filters (see magic_items.css). */
+.range-filter-row{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:nowrap;
+}
+.range-filter-row select.select-filter{
+  flex:0 0 42%;
+  width:31%;
+  min-width:0;
+  padding-left:6px;
+  padding-right:6px;
+}
+.range-input{
+  width:60px;
+  flex:0 0 60px;
+  min-width:0;
+  background:var(--ink-3);
+  border:1px solid var(--parchment-dim);
+  color:var(--parchment);
+  font-family:'Crimson Pro',serif;
+  font-size:.95rem;
+  padding:9px 4px;
+  border-radius:6px;
+  outline:none;
+  text-align:center;
+  transition:border-color .15s;
+  -moz-appearance:textfield;
+  appearance:textfield;
+}
+.range-input::-webkit-outer-spin-button,
+.range-input::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+.range-input:focus{border-color:var(--gold);}
+.range-input[hidden]{display:none;}
+.range-and{
+  flex:0 0 auto;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+}
+.range-and[hidden]{display:none;}
+
 .rune-card{
   background:var(--ink-2);
   border:1px solid var(--hairline);
@@ -141,7 +191,7 @@
   margin:0 0 4px;
 }
 .rune-meta-line b{
-  color:var(--parchment);
+  color:var(--cardc,var(--gold));
   font-weight:600;
 }
 
@@ -164,6 +214,12 @@
 }
 .rune-desc b{
   color:var(--parchment);
+  font-weight:600;
+}
+
+/* Crafting line labels (Spells / Special / Cost): bold + card color */
+.rune-craft-line b{
+  color:var(--cardc,var(--gold));
   font-weight:600;
 }
 

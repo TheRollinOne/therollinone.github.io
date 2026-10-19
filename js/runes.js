@@ -6,7 +6,10 @@
 
   const state = {
     query: '',
+    searchScope: SEARCH_SCOPE_NAMES,
     bonus: new Set(),
+    price: { operator: '', v1: null, v2: null },
+    cl: { operator: '', v1: null, v2: null },
     categories: new Set(),
     sort: 'name',
     open: new Set()
@@ -16,7 +19,8 @@
 
   RUNES_DATA.forEach((r, i) => {
     r._idx = i;
-    r._category = titleCase(r.category);
+    r._category = formatTitleCase(r.category);
+    r._nameBlob = (r.name || '').toLowerCase();
     r._blob = [
       r.name, r._category, r.short_description, r.description, r.aura
     ].filter(Boolean).join(' ').toLowerCase();
@@ -27,7 +31,6 @@
 
   initMobileFiltersCollapse();
   initThemeToggle();
-  initSidebarArt();
 
   const bonusChips = document.getElementById('bonusChips');
   bonusChips.querySelectorAll('.chip').forEach(chip => {
@@ -44,6 +47,97 @@
     bonusChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
     render();
   });
+
+  // ---- Price / Caster Level filters (operator select + up to two numeric
+  // inputs, same shape as the Magic Items page's range filters). Both
+  // values are plain integers in the data. ----
+  function makeClamp(min, max){
+    return function(val){
+      if (val === '') return null;
+      const n = parseFloat(val);
+      if (Number.isNaN(n)) return null;
+      return Math.min(max, Math.max(min, n));
+    };
+  }
+  const clampPrice = makeClamp(0, 999999);
+  const clampCL = makeClamp(1, 30);
+
+  function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, clearId, clamp }){
+    const operatorSelect = document.getElementById(operatorId);
+    const input1 = document.getElementById(input1Id);
+    const andSpan = document.getElementById(andId);
+    const input2 = document.getElementById(input2Id);
+
+    function syncVisibility(){
+      const op = operatorSelect.value;
+      input1.hidden = (op === '');
+      andSpan.hidden = (op !== 'between');
+      input2.hidden = (op !== 'between');
+    }
+
+    // Typed numbers are debounced; the operator select and the clear
+    // button are discrete actions and render immediately.
+    const debouncedRender = debounce(render, 200);
+
+    operatorSelect.addEventListener('change', () => {
+      rangeState.operator = operatorSelect.value;
+      syncVisibility();
+      render();
+    });
+    input1.addEventListener('input', () => {
+      rangeState.v1 = clamp(input1.value);
+      debouncedRender();
+    });
+    input2.addEventListener('input', () => {
+      rangeState.v2 = clamp(input2.value);
+      debouncedRender();
+    });
+    document.getElementById(clearId).addEventListener('click', () => {
+      rangeState.operator = '';
+      rangeState.v1 = null;
+      rangeState.v2 = null;
+      operatorSelect.value = '';
+      input1.value = '';
+      input2.value = '';
+      syncVisibility();
+      render();
+    });
+    syncVisibility();
+  }
+
+  wireRangeFilter({
+    rangeState: state.price,
+    operatorId: 'priceOperatorSelect',
+    input1Id: 'priceInput1',
+    andId: 'priceAndSpan',
+    input2Id: 'priceInput2',
+    clearId: 'clearPrice',
+    clamp: clampPrice
+  });
+  wireRangeFilter({
+    rangeState: state.cl,
+    operatorId: 'clOperatorSelect',
+    input1Id: 'clInput1',
+    andId: 'clAndSpan',
+    input2Id: 'clInput2',
+    clearId: 'clearCL',
+    clamp: clampCL
+  });
+
+  function matchesRange(value, rangeState){
+    if (!rangeState.operator) return true;
+    if (typeof value !== 'number') return false;
+    if (rangeState.operator === 'lt') return rangeState.v1 !== null && value < rangeState.v1;
+    if (rangeState.operator === 'eq') return rangeState.v1 !== null && value === rangeState.v1;
+    if (rangeState.operator === 'gt') return rangeState.v1 !== null && value > rangeState.v1;
+    if (rangeState.operator === 'between') {
+      if (rangeState.v1 === null || rangeState.v2 === null) return true;
+      const lo = Math.min(rangeState.v1, rangeState.v2);
+      const hi = Math.max(rangeState.v1, rangeState.v2);
+      return value >= lo && value <= hi;
+    }
+    return true;
+  }
 
   // Category chips are generated dynamically (colors depend on the data),
   // the same way feats.js/armors.js build their category chips.
@@ -78,10 +172,12 @@
     wrapEl: searchWrapEl,
     clearIconEl: searchClearIcon,
     onQuery: (q) => { state.query = q; },
-    render: () => render()
+    render: () => render(),
+    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
   });
 
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'flaming +keen -bane');
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'flaming +keen -bane', { prefix: true });
+  initSearchScope(searchWrapEl, (scope) => { state.searchScope = scope; render(); });
 
   document.getElementById('clearAll').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -90,6 +186,8 @@
     searchWrapEl.classList.remove('has-query');
     state.bonus.clear();
     bonusChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
+    document.getElementById('clearPrice').click();
+    document.getElementById('clearCL').click();
     state.categories.clear();
     categoryChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
     render();
@@ -108,21 +206,9 @@
 
   wireCopyableList('runeList', 'rune-name');
 
-  const queryMatch = createQueryMatcher();
+  const queryMatch = createQueryMatcher({ prefix: true });
   function matchesQuery(rune, query) {
-    return queryMatch(rune._blob, query);
-  }
-
-  function formatCasterLevel(cl){
-    if (!cl) return '';
-    const n = Number(cl);
-    if (Number.isNaN(n)) return String(cl);
-    const suffix =
-      n === 1 ? 'st' :
-      n === 2 ? 'nd' :
-      n === 3 ? 'rd' :
-      'th';
-    return `${n}${suffix}`;
+    return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? rune._blob : rune._nameBlob, query);
   }
 
   // Builds a "**Label** value — **Label2** value2" style line from an
@@ -134,7 +220,18 @@
       const boldLabel = htmlMode ? `<b>${label}</b>` : `**${label}**`;
       const safeVal = htmlMode ? escapeHtml(val) : val;
       return `${boldLabel} ${safeVal}`;
-    }).join(' — ');
+    }).join(htmlMode ? ' &nbsp; ' : ' — ');
+  }
+
+  // bonus, price, caster_level and crafting.cost are stored as integers in
+  // the data; these helpers rebuild the original display strings.
+  // 7000 -> "7,000 gp"
+  function formatGp(n){
+    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' gp';
+  }
+  // 3 -> "+3"
+  function formatBonus(n){
+    return (n === null || n === undefined || n === '') ? '' : '+' + n;
   }
 
   function cardHTML(r){
@@ -142,17 +239,17 @@
     const isOpen = state.open.has(r._idx);
 
     const spellsText = (r.crafting.spells && r.crafting.spells.length) ? r.crafting.spells.join(', ') : '';
-    const clDisplay = formatCasterLevel(r.caster_level);
+    const clDisplay = formatOrdinal(String(r.caster_level));
 
     const metaPairs = [
-      ['Price', r.price],
+      ['Price', formatGp(r.price)],
       ['Aura', r.aura],
       ['Caster Level', clDisplay]
     ];
     const craftingPairs = [
       ['Spells', spellsText],
       ['Special', r.crafting.special],
-      ['Cost', r.crafting.cost]
+      ['Cost', '+' + formatGp(r.crafting.cost)]
     ];
 
     const metaLineHtml = buildLabeledLine(metaPairs, true);
@@ -164,22 +261,22 @@
       <div class="rune-meta-line">${metaLineHtml}</div>
       <div class="rune-section">
         <div class="rune-section-title">Description</div>
-        <div class="rune-desc"><div>${boldLeadingLabel(r.description||'')}</div></div>
+        <div class="rune-desc"><div>${htmlFormatDescription(r.description)}</div></div>
       </div>
       <div class="rune-section">
         <div class="rune-section-title">Crafting</div>
-        <div class="rune-desc">${craftingLineHtml}</div>
+        <div class="rune-desc rune-craft-line">${craftingLineHtml}</div>
       </div>`;
 
     const copyText =
-      `${metaLineCopy}\n${boldLeadingLabelText(r.description||'')}\n\nCRAFTING\n${craftingLineCopy}`;
+      `${metaLineCopy}\n${clipboardFormatText(r.description)}\n\nCRAFTING\n${craftingLineCopy}`;
 
     return `
     <div class="rune-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${r._idx}">
       <div class="rune-head" data-toggle="${r._idx}">
         <div class="rune-title-block">
           <span class="rune-name copyable" data-copy="${escapeHtml(r.name)}">${escapeHtml(r.name)}</span>
-          <span class="rune-bonus-tag">${escapeHtml(r.bonus||'')}</span>
+          <span class="rune-bonus-tag">${escapeHtml(formatBonus(r.bonus))}</span>
           <span class="rune-category-tag">${escapeHtml(r._category)}</span>
         </div>
         <div class="rune-right">
@@ -201,6 +298,12 @@
     }
     if (state.bonus.size) {
       list = list.filter(r => state.bonus.has(String(parseInt(r.bonus, 10))));
+    }
+    if (state.price.operator) {
+      list = list.filter(r => matchesRange(r.price, state.price));
+    }
+    if (state.cl.operator) {
+      list = list.filter(r => matchesRange(r.caster_level, state.cl));
     }
     if (state.categories.size) {
       list = list.filter(r => state.categories.has(r._category));

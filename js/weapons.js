@@ -6,6 +6,7 @@
 
   const state = {
     query: '',
+    searchScope: SEARCH_SCOPE_NAMES,
     proficiencies: new Set(),
     categories: new Set(),
     damageTypes: new Set(),
@@ -20,6 +21,7 @@
 
   WEAPONS_DATA.forEach((w, i) => {
     w._idx = i;
+    w._nameBlob = (w.name || '').toLowerCase();
     w._blob = [
       w.name, w.category, w.proficiency, (w.damage_type||[]).join(' '),
       (w.weapon_group||[]).join(' '), (w.special||[]).join(' '), w.description
@@ -31,7 +33,6 @@
 
   initMobileFiltersCollapse();
   initThemeToggle();
-  initSidebarArt();
 
   const proficiencyChips = document.getElementById('proficiencyChips');
   proficiencyChips.querySelectorAll('.chip').forEach(chip => {
@@ -147,10 +148,12 @@
     wrapEl: searchWrapEl,
     clearIconEl: searchClearIcon,
     onQuery: (q) => { state.query = q; },
-    render: () => render()
+    render: () => render(),
+    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
   });
 
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'longsword +slashing -reach');
+  wireSearchTooltip(searchInputEl, searchWrapEl, 'longsword +slashing -reach', { prefix: true });
+  initSearchScope(searchWrapEl, (scope) => { state.searchScope = scope; render(); });
 
   document.getElementById('clearAll').addEventListener('click', (e) => {
     e.stopPropagation();
@@ -185,9 +188,9 @@
 
   wireCopyableList('weaponList', 'weapon-name');
 
-  const queryMatch = createQueryMatcher();
+  const queryMatch = createQueryMatcher({ prefix: true });
   function matchesQuery(weapon, query) {
-    return queryMatch(weapon._blob, query);
+    return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? weapon._blob : weapon._nameBlob, query);
   }
 
   function parseLeadingNumber(str){
@@ -257,11 +260,11 @@
       `<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`
     ).join('');
 
-    const descText = boldLeadingLabelText(w.description || '');
+    const descText = clipboardFormatText(w.description);
     const descHtml = w.description ? `
       <div class="weapon-section copyable" data-copy="${escapeHtml(descText)}">
         <div class="weapon-section-title">Description</div>
-        <div class="weapon-desc"><div>${boldLeadingLabel(w.description)}</div></div>
+        <div class="weapon-desc"><div>${htmlFormatDescription(w.description)}</div></div>
       </div>` : '';
 
     return `

@@ -43,6 +43,10 @@
   width:auto;
   justify-content:left;
 }
+/* PFS Content (Yes / No): labels centered */
+.pfs-chip-row .chip{
+  justify-content:center;
+}
 
 /* Price: operator select + up to two numeric inputs, same shape as the
    Monsters page's CR/HD range filters (see monsters.css). */
@@ -201,6 +205,11 @@
   font-size:1.1rem;
   color:var(--parchment-dim);
   white-space:pre-wrap;
+}
+/* Aura / CL / Slot / Weight line only: bold labels in the card color */
+.item-stats-line b{
+  color:var(--cardc,var(--gold));
+  font-weight:700;
 }
 
 .empty-state{
