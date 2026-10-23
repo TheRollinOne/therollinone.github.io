@@ -5,9 +5,39 @@
   // afterward, alphabetically.
   const TYPE_ORDER = ['Aberration', 'Animal', 'Construct', 'Dragon', 'Fey', 'Humanoid', 'Magical Beast', 'Monstrous Humanoid', 'Ooze', 'Outsider', 'Plant', 'Undead', 'Vermin'];
 
-  // Single dataset, always fully inlined — unlike monsters.js there is no
-  // Publishers filter and no lazy-loaded 3pp split for npcs.json.
+  // NPCS_DATA holds only slim list records (see build-npcs.js). The full
+  // stat blocks live in chunked files (data/npcs-<N>.js) that are loaded
+  // the first time a card in that chunk is opened.
   const NPCS = (typeof NPCS_DATA !== 'undefined') ? NPCS_DATA.slice() : [];
+
+  // ---- Lazy-loaded full records ----
+  const META = (typeof NPCS_DATA_META !== 'undefined') ? NPCS_DATA_META : { chunkSize: 20 };
+  const CH = META.chunkSize;
+  const chunkPromises = {};
+  function loadChunk(c){
+    return chunkPromises[c] || (chunkPromises[c] = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = META['c' + c];
+      s.onload = () => res(window['NPC_CHUNK_' + c]);
+      s.onerror = () => { delete chunkPromises[c]; s.remove(); rej(new Error('chunk ' + c)); };
+      document.head.appendChild(s);
+    }));
+  }
+  function loadDetail(idx){
+    return loadChunk(Math.floor(idx / CH)).then(arr => {
+      const full = arr[idx % CH];
+      full._type = NPCS[idx]._type;   // bodyHTML() uses m._type
+      return full;
+    });
+  }
+  function hydrate(idx, card){
+    const body = card.querySelector('.entry-body');
+    if(!body || body.dataset.ready) return;
+    body.innerHTML = '<div class="entry-desc">Loading…</div>';
+    loadDetail(idx)
+      .then(full => { body.innerHTML = bodyHTML(full); body.dataset.ready = '1'; })
+      .catch(() => { body.innerHTML = '<div class="entry-desc">Could not load details.</div>'; });
+  }
 
   // Colors are computed from whatever types are actually present in the
   // data, title-cased so inconsistent source casing doesn't produce
@@ -101,26 +131,10 @@
         (m._classes[cat] = m._classes[cat] || new Set()).add(label);
       });
     });
-    // Fields are joined with " | " (also between array items) so a phrase can
-    // never accidentally match across the end of one field / start of the next.
-    const fmt = x => typeof x === 'string' ? x : (x && (x.type || x.name || x.spell)) || '';
-    const J = arr => (Array.isArray(arr) ? arr : (arr ? [arr] : [])).map(fmt).filter(Boolean).join(' | ');
+    // The "All Fields" search blob is precomputed at build time
+    // (buildBlob in build-npcs.js).
     m._nameBlob = (m.name || '').toLowerCase();
-    m._blob = [
-      m.name, m.race, m._type, J(m.sub_types), m.alignment, m.size,
-      (m.classes||[]).map(c => c.class || c.name).join(' | '),
-      J(m.senses),
-      J(m.auras),
-      J(m.hp_mods),
-      J(m.defensive_abilities),
-      J(m.special_attacks),
-      (m.feats||[]).map(f => f.feat).join(' | '),
-      (m.skills||[]).map(k => k.skill).join(' | '),
-      J(m.languages),
-      (m.special_abilities||[]).map(a => a.type).join(' | '),
-      // speeds: type + maneuverability ("base" is indexed as "land")
-      (m.speed||[]).map(sp => [sp.type === 'base' ? 'land' : sp.type, sp.maneuverability].filter(Boolean).join(' ')).join(' | ')
-    ].filter(Boolean).join(' | ').toLowerCase();
+    m._blob = m.blob || '';
   }
   NPCS.forEach(prepare);
 
@@ -137,83 +151,8 @@
   initThemeToggle();
 
   // ---- Numeric range filters (Challenge Rating, Hit Dice) ----
-  // Shared behavior: an operator <select> plus up to two number inputs.
-  // "Any" hides both inputs; lt/eq/gt show just the first;
-  // "between" shows both plus the "and" label.
-  function clampRange(val, min, max){
-    if(val === '') return null;
-    let n = parseFloat(val);
-    if(Number.isNaN(n)) return null;
-    n = Math.max(min, Math.min(max, n));
-    return n;
-  }
-
-  function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, clearId, min, max }){
-    const operatorSelect = document.getElementById(operatorId);
-    const input1 = document.getElementById(input1Id);
-    const andSpan = document.getElementById(andId);
-    const input2 = document.getElementById(input2Id);
-
-    // Bounds + placeholders come from the real data range for this field
-    // (computed above as CR_MIN/CR_MAX and HD_MIN/HD_MAX) rather than a
-    // fixed guess, so the inputs always match what npcs.json actually has.
-    [input1, input2].forEach(inp => {
-      inp.min = min;
-      inp.max = max;
-    });
-    input1.placeholder = String(min);
-    input2.placeholder = String(max);
-
-    function syncVisibility(){
-      const op = operatorSelect.value;
-      if(op === ''){
-        input1.hidden = true;
-        andSpan.hidden = true;
-        input2.hidden = true;
-      } else if(op === 'between'){
-        input1.hidden = false;
-        andSpan.hidden = false;
-        input2.hidden = false;
-      } else {
-        input1.hidden = false;
-        andSpan.hidden = true;
-        input2.hidden = true;
-      }
-    }
-
-    // Only the number inputs (typed) get debounced; the operator <select>
-    // and the "clear" button below are discrete actions and should render
-    // immediately.
-    const debouncedRender = debounce(render, 200);
-
-    operatorSelect.addEventListener('change', () => {
-      rangeState.operator = operatorSelect.value;
-      syncVisibility();
-      render();
-    });
-    input1.addEventListener('input', () => {
-      rangeState.v1 = clampRange(input1.value, min, max);
-      debouncedRender();
-    });
-    input2.addEventListener('input', () => {
-      rangeState.v2 = clampRange(input2.value, min, max);
-      debouncedRender();
-    });
-    document.getElementById(clearId).addEventListener('click', () => {
-      rangeState.operator = '';
-      rangeState.v1 = null;
-      rangeState.v2 = null;
-      operatorSelect.value = '';
-      input1.value = '';
-      input2.value = '';
-      syncVisibility();
-      render();
-    });
-    syncVisibility();
-
-    return { operatorSelect, input1, input2, syncVisibility };
-  }
-
+  // wireRangeFilter/matchesRange are shared helpers in base.js. Bounds and
+  // placeholders come from the real data range (CR_MIN/MAX, HD_MIN/MAX).
   const crFilter = wireRangeFilter({
     rangeState: state.cr,
     operatorId: 'crOperatorSelect',
@@ -221,8 +160,10 @@
     andId: 'crAndSpan',
     input2Id: 'crInput2',
     clearId: 'clearCR',
+    render,
     min: CR_MIN,
-    max: CR_MAX
+    max: CR_MAX,
+    applyBounds: true
   });
 
   const hdFilter = wireRangeFilter({
@@ -232,8 +173,10 @@
     andId: 'hdAndSpan',
     input2Id: 'hdInput2',
     clearId: 'clearHD',
+    render,
     min: HD_MIN,
-    max: HD_MAX
+    max: HD_MAX,
+    applyBounds: true
   });
 
   // ---- Type filter ----
@@ -378,46 +321,12 @@
     return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? npc._blob : npc._nameBlob, query);
   }
 
-  function matchesRange(value, rangeState){
-    if(!rangeState.operator) return true;
-    if(typeof value !== 'number') return false;
-    if(rangeState.operator === 'lt') return rangeState.v1 !== null && value < rangeState.v1;
-    if(rangeState.operator === 'eq') return rangeState.v1 !== null && value === rangeState.v1;
-    if(rangeState.operator === 'gt') return rangeState.v1 !== null && value > rangeState.v1;
-    if(rangeState.operator === 'between'){
-      if(rangeState.v1 === null || rangeState.v2 === null) return true;
-      const lo = Math.min(rangeState.v1, rangeState.v2);
-      const hi = Math.max(rangeState.v1, rangeState.v2);
-      return value >= lo && value <= hi;
-    }
-    return true;
-  }
-
-  // True if the NPC has any non-empty field whose key starts with `prefix`
-  // (e.g. extracts, extracts_caster_level, psychic_magic, ...).
-  function hasFieldStartingWith(npc, prefix){
-    return Object.keys(npc).some(k => {
-      if(!k.toLowerCase().startsWith(prefix)) return false;
-      const v = npc[k];
-      return v != null && v !== '' && !(Array.isArray(v) && !v.length);
-    });
-  }
-
+  // `sc` is a precomputed array of spellcasting flags (none / extracts /
+  // prepared / psychic / spell_like / spontaneous), see scFlags() in
+  // build-npcs.js.
   function matchesSpellcasting(npc){
     if(!state.spellcasting.size) return true;
-    const isSpellLike = npc.spell_like_abilities_caster_level != null;
-    const isPrepared = npc.spellsprepared_caster != null;
-    const isSpontaneous = npc.spellsknown_caster != null;
-    const isExtracts = hasFieldStartingWith(npc, 'extracts');
-    const isPsychic = hasFieldStartingWith(npc, 'psychic');
-    const isNone = !isSpellLike && !isPrepared && !isSpontaneous && !isExtracts && !isPsychic;
-    if(state.spellcasting.has('none') && isNone) return true;
-    if(state.spellcasting.has('extracts') && isExtracts) return true;
-    if(state.spellcasting.has('prepared') && isPrepared) return true;
-    if(state.spellcasting.has('psychic') && isPsychic) return true;
-    if(state.spellcasting.has('spell_like') && isSpellLike) return true;
-    if(state.spellcasting.has('spontaneous') && isSpontaneous) return true;
-    return false;
+    return (npc.sc || []).some(f => state.spellcasting.has(f));
   }
 
   function matchesClass(m){
@@ -526,8 +435,8 @@
       ['HD', hdText || '—'],
       ['Size', m.size || '—'],
     ];
-    return `<div class="npc-quick-stats">${boxes.map(([l, v]) =>
-      `<div class="npc-quick-stat"><div class="npc-quick-stat-label">${escapeHtml(l)}</div><div class="npc-quick-stat-value">${escapeHtml(v)}</div></div>`
+    return `<div class="entry-qstats">${boxes.map(([l, v]) =>
+      `<div class="entry-qstat"><div class="entry-qstat-label">${escapeHtml(l)}</div><div class="entry-qstat-value">${escapeHtml(v)}</div></div>`
     ).join('')}</div>`;
   }
 
@@ -837,7 +746,7 @@
   }
 
   function linesHtml(lines){
-    return lines.map(l => `<div class="npc-line${l.gap ? ' gap' : ''}">${partsHtml(l)}</div>`).join('');
+    return lines.map(l => `<div class="statblock-line${l.gap ? ' gap' : ''}">${partsHtml(l)}</div>`).join('');
   }
   // Returns {html, text} so cardHTML can assemble one combined copy string.
   function sectionPart(title, lines){
@@ -845,8 +754,8 @@
     return {
       text: [`**${title}**`, ...lines.map(partsText)].join('\n'),
       html: `
-      <div class="npc-section">
-        <div class="npc-section-title">${escapeHtml(title)}</div>
+      <div class="entry-section">
+        <div class="entry-section-title">${escapeHtml(title)}</div>
         ${linesHtml(lines)}
       </div>`
     };
@@ -859,7 +768,7 @@
     if(m.description_visual){
       parts.push({
         text: '*' + m.description_visual + '*',
-        html: `<p class="npc-visual">${escapeHtml(m.description_visual)}</p>`
+        html: `<p class="statblock-visual">${escapeHtml(m.description_visual)}</p>`
       });
     }
 
@@ -868,10 +777,10 @@
     parts.push({
       text: [`**${m.name}${crText ? ' ' + crText : ''}**`, ...hLines.map(partsText)].join('\n'),
       html: `
-      <div class="npc-statblock-head">
-        <div class="npc-sb-titlerow">
-          <span class="npc-sb-name">${escapeHtml(m.name)}</span>
-          <span class="npc-sb-cr">${escapeHtml(crText)}</span>
+      <div class="statblock-head">
+        <div class="statblock-titlerow">
+          <span class="statblock-name">${escapeHtml(m.name)}</span>
+          <span class="statblock-cr">${escapeHtml(crText)}</span>
         </div>
         ${linesHtml(hLines)}
       </div>`
@@ -887,15 +796,15 @@
       parts.push({
         text: `**Description**\n${clipboardFormatText(m.description)}`,
         html: `
-      <div class="npc-section">
-        <div class="npc-section-title">Description</div>
-        <div class="npc-desc"><div>${htmlFormatDescription(m.description)}</div></div>
+      <div class="entry-section">
+        <div class="entry-section-title">Description</div>
+        <div class="entry-desc"><div>${htmlFormatDescription(m.description)}</div></div>
       </div>`
       });
     }
     const live = parts.filter(Boolean);
     const copyText = live.map(p => p.text).join('\n\n');
-    return `<div class="npc-body-copy copyable" data-copy="${escapeHtml(copyText)}">${live.map(p => p.html).join('')}</div>`;
+    return `<div class="statblock-copy copyable" data-copy="${escapeHtml(copyText)}">${live.map(p => p.html).join('')}</div>`;
   }
 
   function cardHTML(m){
@@ -903,23 +812,23 @@
     const isOpen = state.open.has(m._idx);
 
     const subtypesText = (m.sub_types || []).join(', ');
-    const typeTagHtml = m._type ? `<span class="npc-type-tag">${escapeHtml(m._type)}</span>` : '';
-    const subtypeTagHtml = subtypesText ? `<span class="npc-subtype-tag">(${escapeHtml(subtypesText)})</span>` : '';
+    const typeTagHtml = m._type ? `<span class="entry-tag entry-tag--lg">${escapeHtml(m._type)}</span>` : '';
+    const subtypeTagHtml = subtypesText ? `<span class="entry-tag">(${escapeHtml(subtypesText)})</span>` : '';
 
     return `
-    <div class="npc-card${isOpen?' open':''}"${cardStyle} data-idx="${m._idx}">
-      <div class="npc-head" data-toggle="${m._idx}">
-        <div class="npc-title-block">
-          <span class="npc-name copyable" data-copy="${escapeHtml(m.name)}">${escapeHtml(m.name)}</span>
+    <div class="entry-card entry-card--stats entry-card--tight entry-card--statblock npc-card${isOpen?' open':''}"${cardStyle} data-idx="${m._idx}">
+      <div class="entry-head" data-toggle="${m._idx}">
+        <div class="entry-title-block">
+          <span class="entry-name npc-name copyable" data-copy="${escapeHtml(m.name)}">${escapeHtml(m.name)}</span>
           ${typeTagHtml}
           ${subtypeTagHtml}
         </div>
-        <div class="npc-right">
+        <div class="entry-right">
           ${quickStatsHTML(m)}
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
-      <div class="npc-body">${isOpen ? bodyHTML(m) : ''}</div>
+      <div class="entry-body"></div>
     </div>`;
   }
 
@@ -934,11 +843,11 @@
     }
     const shown = paginate(state, results);
     listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'NPCs');
-    // Stat block is built lazily the first time a card is opened.
-    wireCardToggle(listEl, state, 'npc-card', 'npc-name', (idx, card) => {
-      const body = card.querySelector('.npc-body');
-      if(body && !body.firstElementChild) body.innerHTML = bodyHTML(NPCS[idx]);
-    });
+    // The full record is fetched (chunked, cached) and the stat block built
+    // when a card is opened; cards that are already open (state.open) after a
+    // re-render are hydrated here too.
+    wireCardToggle(listEl, state, 'npc-card', 'npc-name', (idx, card) => hydrate(idx, card));
+    listEl.querySelectorAll('.npc-card.open').forEach(card => hydrate(+card.dataset.idx, card));
     wireShowMore(listEl, {
       onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
       onShowAll: () => { state.visibleCount = results.length; render(); }

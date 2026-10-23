@@ -65,6 +65,61 @@
 
   document.getElementById('brandSub').textContent = `Magic Item Vault · ${MAGIC_ITEMS_DATA.length} Items`;
 
+  // MAGIC_ITEMS_DATA holds only slim list records (see build-magic_items.js).
+  // Full records live in chunked files (data/magic_items-<N>.js) loaded the
+  // first time a card in that chunk is opened; the "All Fields" search text
+  // is one extra file loaded the first time it is needed.
+  const META = (typeof MAGIC_ITEMS_DATA_META !== 'undefined') ? MAGIC_ITEMS_DATA_META : { chunkSize: 50 };
+  const CH = META.chunkSize;
+  const chunkPromises = {};
+  function loadChunk(c){
+    return chunkPromises[c] || (chunkPromises[c] = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = META['c' + c];
+      s.onload = () => res(window['MAGIC_CHUNK_' + c]);
+      s.onerror = () => { delete chunkPromises[c]; s.remove(); rej(new Error('chunk ' + c)); };
+      document.head.appendChild(s);
+    }));
+  }
+  // Full record + the fields prepare() derived on the slim record (_aura, ...).
+  function loadDetail(idx){
+    return loadChunk(Math.floor(idx / CH)).then(arr => Object.assign({}, arr[idx % CH], MAGIC_ITEMS_DATA[idx]));
+  }
+  function hydrate(idx, card){
+    const body = card.querySelector('.entry-body');
+    if(!body || body.dataset.ready) return;
+    body.innerHTML = '<div class="entry-desc">Loading…</div>';
+    loadDetail(idx)
+      .then(full => { body.innerHTML = bodyHTML(full); body.dataset.ready = '1'; })
+      .catch(() => { body.innerHTML = '<div class="entry-desc">Could not load details.</div>'; });
+  }
+
+  // 'idle' | 'loading' | 'loaded' | 'error'. With no blob file (older build)
+  // there is nothing to load.
+  let blobStatus = META.blobFile ? 'idle' : 'loaded';
+  function needsBlob(){
+    return blobStatus !== 'loaded' && state.searchScope === SEARCH_SCOPE_ALL && !!state.query;
+  }
+  function loadBlob(){
+    blobStatus = 'loading';
+    const s = document.createElement('script');
+    s.src = META.blobFile;
+    s.onload = () => {
+      const blobs = window.MAGIC_ITEMS_BLOBS || [];
+      MAGIC_ITEMS_DATA.forEach((it, i) => { it._blob = blobs[i] || ''; });
+      window.MAGIC_ITEMS_BLOBS = null;
+      blobStatus = 'loaded';
+      render();
+    };
+    s.onerror = () => { blobStatus = 'error'; s.remove(); render(); };
+    document.head.appendChild(s);
+  }
+  function showStatus(title, msg){
+    document.getElementById('listTitle').textContent = title;
+    document.getElementById('itemList').innerHTML =
+      `<div class="empty-state"><span class="big">${escapeHtml(title)}</span>${escapeHtml(msg)}</div>`;
+  }
+
   MAGIC_ITEMS_DATA.forEach((it,i)=>{
     it._idx = i;
 
@@ -94,12 +149,10 @@
     // Weight is a number in the data (null when missing).
     it._weight = (typeof it.weight === 'number') ? it.weight : null;
 
-    // Search blob: only text that is actually shown on the card.
+    // Names-only search uses the name; the "All Fields" text lives in a
+    // separate lazy-loaded file (see loadBlob()) and fills _blob when it arrives.
     it._nameBlob = (it.name || '').toLowerCase();
-    it._blob = [
-      it.name, it._groupLabel, it._slotLabel, it.description, it.requirements,
-      it._aura, it.destruction, it.magic_items
-    ].filter(Boolean).join(' ').toLowerCase();
+    it._blob = '';
   });
 
   initMobileFiltersCollapse();
@@ -133,75 +186,9 @@
     render();
   });
 
-  // ---- Price filter (operator select + up to two numeric inputs, same
-  // shape as the Monsters page's CR/HD range filters). Price now arrives
-  // as a plain number directly on the item, so no separate PriceValue
-  // field is needed. ----
-  function makeClamp(min, max){
-    return function(val){
-      if(val === '') return null;
-      let n = parseFloat(val);
-      if(Number.isNaN(n)) return null;
-      return Math.min(max, Math.max(min, n));
-    };
-  }
-  const clampPrice = makeClamp(0, 999999);
-  const clampCL = makeClamp(1, 30);
-
-  function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, clearId, clamp }){
-    const operatorSelect = document.getElementById(operatorId);
-    const input1 = document.getElementById(input1Id);
-    const andSpan = document.getElementById(andId);
-    const input2 = document.getElementById(input2Id);
-
-    function syncVisibility(){
-      const op = operatorSelect.value;
-      if(op === ''){
-        input1.hidden = true;
-        andSpan.hidden = true;
-        input2.hidden = true;
-      } else if(op === 'between'){
-        input1.hidden = false;
-        andSpan.hidden = false;
-        input2.hidden = false;
-      } else {
-        input1.hidden = false;
-        andSpan.hidden = true;
-        input2.hidden = true;
-      }
-    }
-
-    // Only the number inputs (typed) get debounced; the operator <select>
-    // and the "clear" button below are discrete actions and should render
-    // immediately.
-    const debouncedRender = debounce(render, 200);
-
-    operatorSelect.addEventListener('change', () => {
-      rangeState.operator = operatorSelect.value;
-      syncVisibility();
-      render();
-    });
-    input1.addEventListener('input', () => {
-      rangeState.v1 = clamp(input1.value);
-      debouncedRender();
-    });
-    input2.addEventListener('input', () => {
-      rangeState.v2 = clamp(input2.value);
-      debouncedRender();
-    });
-    document.getElementById(clearId).addEventListener('click', () => {
-      rangeState.operator = '';
-      rangeState.v1 = null;
-      rangeState.v2 = null;
-      operatorSelect.value = '';
-      input1.value = '';
-      input2.value = '';
-      syncVisibility();
-      render();
-    });
-    syncVisibility();
-  }
-
+  // ---- Price / Caster Level filters (operator select + up to two numeric
+  // inputs; wireRangeFilter/matchesRange are shared helpers in base.js).
+  // Price arrives as a plain number directly on the item. ----
   wireRangeFilter({
     rangeState: state.price,
     operatorId: 'priceOperatorSelect',
@@ -209,7 +196,8 @@
     andId: 'priceAndSpan',
     input2Id: 'priceInput2',
     clearId: 'clearPrice',
-    clamp: clampPrice
+    render,
+    clamp: makeClamp(0, 999999)
   });
 
   wireRangeFilter({
@@ -219,22 +207,9 @@
     andId: 'clAndSpan',
     input2Id: 'clInput2',
     clearId: 'clearCL',
-    clamp: clampCL
+    render,
+    clamp: makeClamp(1, 30)
   });
-  function matchesRange(value, rangeState){
-    if(!rangeState.operator) return true;
-    if(typeof value !== 'number') return false;
-    if(rangeState.operator === 'lt') return rangeState.v1 !== null && value < rangeState.v1;
-    if(rangeState.operator === 'eq') return rangeState.v1 !== null && value === rangeState.v1;
-    if(rangeState.operator === 'gt') return rangeState.v1 !== null && value > rangeState.v1;
-    if(rangeState.operator === 'between'){
-      if(rangeState.v1 === null || rangeState.v2 === null) return true;
-      const lo = Math.min(rangeState.v1, rangeState.v2);
-      const hi = Math.max(rangeState.v1, rangeState.v2);
-      return value >= lo && value <= hi;
-    }
-    return true;
-  }
 
   // ---- Aura Strength (multi-select chips) ----
   // Plain gold buttons (no per-value colors / dots): chips fall back to the
@@ -362,13 +337,9 @@
     return escapeHtml(base) + (note ? ` (${escapeHtml(note)})` : '');
   }
 
-  function cardHTML(it){
-    const isOpen = state.open.has(it._idx);
-
-    const slotTagHtml = it._slot ? `<span class="item-slot-tag">${escapeHtml(it._slot)}</span>` : '';
-    const groupTagHtml = it._groupLabel ? `<span class="item-category-tag">(${escapeHtml(it._groupLabel)})</span>` : '';
-
-    const descHtml = it.description ? `\n        <div class="item-section">\n          <div class="item-section-title">Description</div>\n          <div class="item-desc">${htmlFormatDescription(it.description)}</div>\n        </div>` : '';
+  // Card body, built from the full record once its chunk has loaded.
+  function bodyHTML(it){
+    const descHtml = it.description ? `\n        <div class="entry-section">\n          <div class="entry-section-title">Description</div>\n          <div class="entry-desc">${htmlFormatDescription(it.description)}</div>\n        </div>` : '';
 
     const statBits = [];
     if(it._aura) statBits.push(`<b>Aura</b> ${escapeHtml(it._aura)}`);
@@ -376,7 +347,7 @@
     else statBits.push(`<b>CL</b> varies`);
     if(it._slotLabel) statBits.push(`<b>Slot</b> ${escapeHtml(it._slotLabel)}`);
     if(it._weight !== null) statBits.push(`<b>Weight</b> ${escapeHtml(weightLabel(it._weight))}`);
-    const statsHtml = statBits.length ? `\n        <div class="item-section">\n          <div class="item-desc item-stats-line">${statBits.join(' &nbsp; ')}</div>\n        </div>` : '';
+    const statsHtml = statBits.length ? `\n        <div class="entry-section">\n          <div class="entry-desc item-stats-line">${statBits.join(' &nbsp; ')}</div>\n        </div>` : '';
 
     const constructionBits = [];
     const reqCostBits = [];
@@ -384,8 +355,11 @@
     if(it.cost) reqCostBits.push(`<b>Cost</b> ${Number(it.cost).toLocaleString()} gp`);
     if(reqCostBits.length) constructionBits.push(`<span class="item-stats-line">${reqCostBits.join(' &nbsp; ')}</span>`);
     if(it.magic_items) constructionBits.push(`<b>Made From</b> ${escapeHtml(it.magic_items)}`);
-    if(it.destruction) constructionBits.push(`<b>Destruction</b> ${escapeHtml(it.destruction)}`);
-    const constructionHtml = constructionBits.length ? `\n        <div class="item-section">\n          <div class="item-section-title">Construction</div>\n          <div class="item-desc">${constructionBits.join('<br>')}</div>\n        </div>` : '';
+    const constructionHtml = constructionBits.length ? `\n        <div class="entry-section">\n          <div class="entry-section-title">Construction</div>\n          <div class="entry-desc item-stats-line">${constructionBits.join('<br>')}</div>\n        </div>` : '';
+
+    // Destruction gets its own section, after Construction; the value is
+    // shown on its own (no "Destruction" label before it).
+    const destructionHtml = it.destruction ? `\n        <div class="entry-section">\n          <div class="entry-section-title">Destruction</div>\n          <div class="entry-desc">${escapeHtml(it.destruction)}</div>\n        </div>` : '';
 
     const ii = it.intelligent_item;
     let intelligentHtml = '';
@@ -409,11 +383,20 @@
       if(ii.powers) iiLines.push(`<b>Powers</b> ${escapeHtml(ii.powers)}`);
 
       if(iiLines.length){
-        intelligentHtml = `\n        <div class="item-section">\n          <div class="item-section-title">Intelligent Item Stats</div>\n          <div class="item-desc">${iiLines.join('<br>')}</div>\n        </div>`;
+        intelligentHtml = `\n        <div class="entry-section">\n          <div class="entry-section-title">Intelligent Item Stats</div>\n          <div class="entry-desc item-stats-line">${iiLines.join('<br>')}</div>\n        </div>`;
       }
     }
 
-    return `\n    <div class="item-card${isOpen?' open':''}" style="--cardc:${it._cardColor}" data-idx="${it._idx}">\n      <div class="item-head" data-toggle="${it._idx}">\n        <div class="item-title-block">\n          <span class="item-name copyable" data-copy="${escapeHtml(it.name)}">${escapeHtml(it.name)}</span>\n          ${slotTagHtml}\n          ${groupTagHtml}\n        </div>\n        <div class="item-right">\n          <span class="item-badge">${escapeHtml(priceLabel(it))}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="item-body">\n        ${statsHtml}${descHtml}${constructionHtml}${intelligentHtml}\n      </div>\n    </div>`;
+    return `${statsHtml}${descHtml}${intelligentHtml}${constructionHtml}${destructionHtml}`;
+  }
+
+  function cardHTML(it){
+    const isOpen = state.open.has(it._idx);
+
+    const slotTagHtml = it._slot ? `<span class="entry-tag entry-tag--lg">${escapeHtml(it._slot)}</span>` : '';
+    const groupTagHtml = it._groupLabel ? `<span class="entry-tag">(${escapeHtml(it._groupLabel)})</span>` : '';
+
+    return `\n    <div class="entry-card entry-card--tight item-card${isOpen?' open':''}" style="--cardc:${it._cardColor}" data-idx="${it._idx}">\n      <div class="entry-head" data-toggle="${it._idx}">\n        <div class="entry-title-block">\n          <span class="entry-name item-name copyable" data-copy="${escapeHtml(it.name)}">${escapeHtml(it.name)}</span>\n          ${slotTagHtml}\n          ${groupTagHtml}\n        </div>\n        <div class="entry-right">\n          <span class="entry-badge">${escapeHtml(priceLabel(it))}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="entry-body"></div>\n    </div>`;
   }
 
   // Every filter except Group — the population the Group dropdown's own
@@ -484,6 +467,20 @@
 
   function render(){
     syncSortButtons();
+    if(needsBlob()){
+      if(blobStatus === 'error'){
+        showStatus('Could not load full-text search', 'Check your connection, then edit the search to retry.');
+        blobStatus = 'idle';   // next render retries
+        return;
+      }
+      if(blobStatus === 'idle') loadBlob();
+      showStatus('Loading…', 'Fetching full-text search data.');
+      return;
+    }
+    renderNow();
+  }
+
+  function renderNow(){
     const results = filtered();
     document.getElementById('listTitle').textContent = `${results.length} Magic Item${results.length!==1?'s':''} Listed`;
     const listEl = document.getElementById('itemList');
@@ -493,7 +490,10 @@
     }
     const shown = paginate(state, results);
     listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Magic Items');
-    wireCardToggle(listEl, state, 'item-card', 'item-name');
+    // The full record is fetched (chunked, cached) when a card is opened;
+    // cards still open (state.open) after a re-render are hydrated here too.
+    wireCardToggle(listEl, state, 'item-card', 'item-name', (idx, card) => hydrate(idx, card));
+    listEl.querySelectorAll('.item-card.open').forEach(card => hydrate(+card.dataset.idx, card));
     wireShowMore(listEl, {
       onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
       onShowAll: () => { state.visibleCount = results.length; render(); }

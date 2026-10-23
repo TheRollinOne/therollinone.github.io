@@ -151,6 +151,102 @@ function createQueryMatcher(opts){
   };
 }
 
+// ---- Numeric range filters (shared by Runes, Magic Items, Monsters, NPCs) ----
+// An operator <select> plus up to two number inputs. "Any" hides both
+// inputs; lt/eq/gt show just the first; "between" shows both plus the
+// "and" label.
+
+// Returns a function that parses an input's raw string into a number
+// clamped to [min, max], or null when empty / not a number.
+function makeClamp(min, max){
+  return function(val){
+    if(val === '') return null;
+    const n = parseFloat(val);
+    if(Number.isNaN(n)) return null;
+    return Math.min(max, Math.max(min, n));
+  };
+}
+
+// True if `value` satisfies the {operator, v1, v2} range state. Values that
+// aren't numbers never match an active filter; a "between" with a missing
+// bound is treated as not yet filtering.
+function matchesRange(value, rangeState){
+  if(!rangeState.operator) return true;
+  if(typeof value !== 'number') return false;
+  if(rangeState.operator === 'lt') return rangeState.v1 !== null && value < rangeState.v1;
+  if(rangeState.operator === 'eq') return rangeState.v1 !== null && value === rangeState.v1;
+  if(rangeState.operator === 'gt') return rangeState.v1 !== null && value > rangeState.v1;
+  if(rangeState.operator === 'between'){
+    if(rangeState.v1 === null || rangeState.v2 === null) return true;
+    const lo = Math.min(rangeState.v1, rangeState.v2);
+    const hi = Math.max(rangeState.v1, rangeState.v2);
+    return value >= lo && value <= hi;
+  }
+  return true;
+}
+
+// Wires one range filter's DOM controls to its state object.
+// - rangeState: the {operator, v1, v2} object living in the page's state.
+// - operatorId / input1Id / andId / input2Id / clearId: element ids.
+// - render: the page's render function (typed numbers are debounced;
+//   the operator select and clear button render immediately).
+// - clamp: parser for the typed values; if omitted, one is built from
+//   min/max (default 0..99).
+// - min / max: numeric bounds for the default clamp. With applyBounds:true
+//   they are also written to the inputs' min/max attributes and
+//   placeholders (used when the bounds come from the real data range).
+// Returns { operatorSelect, input1, input2, syncVisibility } so a page's
+// "clear all" can reset the controls.
+function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, clearId, render, clamp, min = 0, max = 99, applyBounds = false }){
+  const operatorSelect = document.getElementById(operatorId);
+  const input1 = document.getElementById(input1Id);
+  const andSpan = document.getElementById(andId);
+  const input2 = document.getElementById(input2Id);
+  const parse = clamp || makeClamp(min, max);
+
+  if(applyBounds){
+    [input1, input2].forEach(inp => { inp.min = min; inp.max = max; });
+    input1.placeholder = String(min);
+    input2.placeholder = String(max);
+  }
+
+  function syncVisibility(){
+    const op = operatorSelect.value;
+    input1.hidden = (op === '');
+    andSpan.hidden = (op !== 'between');
+    input2.hidden = (op !== 'between');
+  }
+
+  const debouncedRender = debounce(render, 200);
+
+  operatorSelect.addEventListener('change', () => {
+    rangeState.operator = operatorSelect.value;
+    syncVisibility();
+    render();
+  });
+  input1.addEventListener('input', () => {
+    rangeState.v1 = parse(input1.value);
+    debouncedRender();
+  });
+  input2.addEventListener('input', () => {
+    rangeState.v2 = parse(input2.value);
+    debouncedRender();
+  });
+  document.getElementById(clearId).addEventListener('click', () => {
+    rangeState.operator = '';
+    rangeState.v1 = null;
+    rangeState.v2 = null;
+    operatorSelect.value = '';
+    input1.value = '';
+    input2.value = '';
+    syncVisibility();
+    render();
+  });
+  syncVisibility();
+
+  return { operatorSelect, input1, input2, syncVisibility };
+}
+
 // Search scope toggle: a "Names Only | All Fields" button pair placed right
 // under the search box. Names Only is the default. If the page's HTML
 // doesn't already contain #searchScope, it is created and inserted after
@@ -312,7 +408,7 @@ function showCopiedTooltip(x,y){
 
 // Delegated hover tooltip: shows a two-line "Click to copy / <text>" bubble
 // above any matching element inside a container, using position:fixed so it
-// escapes ancestors with overflow:hidden (e.g. .spell-card). Horizontally
+// escapes ancestors with overflow:hidden (e.g. .entry-card). Horizontally
 // clamped to stay inside the viewport. Text comes from the element's
 // data-copy attribute unless a different attr name is given.
 function wireHoverCopyTooltip(containerId, selector, dataAttr){

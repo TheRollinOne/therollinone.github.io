@@ -116,7 +116,7 @@
   ritualGroup.className = 'filter-group';
   ritualGroup.innerHTML = `
     <div class="filter-label">Ritual Casting</div>
-    <div class="chip-row ritual-chip-row" id="ritualChips"></div>`;
+    <div class="chip-grid cols-2" id="ritualChips"></div>`;
   savesGroup.insertAdjacentElement('afterend', ritualGroup);
 
   const ritualChips = ritualGroup.querySelector('#ritualChips');
@@ -324,15 +324,15 @@
     const roll20TagHTML = `<span class="ritual-tag roll20-tag copyable" data-copy="${escapeHtml(roll20Text)}">Copy</span>`;
     const badgesHTML = `<div class="spell-badges">${ritualTagHTML}</div>`;
 
-    const descHtml = `<div class="spell-section-title-row"><div class="spell-section-title">Description</div>${badgesHTML}</div><div>${htmlFormatDescription((s.description || '').trim())}</div>`;
+    const descHtml = `<div class="spell-section-title-row"><div class="entry-section-title">Description</div>${badgesHTML}</div><div>${htmlFormatDescription((s.description || '').trim())}</div>`;
 
     const heightenedItemsHtml = (s.heightened && s.heightened.length) ? s.heightened.map(h=>{
       const m = h.match(/^\s*(\([^)]*\))\s*(.*)$/s);
-      if(m) return `<div class="heightened-item"><b>${escapeHtml(m[1].replace(/^\(\s*|\s*\)$/g, ''))}</b>: ${htmlFormatText(m[2])}</div>`;
-      return `<div class="heightened-item">${htmlFormatText(h)}</div>`;
+      if(m) return `<div class="entry-desc heightened-item"><b>${escapeHtml(m[1].replace(/^\(\s*|\s*\)$/g, ''))}</b>: ${htmlFormatText(m[2])}</div>`;
+      return `<div class="entry-desc heightened-item">${htmlFormatText(h)}</div>`;
     }).join('') : '';
-    const heightenedCopyBlock = heightenedText ? `\n      <div class="heightened-block copyable" data-copy="${escapeHtml(heightenedText)}">\n        <div class="heightened-title">Heightened</div>\n        <div class="heightened-copy">${heightenedItemsHtml}</div>\n      </div>` : '';
-    return `\n    <div class="spell-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${s._idx}">\n      <div class="spell-head" data-toggle="${s._idx}">\n        <div class="spell-title-block">\n          <span class="spell-name copyable" data-copy="${escapeHtml(s.name)}">${escapeHtml(s.name)}</span>\n          <span class="spell-meta-inline">${levelDisp}</span>\n          <span class="spell-school-tag">${escapeHtml(schoolDisplay(s) || sch)}</span>\n        </div>\n        <div class="spell-right">\n          <span class="spell-classlevel-badge" title="${escapeHtml(shortDescInline)}">${escapeHtml(shortDescInline)}</span>\n          ${roll20TagHTML}\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="spell-body">\n        <div class="stat-grid">\n          ${statFields.map(([l,v])=>`<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`).join('')}\n        </div>\n        <div class="classes-row">${classesHTML}</div>\n        <div class="desc-copy copyable" data-copy="${escapeHtml(descText)}">${descHtml}</div>${heightenedCopyBlock}\n      </div>\n    </div>`;
+    const heightenedCopyBlock = heightenedText ? `\n      <div class="entry-section copyable" data-copy="${escapeHtml(heightenedText)}">\n        <div class="entry-section-title">Heightened</div>\n        <div >${heightenedItemsHtml}</div>\n      </div>` : '';
+    return `\n    <div class="entry-card spell-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${s._idx}">\n      <div class="entry-head" data-toggle="${s._idx}">\n        <div class="entry-title-block">\n          <span class="entry-name spell-name copyable" data-copy="${escapeHtml(s.name)}">${escapeHtml(s.name)}</span>\n          <span class="entry-meta">${levelDisp}</span>\n          <span class="entry-tag">${escapeHtml(schoolDisplay(s) || sch)}</span>\n        </div>\n        <div class="entry-right">\n          <span class="entry-badge entry-badge--responsive spell-classlevel-badge" title="${escapeHtml(shortDescInline)}">${escapeHtml(shortDescInline)}</span>\n          ${roll20TagHTML}\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="entry-body">\n        <div class="stat-grid">\n          ${statFields.map(([l,v])=>`<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`).join('')}\n        </div>\n        <div class="classes-row">${classesHTML}</div>\n        <div class="entry-desc desc-copy copyable" data-copy="${escapeHtml(descText)}">${descHtml}</div>${heightenedCopyBlock}\n      </div>\n    </div>`;
   }
 
   // Rebuilds the Subschool <select> from the subschools present in `list`

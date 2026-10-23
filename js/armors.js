@@ -142,7 +142,7 @@
 
   wireCopyableList('armorList', 'armor-name');
 
-  // Live search (Armor only, for now): terms match from the start of a word,
+  // Live search:  terms match from the start of a word,
   // so results narrow as the user types instead of waiting for a full word.
   const queryMatch = createQueryMatcher({ prefix: true });
   function matchesQuery(armor, query) {
@@ -191,8 +191,8 @@
       ['Cost', (a.cost || '').replace(/\s*gp?\.?/i, '') || '—'],
       ['Weight', (a.weight || '').replace(/\s*lbs?\.?/i, '') || '—'],
     ];
-    return `<div class="armor-quick-stats">${boxes.map(([l, v]) =>
-      `<div class="armor-quick-stat"><div class="armor-quick-stat-label">${escapeHtml(l)}</div><div class="armor-quick-stat-value">${escapeHtml(v)}</div></div>`
+    return `<div class="entry-qstats">${boxes.map(([l, v]) =>
+      `<div class="entry-qstat"><div class="entry-qstat-label">${escapeHtml(l)}</div><div class="entry-qstat-value">${escapeHtml(v)}</div></div>`
     ).join('')}</div>`;
   }
 
@@ -200,7 +200,7 @@
     const cardStyle = a._cardColor ? ` style="--cardc:${a._cardColor}"` : '';
     const isOpen = state.open.has(a._idx);
 
-    const categoryTagHtml = a._category ? `<span class="armor-category-tag">${escapeHtml(a._category)}</span>` : '';
+    const categoryTagHtml = a._category ? `<span class="entry-tag">${escapeHtml(a._category)}</span>` : '';
 
     const statFields = buildStatFields(a);
     const statGridHtml = statFields.map(([l,v]) =>
@@ -209,24 +209,24 @@
 
     const descText = clipboardFormatText(a.description || '');
     const descHtml = a.description ? `
-      <div class="armor-section copyable" data-copy="${escapeHtml(descText)}">
-        <div class="armor-section-title">Description</div>
-        <div class="armor-desc"><div>${htmlFormatDescription(a.description)}</div></div>
+      <div class="entry-section copyable" data-copy="${escapeHtml(descText)}">
+        <div class="entry-section-title">Description</div>
+        <div class="entry-desc"><div>${htmlFormatDescription(a.description)}</div></div>
       </div>` : '';
 
     return `
-    <div class="armor-card${isOpen?' open':''}"${cardStyle} data-idx="${a._idx}">
-      <div class="armor-head" data-toggle="${a._idx}">
-        <div class="armor-title-block">
-          <span class="armor-name copyable" data-copy="${escapeHtml(a.name)}">${escapeHtml(a.name)}</span>
+    <div class="entry-card entry-card--stats armor-card${isOpen?' open':''}"${cardStyle} data-idx="${a._idx}">
+      <div class="entry-head" data-toggle="${a._idx}">
+        <div class="entry-title-block">
+          <span class="entry-name armor-name copyable" data-copy="${escapeHtml(a.name)}">${escapeHtml(a.name)}</span>
           ${categoryTagHtml}
         </div>
-        <div class="armor-right">
+        <div class="entry-right">
           ${quickStatsHTML(a)}
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
-      <div class="armor-body">
+      <div class="entry-body">
         <div class="stat-grid">${statGridHtml}</div>
         ${descHtml}
       </div>

@@ -5,10 +5,38 @@
   // afterward, alphabetically.
   const TYPE_ORDER = ['Aberration', 'Animal', 'Construct', 'Dragon', 'Fey', 'Humanoid', 'Magical Beast', 'Monstrous Humanoid', 'Ooze', 'Outsider', 'Plant', 'Undead', 'Vermin'];
 
-  // MONSTERS starts with the inlined (Paizo) entries; third-party entries are
-  // appended by load3pp() the first time the Publishers filter needs them.
+  // MONSTERS holds slim list records (see build-monsters.js). It starts with
+  // the inlined (Paizo) entries; third-party entries are appended by load3pp()
+  // the first time the Publishers filter needs them. The full stat blocks live
+  // in chunked files (data/monsters-<N>.js) loaded the first time a card in
+  // that chunk is opened; chunk order = index order (Paizo first, then 3pp).
   const MONSTERS = (typeof MONSTERS_DATA !== 'undefined') ? MONSTERS_DATA.slice() : [];
   const META = (typeof MONSTERS_DATA_META !== 'undefined') ? MONSTERS_DATA_META : null;
+
+  // ---- Lazy-loaded full records ----
+  const CH = (META && META.chunkSize) || 20;
+  const chunkPromises = {};
+  function loadChunk(c){
+    return chunkPromises[c] || (chunkPromises[c] = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = META['c' + c];
+      s.onload = () => res(window['MONSTER_CHUNK_' + c]);
+      s.onerror = () => { delete chunkPromises[c]; s.remove(); rej(new Error('chunk ' + c)); };
+      document.head.appendChild(s);
+    }));
+  }
+  // Full record + the fields prepare() derived on the slim record (_type, ...).
+  function loadDetail(idx){
+    return loadChunk(Math.floor(idx / CH)).then(arr => Object.assign({}, arr[idx % CH], MONSTERS[idx]));
+  }
+  function hydrate(idx, card){
+    const body = card.querySelector('.entry-body');
+    if(!body || body.dataset.ready) return;
+    body.innerHTML = '<div class="entry-desc">Loading…</div>';
+    loadDetail(idx)
+      .then(full => { body.innerHTML = bodyHTML(full); body.dataset.ready = '1'; })
+      .catch(() => { body.innerHTML = '<div class="entry-desc">Could not load details.</div>'; });
+  }
 
   // Colors are computed from whatever types are actually present in the
   // (initially-loaded) data, title-cased so inconsistent source casing
@@ -40,27 +68,11 @@
     m._idx = i;
     m._type = formatTitleCase(m.type);
     m._cardColor = typeColorOf[m._type];
-    // Fields are joined with " | " (also between array items) so a phrase can
-    // never accidentally match across the end of one field / start of the next.
-    const fmt = x => typeof x === 'string' ? x : (x && (x.type || x.name || x.spell)) || '';
-    const J = arr => (arr || []).map(fmt).filter(Boolean).join(' | ');
     m._envLC = (m.environments || []).map(e => String(e).toLowerCase());
     m._nameBlob = (m.name || '').toLowerCase();
-    m._blob = [
-      m.name, m.race, m._type, J(m.subtypes), m.alignment, m.size, m.group,
-      J(m.senses),
-      J(m.auras),
-      J(m.hp_mods),
-      m.sr_mods,
-      J(m.defensive_abilities),
-      J(m.special_attacks),
-      (m.feats||[]).map(f => f.feat).join(' | '),
-      (m.skills||[]).map(k => k.skill).join(' | '),
-      J(m.languages),
-      (m.special_abilities||[]).map(a => a.type).join(' | '),
-      // speeds: type + maneuverability ("base" is indexed as "land")
-      (m.speed||[]).map(sp => [sp.type === 'base' ? 'land' : sp.type, sp.maneuverability].filter(Boolean).join(' ')).join(' | ')
-    ].filter(Boolean).join(' | ').toLowerCase();
+    // The "All Fields" search blob is precomputed at build time
+    // (buildBlob in build-monsters.js).
+    m._blob = m.blob || '';
   }
   MONSTERS.forEach(prepare);
 
@@ -68,80 +80,15 @@
   initThemeToggle();
 
   // ---- Numeric range filters (Challenge Rating, Hit Dice) ----
-  // Shared behavior: an operator <select> plus up to two number inputs.
-  // "Any" hides both inputs; lt/eq/gt show just the first;
-  // "between" shows both plus the "and" label.
-  function clampRange(val){
-    if(val === '') return null;
-    let n = parseFloat(val);
-    if(Number.isNaN(n)) return null;
-    n = Math.max(0, Math.min(99, n));
-    return n;
-  }
-
-  function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, clearId }){
-    const operatorSelect = document.getElementById(operatorId);
-    const input1 = document.getElementById(input1Id);
-    const andSpan = document.getElementById(andId);
-    const input2 = document.getElementById(input2Id);
-
-    function syncVisibility(){
-      const op = operatorSelect.value;
-      if(op === ''){
-        input1.hidden = true;
-        andSpan.hidden = true;
-        input2.hidden = true;
-      } else if(op === 'between'){
-        input1.hidden = false;
-        andSpan.hidden = false;
-        input2.hidden = false;
-      } else {
-        input1.hidden = false;
-        andSpan.hidden = true;
-        input2.hidden = true;
-      }
-    }
-
-    // Only the number inputs (typed) get debounced; the operator <select>
-    // and the "clear" button below are discrete actions and should render
-    // immediately.
-    const debouncedRender = debounce(render, 200);
-
-    operatorSelect.addEventListener('change', () => {
-      rangeState.operator = operatorSelect.value;
-      syncVisibility();
-      render();
-    });
-    input1.addEventListener('input', () => {
-      rangeState.v1 = clampRange(input1.value);
-      debouncedRender();
-    });
-    input2.addEventListener('input', () => {
-      rangeState.v2 = clampRange(input2.value);
-      debouncedRender();
-    });
-    document.getElementById(clearId).addEventListener('click', () => {
-      rangeState.operator = '';
-      rangeState.v1 = null;
-      rangeState.v2 = null;
-      operatorSelect.value = '';
-      input1.value = '';
-      input2.value = '';
-      syncVisibility();
-      render();
-    });
-    syncVisibility();
-
-    return { operatorSelect, input1, input2, syncVisibility };
-  }
-
+  // wireRangeFilter/matchesRange are shared helpers in base.js.
   const crFilter = wireRangeFilter({
     rangeState: state.cr,
     operatorId: 'crOperatorSelect',
     input1Id: 'crInput1',
     andId: 'crAndSpan',
     input2Id: 'crInput2',
-    clearId: 'clearCR'
+    clearId: 'clearCR',
+    render
   });
 
   const hdFilter = wireRangeFilter({
@@ -150,7 +97,8 @@
     input1Id: 'hdInput1',
     andId: 'hdAndSpan',
     input2Id: 'hdInput2',
-    clearId: 'clearHD'
+    clearId: 'clearHD',
+    render
   });
 
   // ---- Type filter ----
@@ -438,34 +386,11 @@
     return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? monster._blob : monster._nameBlob, query);
   }
 
-  function matchesRange(value, rangeState){
-    if(!rangeState.operator) return true;
-    if(typeof value !== 'number') return false;
-    if(rangeState.operator === 'lt') return rangeState.v1 !== null && value < rangeState.v1;
-    if(rangeState.operator === 'eq') return rangeState.v1 !== null && value === rangeState.v1;
-    if(rangeState.operator === 'gt') return rangeState.v1 !== null && value > rangeState.v1;
-    if(rangeState.operator === 'between'){
-      if(rangeState.v1 === null || rangeState.v2 === null) return true;
-      const lo = Math.min(rangeState.v1, rangeState.v2);
-      const hi = Math.max(rangeState.v1, rangeState.v2);
-      return value >= lo && value <= hi;
-    }
-    return true;
-  }
-
   function matchesSpellcasting(monster){
     if(!state.spellcasting.size) return true;
-    const isNone = monster.spell_like_abilities_caster_level == null
-      && monster.spellsprepared_caster == null
-      && monster.spellsknown_caster == null;
-    const isSpellLike = monster.spell_like_abilities_caster_level != null;
-    const isPrepared = monster.spellsprepared_caster != null;
-    const isSpontaneous = monster.spellsknown_caster != null;
-    if(state.spellcasting.has('none') && isNone) return true;
-    if(state.spellcasting.has('spell_like') && isSpellLike) return true;
-    if(state.spellcasting.has('prepared') && isPrepared) return true;
-    if(state.spellcasting.has('spontaneous') && isSpontaneous) return true;
-    return false;
+    // `sc` = precomputed flags (none / spell_like / prepared / spontaneous),
+    // see scFlags() in build-monsters.js.
+    return (monster.sc || []).some(f => state.spellcasting.has(f));
   }
 
   function matchesPublisher(monster){
@@ -488,7 +413,7 @@
     if(state.types.size) list = list.filter(m => state.types.has(m._type));
     if(state.sizes.size) list = list.filter(m => state.sizes.has(m.size));
     if(state.env.group) list = list.filter(matchesEnvironment);
-    if(state.movements.size) list = list.filter(m => (m.speed||[]).some(s => state.movements.has(s.type === 'base' ? 'land' : s.type)));
+    if(state.movements.size) list = list.filter(m => (m.moves || []).some(t => state.movements.has(t)));
     if(state.spellcasting.size) list = list.filter(matchesSpellcasting);
     if(state.publishers.size) list = list.filter(matchesPublisher);
     return list;
@@ -549,8 +474,8 @@
       ['HD', hdText || '—'],
       ['Size', m.size || '—'],
     ];
-    return `<div class="monster-quick-stats">${boxes.map(([l, v]) =>
-      `<div class="monster-quick-stat"><div class="monster-quick-stat-label">${escapeHtml(l)}</div><div class="monster-quick-stat-value">${escapeHtml(v)}</div></div>`
+    return `<div class="entry-qstats">${boxes.map(([l, v]) =>
+      `<div class="entry-qstat"><div class="entry-qstat-label">${escapeHtml(l)}</div><div class="entry-qstat-value">${escapeHtml(v)}</div></div>`
     ).join('')}</div>`;
   }
 
@@ -764,7 +689,7 @@
   }
 
   function linesHtml(lines){
-    return lines.map(l => `<div class="monster-line${l.gap ? ' gap' : ''}${l.pre ? ' pre' : ''}">${partsHtml(l)}</div>`).join('');
+    return lines.map(l => `<div class="statblock-line${l.gap ? ' gap' : ''}${l.pre ? ' pre' : ''}">${partsHtml(l)}</div>`).join('');
   }
   // Returns {html, text} so cardHTML can assemble one combined copy string.
   function sectionPart(title, lines){
@@ -772,8 +697,8 @@
     return {
       text: [`**${title}**`, ...lines.map(partsText)].join('\n'),
       html: `
-      <div class="monster-section">
-        <div class="monster-section-title">${escapeHtml(title)}</div>
+      <div class="entry-section">
+        <div class="entry-section-title">${escapeHtml(title)}</div>
         ${linesHtml(lines)}
       </div>`
     };
@@ -829,7 +754,7 @@
     if(m.description_visual){
       parts.push({
         text: '*' + m.description_visual + '*',
-        html: `<p class="monster-visual">${escapeHtml(m.description_visual)}</p>`
+        html: `<p class="statblock-visual">${escapeHtml(m.description_visual)}</p>`
       });
     }
 
@@ -838,10 +763,10 @@
     parts.push({
       text: [`**${m.name}${crText ? ' ' + crText : ''}**`, ...hLines.map(partsText)].join('\n'),
       html: `
-      <div class="monster-statblock-head">
-        <div class="monster-sb-titlerow">
-          <span class="monster-sb-name">${escapeHtml(m.name)}</span>
-          <span class="monster-sb-cr">${escapeHtml(crText)}</span>
+      <div class="statblock-head">
+        <div class="statblock-titlerow">
+          <span class="statblock-name">${escapeHtml(m.name)}</span>
+          <span class="statblock-cr">${escapeHtml(crText)}</span>
         </div>
         ${linesHtml(hLines)}
       </div>`
@@ -858,9 +783,9 @@
       parts.push({
         text: ['**Description**', ...(intro ? [clipboardFormatText(intro)] : []), ...descLines.map(partsText)].join('\n'),
         html: `
-      <div class="monster-section">
-        <div class="monster-section-title">Description</div>
-        ${intro ? `<div class="monster-desc"><div>${htmlFormatDescription(intro)}</div></div>` : ''}
+      <div class="entry-section">
+        <div class="entry-section-title">Description</div>
+        ${intro ? `<div class="entry-desc"><div>${htmlFormatDescription(intro)}</div></div>` : ''}
         ${linesHtml(descLines)}
       </div>`
       });
@@ -869,7 +794,7 @@
     parts.push(sectionPart(`${m.name} as character`, asChar));
     const live = parts.filter(Boolean);
     const copyText = live.map(p => p.text).join('\n\n');
-    return `<div class="monster-body-copy copyable" data-copy="${escapeHtml(copyText)}">${live.map(p => p.html).join('')}</div>`;
+    return `<div class="statblock-copy copyable" data-copy="${escapeHtml(copyText)}">${live.map(p => p.html).join('')}</div>`;
   }
 
   function cardHTML(m){
@@ -877,23 +802,23 @@
     const isOpen = state.open.has(m._idx);
 
     const subtypesText = (m.subtypes || []).map(formatTitleCase).join(', ');
-    const typeTagHtml = m._type ? `<span class="monster-type-tag">${escapeHtml(m._type)}</span>` : '';
-    const subtypeTagHtml = subtypesText ? `<span class="monster-subtype-tag">(${escapeHtml(subtypesText)})</span>` : '';
+    const typeTagHtml = m._type ? `<span class="entry-tag entry-tag--lg">${escapeHtml(m._type)}</span>` : '';
+    const subtypeTagHtml = subtypesText ? `<span class="entry-tag">(${escapeHtml(subtypesText)})</span>` : '';
 
     return `
-    <div class="monster-card${isOpen?' open':''}"${cardStyle} data-idx="${m._idx}">
-      <div class="monster-head" data-toggle="${m._idx}">
-        <div class="monster-title-block">
-          <span class="monster-name copyable" data-copy="${escapeHtml(m.name)}">${escapeHtml(m.name)}</span>
+    <div class="entry-card entry-card--stats entry-card--tight entry-card--statblock monster-card${isOpen?' open':''}"${cardStyle} data-idx="${m._idx}">
+      <div class="entry-head" data-toggle="${m._idx}">
+        <div class="entry-title-block">
+          <span class="entry-name monster-name copyable" data-copy="${escapeHtml(m.name)}">${escapeHtml(m.name)}</span>
           ${typeTagHtml}
           ${subtypeTagHtml}
         </div>
-        <div class="monster-right">
+        <div class="entry-right">
           ${quickStatsHTML(m)}
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
-      <div class="monster-body">${isOpen ? bodyHTML(m) : ''}</div>
+      <div class="entry-body"></div>
     </div>`;
   }
 
@@ -958,11 +883,11 @@
     }
     const shown = paginate(state, results);
     listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Monsters');
-    // Stat block is built lazily the first time a card is opened.
-    wireCardToggle(listEl, state, 'monster-card', 'monster-name', (idx, card) => {
-      const body = card.querySelector('.monster-body');
-      if(body && !body.firstElementChild) body.innerHTML = bodyHTML(MONSTERS[idx]);
-    });
+    // The full record is fetched (chunked, cached) and the stat block built
+    // when a card is opened; cards still open (state.open) after a re-render
+    // are hydrated here too.
+    wireCardToggle(listEl, state, 'monster-card', 'monster-name', (idx, card) => hydrate(idx, card));
+    listEl.querySelectorAll('.monster-card.open').forEach(card => hydrate(+card.dataset.idx, card));
     wireShowMore(listEl, {
       onLoadMore: () => { state.visibleCount += PAGE_SIZE; renderNow(); },
       onShowAll: () => { state.visibleCount = results.length; renderNow(); }

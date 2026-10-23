@@ -42,8 +42,14 @@
 
 
   <div class="hero">
-    <div class="hero-image" id="heroImage">
-      <div class="hero-buttons-wrap">
+    <!-- Logo: reveals first (outside-in) -->
+    <div class="hero-image" id="heroImage"></div>
+
+    <!-- Title: reveals after the logo -->
+    <div class="hero-title" id="heroTitle"></div>
+
+    <!-- Buttons: independent of both images, no transition -->
+    <div class="hero-buttons-wrap">
         <div class="hero-buttons">
           <a class="nav-btn" href="armor_catalogue.html">
             <span class="btn-main">Armor</span>
@@ -80,7 +86,6 @@
             <span class="btn-sub">Arsenal</span>
           </a>
         </div>
-      </div>
     </div>
   </div>
 
@@ -88,6 +93,7 @@
 <script>
 (function(){
   const heroImage = document.getElementById('heroImage');
+  const heroTitle = document.getElementById('heroTitle');
 
   const themeImages = {
     gold: 'd20.png',
@@ -97,9 +103,19 @@
     red: 'd20_red.png',
   };
 
+  const themeTitles = {
+    gold: 'd20_title.png',
+    blue: 'd20_title_blue.png',
+    orange: 'd20_title_orange.png',
+    green: 'd20_title_green.png',
+    red: 'd20_title_red.png',
+  };
+
   function setHeroImage(theme){
     const file = themeImages[theme] || themeImages.gold;
     heroImage.style.backgroundImage = `url('../pictures/${file}')`;
+    const titleFile = themeTitles[theme] || themeTitles.gold;
+    heroTitle.style.backgroundImage = `url('../pictures/${titleFile}')`;
   }
 
   initThemeToggle(setHeroImage);

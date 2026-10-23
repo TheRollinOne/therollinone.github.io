@@ -1,49 +1,12 @@
-/* Sticky page header — rolled out from Armor Catalogue. Stacks
-   .page-title-top (nav) above .page-title-bottom (item count + theme
-   toggle — both defined in base.css) and pins the whole header in place
-   while the list scrolls beneath it. The margin-top/padding-top pair
-   cancels out .main's own top padding and re-adds the same amount as
-   this element's own padding, so the gap above the header is part of the
-   sticky box itself and does not disappear/jump once it pins to the
-   viewport top (see base.css's sticky-header comment for the full
-   explanation). This file is only ever loaded on this page, so this rule
-   scopes the sticky/stacking behavior here without needing a shared
-   change in base.css. */
-.page-title-desktop{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  position:sticky;
-  top:0;
-  z-index:10;
-  background:var(--ink);
-  margin-top:-10px;
-  padding-top:10px;
-  padding-bottom:10px;
-  border-bottom:1px solid var(--hairline);
-}
-@media (max-width:900px){
-  .page-title-desktop{
-    margin-top:-20px;
-    padding-top:20px;
-  }
-}
+/* Spell page — only what differs from the shared styles in base.css */
 
-/* School chip colors: same 16-color palette, same order, as base.css's
-   --type-* colors, assigned in JS. The Universal school is the one
-   exception — it always uses base.css's --type-gray instead of a slot
-   from the main palette. */
-
+/* Save filter: flex row with per-chip widths (shortest labels first) */
 .save-chip-row{
   display:flex;
   flex-wrap:wrap;
   gap:6px;
 }
 .save-chip-row .chip{
-  width:86px;
-  justify-content:center;
-}
-.save-chip-row .chip{ /* Will & None */
   width:50px;
 }
 .save-chip-row .chip[data-save="Fortitude"]{
@@ -52,41 +15,11 @@
 .save-chip-row .chip[data-save="Reflex"]{
   width:62px;
 }
-.ritual-chip-row{
-  display:grid;
-  grid-template-columns:repeat(2, 1fr);
-  gap:6px;
-}
-.ritual-chip-row .chip{
-  width:auto;
-  justify-content:center;
-}
 
-.spell-card{
-  background:var(--ink-2);
-  border:1px solid var(--hairline);
-  border-left:5px solid var(--cardc,var(--gold));
-  border-radius:8px;
-  overflow:hidden;
-  transition:border-color .15s;
-}
-.spell-card.open{
-  border-color:var(--cardc,var(--gold));
-}
+/* Header: "N / C" class-level summary is plain (not italic) */
+.spell-classlevel-badge{font-style:normal;}
 
-.spell-section{
-  margin-top:0px;
-  padding-top:0px;
-}
-.spell-section-title{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.86rem;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--gold);
-  margin-bottom:8px;
-}
-
+/* Description title row with the Ritual tag on the right */
 .spell-section-title-row{
   display:flex;
   align-items:center;
@@ -94,7 +27,7 @@
   gap:12px;
   margin-bottom:8px;
 }
-.spell-section-title-row .spell-section-title{
+.spell-section-title-row .entry-section-title{
   margin-bottom:0;
 }
 .spell-badges{
@@ -120,84 +53,7 @@
   opacity:.9;
 }
 
-.spell-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  padding:8px 18px;
-  cursor:pointer;
-}
-.spell-head:hover{background:rgba(255,255,255,0.02);}
-
-.spell-title-block{
-  display:flex;
-  align-items:baseline;
-  gap:12px;
-  flex-wrap:wrap;
-  min-width:0;
-}
-.spell-name{
-  font-family:'Cinzel',serif;
-  font-weight:600;
-  font-size:1.08rem;
-  color:var(--parchment);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.spell-meta-inline{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
-  color:var(--parchment-dim);
-  white-space:nowrap;
-}
-.spell-school-tag{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.76rem;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--cardc,var(--gold));
-  white-space:nowrap;
-}
-
-.spell-right{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  flex-shrink:0;
-}
-.spell-classlevel-badge{
-  font-family:'Crimson Pro',serif;
-  font-size:1rem;
-  color:var(--parchment-dim);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:320px;
-  display:none;
-}
-@media (min-width:640px){.spell-classlevel-badge{display:inline-block;}}
-@media (min-width:1100px){.spell-classlevel-badge{max-width:460px;}}
-
-.spell-card.open .chevron{transform:rotate(180deg);}
-
-.spell-body{
-  display:none;
-  padding:0 18px 20px;
-  border-top:1px solid var(--hairline);
-}
-.spell-card.open{
-  background:color-mix(in srgb, var(--cardc, var(--gold)) 5%, var(--ink-2));
-}
-.spell-card.open .spell-body{
-  display:block;
-  padding-top:16px;
-}
-.spell-card.open .spell-head{
-  background:color-mix(in srgb, var(--cardc, var(--gold)) 25%, var(--ink-2));
-}
-
+/* Class / level pills (some are click-to-copy damage formulas) */
 .classes-row{
   margin-bottom:10px;
   display:flex;
@@ -227,7 +83,6 @@
 .class-pill-damage.copied{
   background:rgba(196,162,77,0.18);
 }
-
 .class-pill-split{
   overflow:hidden;
 }
@@ -264,60 +119,11 @@
   background:rgba(196,162,77,0.4);
 }
 
-.hover-tooltip{
-  position:fixed;
-  transform:translate(-50%,-100%);
-  background:var(--dark-gold);
-  color:var(--parchment);
-  padding:6px 10px;
-  border-radius:6px;
-  font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
-  font-weight:700;
-  text-align:center;
-  line-height:1.5;
-  pointer-events:none;
-  box-shadow:0 6px 18px rgba(0,0,0,0.4);
-  opacity:0;
-  transition:opacity .15s, transform .15s;
-  z-index:9999;
-  max-width:240px;
-  white-space:normal;
-}
-.hover-tooltip.show{
-  opacity:1;
-  transform:translate(-50%,-112%);
-}
-.hover-tooltip-value{
-  color:var(--parchment-dim);
-}
-
-.heightened-block{
-  margin-top:10px;
-  padding-top:14px;
-}
-.heightened-title{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.86rem;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--gold);
-  margin-bottom:8px;
-}
-.heightened-item,
-.desc-copy{
-  font-size:1.1rem;
-  color:var(--parchment-dim);
+/* Description / Heightened text (shared .entry-desc + spacing) */
+.desc-copy,
+.heightened-item{
   margin-bottom:4px;
-  white-space: pre-wrap;
 }
-.desc-copy b,
-.heightened-item b{
-  color:var(--parchment);
-  font-weight:600;
-}
-/* Heightened bonus label (+1, +2, ...): bold + card color, like the
-   Price/Aura labels on rune cards */
 .heightened-item > b:first-child{
   color:var(--cardc,var(--gold));
   font-weight:600;

@@ -49,62 +49,8 @@
   });
 
   // ---- Price / Caster Level filters (operator select + up to two numeric
-  // inputs, same shape as the Magic Items page's range filters). Both
-  // values are plain integers in the data. ----
-  function makeClamp(min, max){
-    return function(val){
-      if (val === '') return null;
-      const n = parseFloat(val);
-      if (Number.isNaN(n)) return null;
-      return Math.min(max, Math.max(min, n));
-    };
-  }
-  const clampPrice = makeClamp(0, 999999);
-  const clampCL = makeClamp(1, 30);
-
-  function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, clearId, clamp }){
-    const operatorSelect = document.getElementById(operatorId);
-    const input1 = document.getElementById(input1Id);
-    const andSpan = document.getElementById(andId);
-    const input2 = document.getElementById(input2Id);
-
-    function syncVisibility(){
-      const op = operatorSelect.value;
-      input1.hidden = (op === '');
-      andSpan.hidden = (op !== 'between');
-      input2.hidden = (op !== 'between');
-    }
-
-    // Typed numbers are debounced; the operator select and the clear
-    // button are discrete actions and render immediately.
-    const debouncedRender = debounce(render, 200);
-
-    operatorSelect.addEventListener('change', () => {
-      rangeState.operator = operatorSelect.value;
-      syncVisibility();
-      render();
-    });
-    input1.addEventListener('input', () => {
-      rangeState.v1 = clamp(input1.value);
-      debouncedRender();
-    });
-    input2.addEventListener('input', () => {
-      rangeState.v2 = clamp(input2.value);
-      debouncedRender();
-    });
-    document.getElementById(clearId).addEventListener('click', () => {
-      rangeState.operator = '';
-      rangeState.v1 = null;
-      rangeState.v2 = null;
-      operatorSelect.value = '';
-      input1.value = '';
-      input2.value = '';
-      syncVisibility();
-      render();
-    });
-    syncVisibility();
-  }
-
+  // inputs; wireRangeFilter/matchesRange are shared helpers in base.js).
+  // Both values are plain integers in the data. ----
   wireRangeFilter({
     rangeState: state.price,
     operatorId: 'priceOperatorSelect',
@@ -112,7 +58,8 @@
     andId: 'priceAndSpan',
     input2Id: 'priceInput2',
     clearId: 'clearPrice',
-    clamp: clampPrice
+    render,
+    clamp: makeClamp(0, 999999)
   });
   wireRangeFilter({
     rangeState: state.cl,
@@ -121,23 +68,9 @@
     andId: 'clAndSpan',
     input2Id: 'clInput2',
     clearId: 'clearCL',
-    clamp: clampCL
+    render,
+    clamp: makeClamp(1, 30)
   });
-
-  function matchesRange(value, rangeState){
-    if (!rangeState.operator) return true;
-    if (typeof value !== 'number') return false;
-    if (rangeState.operator === 'lt') return rangeState.v1 !== null && value < rangeState.v1;
-    if (rangeState.operator === 'eq') return rangeState.v1 !== null && value === rangeState.v1;
-    if (rangeState.operator === 'gt') return rangeState.v1 !== null && value > rangeState.v1;
-    if (rangeState.operator === 'between') {
-      if (rangeState.v1 === null || rangeState.v2 === null) return true;
-      const lo = Math.min(rangeState.v1, rangeState.v2);
-      const hi = Math.max(rangeState.v1, rangeState.v2);
-      return value >= lo && value <= hi;
-    }
-    return true;
-  }
 
   // Category chips are generated dynamically (colors depend on the data),
   // the same way feats.js/armors.js build their category chips.
@@ -259,33 +192,33 @@
 
     const bodyHtml = `
       <div class="rune-meta-line">${metaLineHtml}</div>
-      <div class="rune-section">
-        <div class="rune-section-title">Description</div>
-        <div class="rune-desc"><div>${htmlFormatDescription(r.description)}</div></div>
+      <div class="entry-section">
+        <div class="entry-section-title">Description</div>
+        <div class="entry-desc"><div>${htmlFormatDescription(r.description)}</div></div>
       </div>
-      <div class="rune-section">
-        <div class="rune-section-title">Crafting</div>
-        <div class="rune-desc rune-craft-line">${craftingLineHtml}</div>
+      <div class="entry-section">
+        <div class="entry-section-title">Crafting</div>
+        <div class="entry-desc rune-craft-line">${craftingLineHtml}</div>
       </div>`;
 
     const copyText =
       `${metaLineCopy}\n${clipboardFormatText(r.description)}\n\nCRAFTING\n${craftingLineCopy}`;
 
     return `
-    <div class="rune-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${r._idx}">
-      <div class="rune-head" data-toggle="${r._idx}">
-        <div class="rune-title-block">
-          <span class="rune-name copyable" data-copy="${escapeHtml(r.name)}">${escapeHtml(r.name)}</span>
-          <span class="rune-bonus-tag">${escapeHtml(formatBonus(r.bonus))}</span>
-          <span class="rune-category-tag">${escapeHtml(r._category)}</span>
+    <div class="entry-card rune-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${r._idx}">
+      <div class="entry-head" data-toggle="${r._idx}">
+        <div class="entry-title-block">
+          <span class="entry-name rune-name copyable" data-copy="${escapeHtml(r.name)}">${escapeHtml(r.name)}</span>
+          <span class="entry-meta">${escapeHtml(formatBonus(r.bonus))}</span>
+          <span class="entry-tag">${escapeHtml(r._category)}</span>
         </div>
-        <div class="rune-right">
-          <span class="rune-badge" title="${escapeHtml(r.short_description||'')}">${escapeHtml(r.short_description||'')}</span>
+        <div class="entry-right">
+          <span class="entry-badge entry-badge--responsive" title="${escapeHtml(r.short_description||'')}">${escapeHtml(r.short_description||'')}</span>
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
-      <div class="rune-body">
-        <div class="rune-copy-group copyable" data-copy="${escapeHtml(copyText)}">${bodyHtml}
+      <div class="entry-body">
+        <div class="copyable" data-copy="${escapeHtml(copyText)}">${bodyHtml}
         </div>
       </div>
     </div>`;

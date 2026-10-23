@@ -44,7 +44,7 @@
       <div class="filters-inner" id="filtersInner">
         <div class="filter-group">
           <div class="filter-label"><span>Proficiencies</span><button id="clearProficiencies" type="button">clear</button></div>
-          <div class="chip-row proficiency-chip-row" id="proficiencyChips">
+          <div class="chip-grid cols-3" id="proficiencyChips">
             <div class="chip" data-proficiency="simple">Simple</div>
             <div class="chip" data-proficiency="martial">Martial</div>
             <div class="chip" data-proficiency="exotic">Exotic</div>
@@ -53,13 +53,13 @@
 
         <div class="filter-group">
           <div class="filter-label"><span>Categories</span><button id="clearCategories" type="button">clear</button></div>
-          <div class="chip-row category-chip-row" id="categoryChips">
+          <div class="chip-grid cols-2 align-left" id="categoryChips">
           </div>
         </div>
 
         <div class="filter-group">
           <div class="filter-label"><span>Damage Types</span><button id="clearDamageTypes" type="button">clear</button></div>
-          <div class="chip-row damage-type-chip-row" id="damageTypeChips">
+          <div class="chip-grid cols-3" id="damageTypeChips">
             <div class="chip" data-damage-type="slashing">Slashing</div>
             <div class="chip" data-damage-type="piercing">Piercing</div>
             <div class="chip" data-damage-type="bludgeoning">Bludgeoning</div>
@@ -68,7 +68,7 @@
 
         <div class="filter-group">
           <div class="filter-label"><span>Critical</span><button id="clearCritical" type="button">clear</button></div>
-          <div class="chip-row critical-chip-row" id="criticalChips">
+          <div class="chip-grid cols-3" id="criticalChips">
             <div class="chip" data-critical="x2">x2</div>
             <div class="chip" data-critical="x3">x3</div>
             <div class="chip" data-critical="x4">x4</div>
@@ -80,7 +80,7 @@
 
         <div class="filter-group">
           <div class="filter-label"><span>Weapon Groups</span><button id="clearWeaponGroups" type="button">clear</button></div>
-          <div class="chip-row weapon-group-chip-row" id="weaponGroupChips">
+          <div class="chip-grid cols-2 align-left" id="weaponGroupChips">
             <div class="chip" data-weapon-group="axes">Axes</div>
             <div class="chip" data-weapon-group="bows">Bows</div>
             <div class="chip" data-weapon-group="close">Close</div>
@@ -100,7 +100,7 @@
 
         <div class="filter-group">
           <div class="filter-label"><span>Special</span><button id="clearSpecial" type="button">clear</button></div>
-          <div class="chip-row special-chip-row" id="specialChips">
+          <div class="chip-grid cols-2 align-left" id="specialChips">
             <div class="chip" data-special="agile">Agile</div>
             <div class="chip" data-special="attached">Attached</div>
             <div class="chip" data-special="brace">Brace</div>

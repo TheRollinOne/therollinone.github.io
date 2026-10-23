@@ -155,15 +155,6 @@ body{
   text-align:center;
 }
 
-.search-hint{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.68rem;
-  color:var(--parchment-dim);
-  letter-spacing:.02em;
-  margin-top:6px;
-  line-height:1.4;
-}
-
 .filter-group{
   display:flex;
   flex-direction:column;
@@ -242,18 +233,11 @@ body{
 }
 .chip.active .dot{background:var(--ink);}
 
-/* Shared "N equal-width chips in a row" grid — used by Spell Levels and
-   Rune Bonus filters (any filter with a small fixed set of numeric values) */
-.level-chip-row{
-  display:grid;
-  grid-template-columns:repeat(5, 1fr);
-  gap:6px;
-}
+/* Numeric-value chip grid modifier (Spell Levels, Rune Bonus, armor stats):
+   used together with .chip-grid cols-5. */
 .level-chip-row .chip{
-  width:auto;
   padding:3px 4px;
   font-size:.95rem;
-  justify-content:center;
 }
 
 select.select-filter{
@@ -268,12 +252,10 @@ select.select-filter{
   outline:none;
 }
 select.select-filter:focus{border-color:var(--gold);}
-
-.sort-row{
-  display:flex;
-  gap:8px;
+select.select-filter:disabled{
+  opacity:.45;
+  cursor:not-allowed;
 }
-.sort-row select{flex:1;}
 
 /* Filters / Sorting */
 .filters-collapse{display:contents;}
@@ -333,15 +315,34 @@ select.select-filter:focus{border-color:var(--gold);}
   .filters-summary.open .fs-arrow{transform:rotate(180deg);}
 }
 
-/* Page title (counts) + top menu bar: item count on the left, page links
-   (fixed equal width) + theme toggle stacked left-to-right on the right. */
+/* ---------- Page header (shared by every page) ----------
+   Sticky header: stacks .page-title-top (nav) above .page-title-bottom
+   (item count + sort bar + theme toggle) and pins the whole thing while
+   the list scrolls beneath it. The margin-top/padding-top pair cancels
+   .main's own top padding and re-adds it inside the sticky box, so the
+   gap above the header is part of what gets pinned and nothing jumps when
+   it sticks. Keep the pair in sync with .main's padding-top (10px desktop
+   / 20px at <=900px). */
 .page-title-desktop{
   display:flex;
+  flex-direction:column;
   align-items:center;
-  justify-content:space-between;
+  gap:8px;
+  position:sticky;
+  top:0;
+  z-index:10;
+  background:var(--ink);
+  margin-top:-10px;
   margin-bottom:12px;
-  gap:10px;
-  flex-wrap:wrap;
+  padding-top:10px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--hairline);
+}
+@media (max-width:900px){
+  .page-title-desktop{
+    margin-top:-20px;
+    padding-top:20px;
+  }
 }
 .page-title-desktop h1{
   font-family:'Cinzel',serif;
@@ -362,11 +363,7 @@ select.select-filter:focus{border-color:var(--gold);}
 
 /* ---------- Page-title top row (nav, centered) ----------
    Wraps the top-menu-nav so it can be centered as a group on its own row,
-   independent of the item-count row below it. Real, permanent shared rule
-   (not opt-in like the sticky block below): it does nothing on any page
-   whose HTML doesn't wrap its nav in a `.page-title-top` div, so it's safe
-   to sit here even though only Armor Catalogue's markup uses it right now.
-   Add the same wrapper to another page's HTML to pick it up there too. */
+   independent of the item-count row below it. */
 .page-title-top{
   display:flex;
   justify-content:center;
@@ -374,9 +371,7 @@ select.select-filter:focus{border-color:var(--gold);}
 
 /* ---------- Page-title bottom row (count + theme toggle) ----------
    Wraps the "<N> Foo Listed" heading and the theme toggle on one row, with
-   the toggle pushed to the far right via justify-content:space-between.
-   Same status as .page-title-top above: inert until a page's HTML wraps
-   these two in a `.page-title-bottom` div. */
+   the toggle pushed to the far right via justify-content:space-between. */
 .page-title-bottom{
   display:flex;
   align-items:center;
@@ -460,49 +455,6 @@ select.select-filter:focus{border-color:var(--gold);}
   .sort-bar{order:3;flex-basis:100%;}
 }
 
-/* ---------- Sticky page header (opt-in) ----------
-   Stacks .page-title-desktop's two rows (.page-title-top, then
-   .page-title-bottom) and pins the whole thing in place while the card
-   list scrolls beneath it. Deliberately NOT applied to the
-   .page-title-desktop rule above — that class is shared by every page, and
-   this is only live on Armor Catalogue right now (see armors.css) while we
-   test it. To roll out to another page: give that page's HTML the same
-   .page-title-top / .page-title-bottom wrappers Armor uses (see
-   armors.html), then copy this exact block into that page's own CSS file.
-   Once every page has it, merge it straight into the .page-title-desktop
-   rule above and delete this comment.
-
-   The margin-top/padding-top pair below isn't decorative — it fixes a real
-   bug: .main's own top padding is what currently creates the gap above the
-   header, but that padding lives OUTSIDE this element, so the instant
-   position:sticky pins the header to the viewport's top edge, that gap
-   disappears and the header visibly jumps. Cancelling .main's padding with
-   a matching negative margin, then re-adding the same amount as this
-   element's OWN padding-top, moves the gap to inside the sticky box itself
-   — so it's part of what gets pinned, and stays constant whether the page
-   is scrolled or not. Keep this pair in sync with .main's own padding-top
-   (10px desktop / 20px at the ≤900px breakpoint) if that ever changes.
-
-   .page-title-desktop{
-     display:flex;
-     flex-direction:column;
-     gap:8px;
-     position:sticky;
-     top:0;
-     z-index:10;
-     background:var(--ink);
-     margin-top:-10px;
-     padding-top:10px;
-     padding-bottom:10px;
-     border-bottom:1px solid var(--hairline);
-   }
-   @media (max-width:900px){
-     .page-title-desktop{
-       margin-top:-20px;
-       padding-top:20px;
-     }
-   }
-*/
 .top-menu-link{
   display:flex;
   align-items:center;
@@ -703,6 +655,342 @@ select.select-filter:focus{border-color:var(--gold);}
 .stat-value{
   font-size:1rem;
   color:var(--parchment);
+}
+
+/* ==========================================================================
+   Shared "entry card" family — the expandable card used by every list page.
+   Markup pattern: shared base class + page hook (+ optional modifiers), e.g.
+     <div class="entry-card entry-card--stats armor-card">
+       <div class="entry-head">…<span class="entry-name armor-name">…</span>
+     </div>
+   The page hooks (.armor-card, .armor-name, …) are what wireCardToggle() /
+   wireCopyableList() in each page's JS look for; page CSS only adds what is
+   genuinely unique to that page.
+   Tunables (override on the card in a page CSS file):
+     --cardc            accent colour (set inline per card by the JS)
+     --entry-head-pad   header padding
+     --entry-sec-mt/pt  gap/padding above each .entry-section
+     --entry-body-pt    body top padding when open
+     --qs-w / --qs-label-size   quick-stat box width / label size
+   Modifiers: --stats (header has quick-stat boxes → tighter header),
+              --tight (denser sections), --statblock (monster/NPC stat block).
+   ========================================================================== */
+.entry-card{
+  background:var(--ink-2);
+  border:1px solid var(--hairline);
+  border-left:5px solid var(--cardc,var(--gold));
+  border-radius:8px;
+  overflow:hidden;
+  transition:border-color .15s;
+}
+.entry-card.open{
+  border-color:var(--cardc,var(--gold));
+  background:color-mix(in srgb, var(--cardc, var(--gold)) 5%, var(--ink-2));
+}
+.entry-card--stats{--entry-head-pad:6px 18px 2px 18px;}
+.entry-card--tight{--entry-sec-mt:5px;--entry-sec-pt:7px;}
+
+.entry-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:var(--entry-head-pad,8px 18px);
+  cursor:pointer;
+}
+.entry-head:hover{background:rgba(255,255,255,0.02);}
+.entry-card.open .entry-head{
+  background:color-mix(in srgb, var(--cardc, var(--gold)) 25%, var(--ink-2));
+}
+.entry-card.open .chevron{transform:rotate(180deg);}
+
+.entry-title-block{
+  display:flex;
+  align-items:baseline;
+  gap:12px;
+  flex-wrap:wrap;
+  min-width:0;
+}
+.entry-name{
+  font-family:'Cinzel',serif;
+  font-weight:600;
+  font-size:1.08rem;
+  color:var(--parchment);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.entry-right{
+  display:flex;
+  align-items:center;
+  gap:14px;
+  flex-shrink:0;
+}
+
+/* Header tags */
+.entry-tag{                      /* coloured category / school / type label */
+  font-family:'JetBrains Mono',monospace;
+  font-size:.76rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--cardc,var(--gold));
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.entry-tag--lg{font-size:.86rem;font-weight:700;}
+.entry-meta{                     /* small dim mono text (level, bonus) */
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+}
+.entry-badge{                    /* dim italic summary text */
+  font-family:'Crimson Pro',serif;
+  font-style:italic;
+  font-size:1rem;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+}
+.entry-badge--responsive{        /* hidden on narrow screens, ellipsised */
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:320px;
+  display:none;
+}
+@media (min-width:640px){.entry-badge--responsive{display:inline-block;}}
+@media (min-width:1100px){.entry-badge--responsive{max-width:460px;}}
+
+/* Header quick-stat boxes (armor, weapon, monster, NPC) */
+.entry-qstats{
+  display:flex;
+  gap:6px;
+}
+.entry-qstat{
+  width:var(--qs-w,56px);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:0px 1px;
+}
+.entry-qstat-label{
+  font-family:'JetBrains Mono',monospace;
+  font-size:var(--qs-label-size,.65rem);
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+}
+.entry-qstat-value{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.95rem;
+  font-weight:700;
+  color:var(--gold);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:100%;
+  text-transform:capitalize;
+}
+
+/* Body */
+.entry-body{
+  display:none;
+  padding:0 18px 20px;
+  border-top:1px solid var(--hairline);
+}
+.entry-card.open .entry-body{
+  display:block;
+  padding-top:var(--entry-body-pt,16px);
+}
+.entry-section{
+  margin-top:var(--entry-sec-mt,10px);
+  padding-top:var(--entry-sec-pt,14px);
+}
+.entry-section-title{
+  font-family:'JetBrains Mono',monospace;
+  font-size:.86rem;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--gold);
+  margin-bottom:8px;
+}
+.entry-desc{
+  font-size:1.1rem;
+  color:var(--parchment-dim);
+  white-space:pre-wrap;
+}
+.entry-desc b{
+  color:var(--parchment);
+  font-weight:600;
+}
+
+/* Monster / NPC stat block (modifier: .entry-card--statblock) */
+.entry-card--statblock .entry-section-title{
+  margin-bottom:4px;
+  border-bottom:1px solid var(--hairline);
+  padding-bottom:2px;
+}
+.statblock-visual{
+  font-family:'Crimson Pro',serif;
+  font-style:italic;
+  font-size:1.1rem;
+  color:var(--parchment-dim);
+  margin:0 0 12px;
+}
+.statblock-head{
+  margin-top:4px;
+  padding:6px 0 4px;
+}
+.statblock-titlerow{
+  display:flex;
+  align-items:baseline;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+  font-family:'Cinzel',serif;
+  font-weight:700;
+  color:var(--cardc,var(--gold));
+  border-bottom:2px solid var(--cardc,var(--gold));
+  padding-bottom:4px;
+  margin-bottom:6px;
+}
+.statblock-name{font-size:1.4rem;}
+.statblock-cr{font-size:1.2rem;white-space:nowrap;}
+.statblock-line{
+  font-size:1.08rem;
+  line-height:1.45;
+  color:var(--parchment-dim);
+  margin:2px 0;
+}
+.statblock-line.gap{margin-top:9px;}
+.statblock-line.pre{white-space:pre-wrap;}
+.statblock-line b{
+  color:var(--parchment);
+  font-weight:600;
+}
+.statblock-line sup{
+  font-size:.7em;
+  line-height:0;
+  color:var(--parchment);
+}
+.statblock-copy{padding:2px 4px;}
+
+/* "No results" message (every list page) */
+.empty-state{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:60px 20px;
+  color:var(--parchment-dim);
+  font-family:'Crimson Pro',serif;
+  text-align:center;
+}
+.empty-state .big{
+  font-family:'Cinzel',serif;
+  font-size:1.2rem;
+  color:var(--gold);
+}
+
+/* ---------- Filter helpers ---------- */
+/* Fixed-column chip grid. Markup: class="chip-grid cols-2 [align-left]".
+   Chips are centred by default; .align-left left-aligns long labels. */
+.chip-grid{
+  display:grid;
+  grid-template-columns:repeat(var(--cols,2), 1fr);
+  gap:6px;
+}
+.chip-grid.cols-2{--cols:2;}
+.chip-grid.cols-3{--cols:3;}
+.chip-grid.cols-5{--cols:5;}
+.chip-grid .chip{
+  width:auto;
+  justify-content:center;
+}
+.chip-grid.align-left .chip{justify-content:left;}
+
+/* "Is lower than / equal / greater / between" numeric filter row (CR, HD,
+   rune/item levels…). Pages tune the proportions through two variables. */
+.range-filter-row{
+  --rf-select:42%;
+  --rf-input:60px;
+  display:flex;
+  align-items:center;
+  gap:6px;
+  flex-wrap:nowrap;
+}
+.range-filter-row select.select-filter{
+  flex:0 0 var(--rf-select);
+  min-width:0;
+  padding-left:6px;
+  padding-right:6px;
+}
+.range-input{
+  width:var(--rf-input);
+  flex:0 0 var(--rf-input);
+  min-width:0;
+  background:var(--ink-3);
+  border:1px solid var(--parchment-dim);
+  color:var(--parchment);
+  font-family:'Crimson Pro',serif;
+  font-size:.95rem;
+  padding:9px 4px;
+  border-radius:6px;
+  outline:none;
+  text-align:center;
+  transition:border-color .15s;
+  -moz-appearance:textfield;
+  appearance:textfield;
+}
+.range-input::-webkit-outer-spin-button,
+.range-input::-webkit-inner-spin-button{
+  -webkit-appearance:none;
+  margin:0;
+}
+.range-input:focus{border-color:var(--gold);}
+.range-input[hidden]{display:none;}
+.range-and{
+  flex:0 0 auto;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.78rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--parchment-dim);
+  white-space:nowrap;
+}
+.range-and[hidden]{display:none;}
+
+/* Hover tooltip used by wireHoverCopyTooltip() (base.js) on any page;
+   the .search-tip variant above overrides it for search help. */
+.hover-tooltip{
+  position:fixed;
+  transform:translate(-50%,-100%);
+  background:var(--dark-gold);
+  color:var(--parchment);
+  padding:6px 10px;
+  border-radius:6px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:.72rem;
+  font-weight:700;
+  text-align:center;
+  line-height:1.5;
+  pointer-events:none;
+  box-shadow:0 6px 18px rgba(0,0,0,0.4);
+  opacity:0;
+  transition:opacity .15s, transform .15s;
+  z-index:9999;
+  max-width:240px;
+  white-space:normal;
+}
+.hover-tooltip.show{
+  opacity:1;
+  transform:translate(-50%,-112%);
+}
+.hover-tooltip-value{
+  color:var(--parchment-dim);
 }
 
 /* scrollbar */

@@ -1,37 +1,6 @@
-/* Sticky page header — rolled out from Armor Catalogue. Stacks
-   .page-title-top (nav) above .page-title-bottom (item count + theme
-   toggle — both defined in base.css) and pins the whole header in place
-   while the list scrolls beneath it. The margin-top/padding-top pair
-   cancels out .main's own top padding and re-adds the same amount as
-   this element's own padding, so the gap above the header is part of the
-   sticky box itself and does not disappear/jump once it pins to the
-   viewport top (see base.css's sticky-header comment for the full
-   explanation). This file is only ever loaded on this page, so this rule
-   scopes the sticky/stacking behavior here without needing a shared
-   change in base.css. */
-.page-title-desktop{
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-  position:sticky;
-  top:0;
-  z-index:10;
-  background:var(--ink);
-  margin-top:-10px;
-  padding-top:10px;
-  padding-bottom:10px;
-  border-bottom:1px solid var(--hairline);
-}
-@media (max-width:900px){
-  .page-title-desktop{
-    margin-top:-20px;
-    padding-top:20px;
-  }
-}
-
-/* Slot chip colors: same 16-color palette, same order, as base.css's
-   --type-* colors. Slot labels are assigned to these in JS, cycling
-   back to the start once all 16 are used. */
+/* Slot chip colors: same 9-color palette, same order, as feats.css's
+   category colors (--cat-*). Slot labels are assigned to these in JS,
+   cycling back to the start once all 9 are used. */
 
 /* Slot: fixed 2-column grid, color-coded like feat categories. */
 .slot-chip-row{
@@ -43,10 +12,6 @@
   width:auto;
   justify-content:left;
 }
-/* PFS Content (Yes / No): labels centered */
-.pfs-chip-row .chip{
-  justify-content:center;
-}
 
 /* Price: operator select + up to two numeric inputs, same shape as the
    Monsters page's CR/HD range filters (see monsters.css). */
@@ -57,15 +22,15 @@
   flex-wrap:nowrap;
 }
 .range-filter-row select.select-filter{
-  flex:0 0 42%;
-  width:31%;
+  flex:0 0 50%;
+  width:40%;
   min-width:0;
   padding-left:6px;
   padding-right:6px;
 }
 .range-input{
-  width:60px;
-  flex:0 0 60px;
+  width:48px;
+  flex:0 0 48px;
   min-width:0;
   background:var(--ink-3);
   border:1px solid var(--parchment-dim);
@@ -97,6 +62,16 @@
   white-space:nowrap;
 }
 .range-and[hidden]{display:none;}
+
+/* Stat / construction line labels (Aura, CL, Slot, Weight, Requirements,
+   Cost, Made From, Destruction, intelligent-item stats): bold + card color,
+   same look as the rune cards' .rune-meta-line b. The extra selector beats
+   base.css's ".entry-desc b" (parchment) regardless of load order. */
+.item-stats-line b,
+.entry-desc.item-stats-line b{
+  color:var(--cardc,var(--gold));
+  font-weight:600;
+}
 
 .item-card{
   background:var(--ink-2);
@@ -136,25 +111,13 @@
   overflow:hidden;
   text-overflow:ellipsis;
 }
-.item-slot-tag{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.86rem;
-  font-weight:700;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--cardc,var(--gold));
-  white-space:nowrap;
-}
 .item-category-tag{
   font-family:'JetBrains Mono',monospace;
   font-size:.76rem;
-  font-weight:400;
   letter-spacing:.08em;
   text-transform:uppercase;
   color:var(--cardc,var(--gold));
   white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
 }
 
 .item-right{
@@ -183,15 +146,15 @@
 }
 .item-card.open .item-body{
   display:block;
-  padding-top:6px;
+  padding-top:16px;
 }
 .item-card.open .item-head{
   background:color-mix(in srgb, var(--cardc, var(--gold)) 25%, var(--ink-2));
 }
 
 .item-section{
-  margin-top:5px;
-  padding-top:7px;
+  margin-top:10px;
+  padding-top:14px;
 }
 .item-section-title{
   font-family:'JetBrains Mono',monospace;
@@ -205,11 +168,6 @@
   font-size:1.1rem;
   color:var(--parchment-dim);
   white-space:pre-wrap;
-}
-/* Aura / CL / Slot / Weight line only: bold labels in the card color */
-.item-stats-line b{
-  color:var(--cardc,var(--gold));
-  font-weight:700;
 }
 
 .empty-state{

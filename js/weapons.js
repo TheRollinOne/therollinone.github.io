@@ -226,8 +226,8 @@
       ['Type', damageTypeAbbrev(w.damage_type) || '—', ' type'],
       ['Critical', w.critical || '—', ''],
     ];
-    return `<div class="weapon-quick-stats">${boxes.map(([l, v, cls]) =>
-      `<div class="weapon-quick-stat${cls}"><div class="weapon-quick-stat-label">${escapeHtml(l)}</div><div class="weapon-quick-stat-value">${escapeHtml(v)}</div></div>`
+    return `<div class="entry-qstats">${boxes.map(([l, v, cls]) =>
+      `<div class="entry-qstat${cls}"><div class="entry-qstat-label">${escapeHtml(l)}</div><div class="entry-qstat-value">${escapeHtml(v)}</div></div>`
     ).join('')}</div>`;
   }
 
@@ -251,9 +251,9 @@
     const cardStyle = w._cardColor ? ` style="--cardc:${w._cardColor}"` : '';
     const isOpen = state.open.has(w._idx);
 
-    const categoryTagHtml = w.category ? `<span class="weapon-category-tag">${escapeHtml(w.category)}</span>` : '';
+    const categoryTagHtml = w.category ? `<span class="entry-tag">${escapeHtml(w.category)}</span>` : '';
     const weaponGroupsText = (w.weapon_group||[]).join(', ');
-    const weaponGroupTagHtml = weaponGroupsText ? `<span class="weapon-group-tag">${escapeHtml(weaponGroupsText)}</span>` : '';
+    const weaponGroupTagHtml = weaponGroupsText ? `<span class="entry-badge weapon-group-tag">${escapeHtml(weaponGroupsText)}</span>` : '';
 
     const statFields = buildStatFields(w);
     const statGridHtml = statFields.map(([l,v]) =>
@@ -262,25 +262,25 @@
 
     const descText = clipboardFormatText(w.description);
     const descHtml = w.description ? `
-      <div class="weapon-section copyable" data-copy="${escapeHtml(descText)}">
-        <div class="weapon-section-title">Description</div>
-        <div class="weapon-desc"><div>${htmlFormatDescription(w.description)}</div></div>
+      <div class="entry-section copyable" data-copy="${escapeHtml(descText)}">
+        <div class="entry-section-title">Description</div>
+        <div class="entry-desc"><div>${htmlFormatDescription(w.description)}</div></div>
       </div>` : '';
 
     return `
-    <div class="weapon-card${isOpen?' open':''}"${cardStyle} data-idx="${w._idx}">
-      <div class="weapon-head" data-toggle="${w._idx}">
-        <div class="weapon-title-block">
-          <span class="weapon-name copyable" data-copy="${escapeHtml(w.name)}">${escapeHtml(w.name)}</span>
+    <div class="entry-card entry-card--stats weapon-card${isOpen?' open':''}"${cardStyle} data-idx="${w._idx}">
+      <div class="entry-head" data-toggle="${w._idx}">
+        <div class="entry-title-block">
+          <span class="entry-name weapon-name copyable" data-copy="${escapeHtml(w.name)}">${escapeHtml(w.name)}</span>
           ${weaponGroupTagHtml}
           ${categoryTagHtml}
         </div>
-        <div class="weapon-right">
+        <div class="entry-right">
           ${quickStatsHTML(w)}
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
-      <div class="weapon-body">
+      <div class="entry-body">
         <div class="stat-grid">${statGridHtml}</div>
         ${descHtml}
       </div>

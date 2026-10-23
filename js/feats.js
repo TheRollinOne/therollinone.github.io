@@ -234,7 +234,7 @@
 
     const flavorHtml = f.flavor_text ? `<p class="feat-flavor copyable" data-copy="${escapeHtml(f.flavor_text)}">${escapeHtml(f.flavor_text)}</p>` : '';
 
-    const prereqHtml = (f.prerequisites && f.prerequisites.length>0) ? `\n        <div class="feat-section copyable" data-copy="${escapeHtml(clipboardFormatText(f.prerequisites))}">\n          <div class="feat-section-title">Prerequisites</div>\n          <div class="feat-desc"><div>${htmlFormatText(f.prerequisites)}</div></div>\n        </div>` : '';
+    const prereqHtml = (f.prerequisites && f.prerequisites.length>0) ? `\n        <div class="entry-section copyable" data-copy="${escapeHtml(clipboardFormatText(f.prerequisites))}">\n          <div class="entry-section-title">Prerequisites</div>\n          <div class="entry-desc feat-desc"><div>${htmlFormatText(f.prerequisites)}</div></div>\n        </div>` : '';
 
     const groupFields = [
       ['Benefits', f.benefits],
@@ -243,7 +243,7 @@
     ].filter(([label,val])=>val && val.length>0);
 
     const groupInnerHtml = groupFields.map(([label,val])=>{
-      return `\n        <div class="feat-section">\n          <div class="feat-section-title">${escapeHtml(label)}</div>\n          <div class="feat-desc"><div>${htmlFormatText(val)}</div></div>\n        </div>`;
+      return `\n        <div class="entry-section">\n          <div class="entry-section-title">${escapeHtml(label)}</div>\n          <div class="entry-desc feat-desc"><div>${htmlFormatText(val)}</div></div>\n        </div>`;
     }).join('');
 
     const combinedCopyText = clipboardFormatText(
@@ -251,10 +251,10 @@
     );
 
     const groupHtml = groupFields.length
-      ? `<div class="feat-copy-group copyable" data-copy="${escapeHtml(combinedCopyText)}">${groupInnerHtml}\n        </div>`
+      ? `<div class="copyable" data-copy="${escapeHtml(combinedCopyText)}">${groupInnerHtml}\n        </div>`
       : '';
 
-    return `\n    <div class="feat-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${f._idx}">\n      <div class="feat-head" data-toggle="${f._idx}">\n        <div class="feat-title-block">\n          <span class="feat-name copyable" data-copy="${escapeHtml(f.name)}">${escapeHtml(f.name)}</span>\n          <span class="feat-category-tag">${escapeHtml(f.category)}</span>\n        </div>\n        <div class="feat-right">\n          <span class="feat-badge" title="${escapeHtml(f.flavor_text||'')}">${escapeHtml(f.flavor_text||'')}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="feat-body">\n        ${flavorHtml}${prereqHtml}${groupHtml}\n      </div>\n    </div>`;
+    return `\n    <div class="entry-card feat-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${f._idx}">\n      <div class="entry-head" data-toggle="${f._idx}">\n        <div class="entry-title-block">\n          <span class="entry-name feat-name copyable" data-copy="${escapeHtml(f.name)}">${escapeHtml(f.name)}</span>\n          <span class="entry-tag">${escapeHtml(f.category)}</span>\n        </div>\n        <div class="entry-right">\n          <span class="entry-badge entry-badge--responsive" title="${escapeHtml(f.flavor_text||'')}">${escapeHtml(f.flavor_text||'')}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="entry-body">\n        ${flavorHtml}${prereqHtml}${groupHtml}\n      </div>\n    </div>`;
   }
 
   // Every filter except Class Feature — the population the Class Feature
