@@ -208,15 +208,15 @@ body {
   z-index: -1;
   width: 276px;
   height: 276px;
-  background: url('../pictures/d20.png') center / 100% 100% no-repeat;
+  background: url('../pictures/d20_logo.png') center / 100% 100% no-repeat;
   opacity: .3;
   pointer-events: none;
 }
 
-html[data-theme="blue"]   .sidebar-art { background-image: url('../pictures/d20_blue.png'); }
-html[data-theme="orange"] .sidebar-art { background-image: url('../pictures/d20_orange.png'); }
-html[data-theme="green"]  .sidebar-art { background-image: url('../pictures/d20_green.png'); }
-html[data-theme="red"]    .sidebar-art { background-image: url('../pictures/d20_red.png'); }
+html[data-theme="blue"]   .sidebar-art { background-image: url('../pictures/d20_logo_blue.png'); }
+html[data-theme="orange"] .sidebar-art { background-image: url('../pictures/d20_logo_orange.png'); }
+html[data-theme="green"]  .sidebar-art { background-image: url('../pictures/d20__logogreen.png'); }
+html[data-theme="red"]    .sidebar-art { background-image: url('../pictures/d20__logored.png'); }
 
 @media (max-width: 900px) {
   .sidebar-art {
