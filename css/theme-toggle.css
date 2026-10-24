@@ -1,5 +1,6 @@
 /* ==========================================================================
-   Theme toggle — button, popup, and color swatches.
+   theme-toggle.css: Theme toggle (button, popup, color swatches)
+   --------------------------------------------------------------------------
    Shared by every page (home + all catalogue pages).
 
    To add a new theme or change an existing swatch's color, this is the
@@ -7,77 +8,111 @@
    rule below, add the matching option in includes/theme-toggle.html, and
    define the theme's palette in themes.css. Nothing else references
    these colors.
+
+   Contents
+     1. Toggle button
+     2. Popup
+     3. Swatches
+        3.1 Base swatch
+        3.2 Swatch colors (edit these when themes change)
+        3.3 Active swatch ring
    ========================================================================== */
 
-.theme-toggle-main{
-  width:34px;
-  height:34px;
-  border-radius:10px;
-  border:3px solid color-mix(in srgb, var(--hairline) 85%, transparent);
-  background:var(--gold);
-  cursor:pointer;
-  padding:0;
-  transition:transform .12s, box-shadow .15s;
-}
-.theme-toggle-main:hover{
-  transform:scale(1.06);
-}
-.theme-toggle-main:focus-visible{
-  outline:2px solid var(--parchment);
-  outline-offset:2px;
+
+/* ==========================================================================
+   1. Toggle button
+   --------------------------------------------------------------------------
+   Filled with the current theme's accent color (--gold).
+   ========================================================================== */
+.theme-toggle-main {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  background: var(--gold);
+  border: 3px solid color-mix(in srgb, var(--hairline) 85%, transparent);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .15s;
 }
 
-.theme-toggle-popup{
-  position:absolute;
+.theme-toggle-main:hover {
+  transform: scale(1.06);
+}
+
+.theme-toggle-main:focus-visible {
+  outline: 2px solid var(--parchment);
+  outline-offset: 2px;
+}
+
+
+/* ==========================================================================
+   2. Popup
+   --------------------------------------------------------------------------
+   Row of swatches that opens over the toggle button.
+   ========================================================================== */
+.theme-toggle-popup {
+  position: absolute;
   /* Offset by -padding on each side so the padding box's top-right corner
      lands exactly on the toggle button's top-right corner: the popup
      overlays the button and the menu bar, and the last swatch (flex row,
      right-aligned) sits precisely over the button. */
-  top:-8px;
-  right:-8px;
-  display:flex;
-  gap:8px;
-  padding:8px;
-  background:var(--ink-2);
-  border:1px solid var(--hairline);
-  border-radius:16px;
-  box-shadow:0 10px 24px rgba(0,0,0,.45);
-  z-index:20;
-}
-.theme-toggle-popup[hidden]{
-  display:none;
+  top: -8px;
+  right: -8px;
+  z-index: 20;
+
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+
+  background: var(--ink-2);
+  border: 1px solid var(--hairline);
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, .45);
 }
 
-.theme-swatch{
-  position:relative;
-  width:34px;
-  height:34px;
-  border-radius:50%;
-  border:1px solid rgba(0,0,0,.3);
-  cursor:pointer;
-  padding:0;
-  transition:transform .12s;
-}
-.theme-swatch:hover{
-  transform:scale(1.1);
-}
-.theme-swatch:focus-visible{
-  outline:2px solid var(--parchment);
-  outline-offset:2px;
+.theme-toggle-popup[hidden] {
+  display: none;
 }
 
-/* ---- Swatch colors: the part that changes when themes change ---- */
-.theme-swatch[data-theme-choice="gold"]{background:#d3ac43;}
-.theme-swatch[data-theme-choice="blue"]{background:#4f9dde;}
-.theme-swatch[data-theme-choice="green"]{background:#5cd486;}
-.theme-swatch[data-theme-choice="orange"]{background:#f18d35;}
-.theme-swatch[data-theme-choice="red"]{background:#e14b4b;}
-.theme-swatch[data-theme-choice="parchment"]{background:#d6be90;}
 
-.theme-swatch.active::after{
-  content:"";
-  position:absolute;
-  inset:0;
-  border-radius:50%;
-  border:2px solid var(--parchment);
+/* ==========================================================================
+   3. Swatches
+   ========================================================================== */
+
+/* 3.1 Base swatch */
+.theme-swatch {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid rgba(0, 0, 0, .3);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform .12s;
+}
+
+.theme-swatch:hover {
+  transform: scale(1.1);
+}
+
+.theme-swatch:focus-visible {
+  outline: 2px solid var(--parchment);
+  outline-offset: 2px;
+}
+
+/* 3.2 Swatch colors: the part that changes when themes change */
+.theme-swatch[data-theme-choice="gold"]      { background: #d3ac43; }
+.theme-swatch[data-theme-choice="blue"]      { background: #4f9dde; }
+.theme-swatch[data-theme-choice="green"]     { background: #5cd486; }
+.theme-swatch[data-theme-choice="orange"]    { background: #f18d35; }
+.theme-swatch[data-theme-choice="red"]       { background: #e14b4b; }
+.theme-swatch[data-theme-choice="parchment"] { background: #d6be90; }
+
+/* 3.3 Active swatch: ring in the text color */
+.theme-swatch.active::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--parchment);
+  border-radius: 50%;
 }

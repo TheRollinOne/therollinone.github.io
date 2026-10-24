@@ -1,1088 +1,1490 @@
-:root{
---ink:#0e1018;
---ink-2:#171925;
---ink-3:#202334;
---parchment:#f3eedf;
---parchment-dim:#e0d8bf;
---hairline:#36394d;
---gold:#d3ac43;
---dark-gold:#b69028;
+/* ==========================================================================
+   base.css: Shared styles for every catalogue page
+   --------------------------------------------------------------------------
+   Page-specific files (armors.css, spells.css, ...) load after this one and
+   only add what differs. Color themes live in themes.css; the theme toggle
+   widget lives in theme-toggle.css.
 
---type-1: #78dc6e;
---type-2: #32d2b4;
---type-3: #41c3f5;
---type-4: #c489ff;
---type-5: #ff96c8;
---type-6: #ff4b4b;
---type-7: #ff9b50;
---type-8: #e4c450;
---type-9: #2f9925;
---type-10: #0b9c82;
---type-11: #0984b4;
---type-12: #7632b9;
---type-13: #a8326b;
---type-14: #c52323;
---type-15: #c0641e;
---type-16: #b39427;
---type-gray: #f0f0f0b4;
-}
-*{box-sizing:border-box;}
-html,body{
-  margin:0;
-  padding:0;
-}
-body{
-  background:var(--ink);
-  color:var(--parchment);
-  font-family:'Crimson Pro',serif;
-  font-size:17px;
-  line-height:1.5;
-  min-height:100vh;
-}
-::selection{
-  background:var(--gold);
-  color:var(--ink);
-}
+   Contents
+      1. Design tokens
+      2. Base / reset
+      3. App layout
+      4. Sidebar (container, brand, scrollbar, background art)
+      5. Search (search box, search-scope toggle)
+      6. Filters
+         6.1 Filter group + label
+         6.2 Chips
+         6.3 Chip grid
+         6.4 Select
+         6.5 Numeric range filter
+         6.6 Filters / Sorting header (collapsible on mobile)
+      7. Page header
+         7.1 Sticky header
+         7.2 Top menu navigation
+         7.3 Sort bar
+         7.4 Theme toggle wrapper
+      8. Main list + pagination
+      9. Stat boxes + copy-to-clipboard
+     10. Entry card family
+         10.1 Card shell + header
+         10.2 Header tags
+         10.3 Header quick-stats
+         10.4 Body
+         10.5 Monster / NPC stat block
+     11. Description tables
+     12. Empty state
+     13. Tooltips
+   ========================================================================== */
 
-/* ---------- Layout ---------- */
-.app{
-  display:grid;
-  grid-template-columns:320px 1fr;
-  min-height:100vh;
-  min-width:0;
-}
-@media (max-width:900px){
-  .app{grid-template-columns:1fr;}
-  .sidebar{position:static;height:auto;border-right:none;border-bottom:1px solid var(--hairline);}
-}
 
-/* ---------- Sidebar ---------- */
-.sidebar{
-  position:sticky;
-  top:0;
-  height:100vh;
-  overflow-y:auto;
-  background:var(--ink-2);
-  border-right:1px solid var(--hairline);
-  padding:20px 22px 40px;
-  display:flex;
-  flex-direction:column;
-  gap:22px;
-}
-@media (max-width:900px){
-  .sidebar{height:auto; max-height:none; position:relative;}
-}
+/* ==========================================================================
+   1. Design tokens
+   --------------------------------------------------------------------------
+   Default (gold) palette. Other themes override these in themes.css.
+   ========================================================================== */
+:root {
+  /* Surfaces, darkest to lightest */
+  --ink:           #0e1018;
+  --ink-2:         #171925;
+  --ink-3:         #202334;
 
-.brand{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  margin-bottom:4px;
-}
-.brand .mark{
-  font-family:'Cinzel',serif;
-  font-weight:700;
-  font-size:1.5rem;
-  letter-spacing:.03em;
-  color:var(--gold);
-  text-decoration:none;
-  cursor:pointer;
-}
-.brand .sub{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
-  letter-spacing:.12em;
-  text-transform:uppercase;
-  color:var(--parchment-dim);
+  /* Text */
+  --parchment:     #f3eedf;
+  --parchment-dim: #e0d8bf;
+
+  /* Lines & accents */
+  --hairline:      #36394d;
+  --gold:          #d3ac43;
+  --dark-gold:     #b69028;
+
+  /* Type colors: 1-8 are the bright set, 9-16 their darker counterparts
+     (same hue order); gray is the neutral. Used to color-code entry types. */
+  --type-1:  #78dc6e;
+  --type-2:  #32d2b4;
+  --type-3:  #41c3f5;
+  --type-4:  #c489ff;
+  --type-5:  #ff96c8;
+  --type-6:  #ff4b4b;
+  --type-7:  #ff9b50;
+  --type-8:  #e4c450;
+  --type-9:  #2f9925;
+  --type-10: #0b9c82;
+  --type-11: #0984b4;
+  --type-12: #7632b9;
+  --type-13: #a8326b;
+  --type-14: #c52323;
+  --type-15: #c0641e;
+  --type-16: #b39427;
+  --type-gray: #f0f0f0b4;
 }
 
-.search-wrap{
-  position:relative;
-}
-.search-wrap input{
-  width:100%;
-  background:var(--ink-3);
-  border:1px solid var(--hairline);
-  border-radius:6px;
-  color:var(--parchment);
-  font-family:'Crimson Pro',serif;
-  font-size:1.02rem;
-  padding:12px 14px 12px 38px;
-  outline:none;
-  transition:border-color .15s;
-}
-.search-wrap input:focus{border-color:var(--gold);}
-.search-wrap input::placeholder{color:var(--parchment-dim);}
-.search-icon{
-  position:absolute;
-  left:12px;
-  top:50%;
-  transform:translateY(-50%);
-  width:16px;
-  height:16px;
-  opacity:.6;
-  pointer-events:none;
-}
-.search-clear-icon{
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%);
-  width:16px;
-  height:16px;
-  color:#e0525f;
-  cursor:pointer;
-  display:none;
-}
-.search-wrap.has-query .search-clear-icon{display:block;}
-.search-wrap.has-query input{padding-right:36px;}
 
-/* ---------- Search scope toggle (shared) ----------
+/* ==========================================================================
+   2. Base / reset
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--ink);
+  color: var(--parchment);
+  font-family: 'Crimson Pro', serif;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+::selection {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+
+/* ==========================================================================
+   3. App layout
+   --------------------------------------------------------------------------
+   Two columns: fixed 320px sidebar + fluid main area. Stacks into a single
+   column at <=900px.
+   ========================================================================== */
+.app {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  min-height: 100vh;
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .app {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* ==========================================================================
+   4. Sidebar
+   ========================================================================== */
+
+/* 4.1 Container: sticky full-height column that scrolls on its own */
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  padding: 20px 22px 40px;
+
+  background: var(--ink-2);
+  border-right: 1px solid var(--hairline);
+}
+
+/* Narrow screens: sidebar becomes a normal block above the list */
+@media (max-width: 900px) {
+  .sidebar {
+    position: relative;
+    height: auto;
+    max-height: none;
+    border-bottom: 1px solid var(--hairline);
+  }
+}
+
+/* 4.2 Brand (site mark + subtitle) */
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.brand .mark {
+  font-family: 'Cinzel', serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: .03em;
+  text-decoration: none;
+  color: var(--gold);
+  cursor: pointer;
+}
+
+.brand .sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+}
+
+/* 4.3 Scrollbar (WebKit/Blink) */
+.sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--hairline);
+  border-radius: 4px;
+}
+
+/* 4.4 Background art
+   Copy of the home page hero image, fixed behind the sidebar. It follows
+   the active theme via the same data-theme attribute the rest of the site
+   uses (gold = no attribute). Hidden on narrow screens. */
+.sidebar-art {
+  position: fixed;
+  left: 22px;
+  bottom: 20px;
+  z-index: -1;
+  width: 276px;
+  height: 276px;
+  background: url('../pictures/d20.png') center / 100% 100% no-repeat;
+  opacity: .3;
+  pointer-events: none;
+}
+
+html[data-theme="blue"]   .sidebar-art { background-image: url('../pictures/d20_blue.png'); }
+html[data-theme="orange"] .sidebar-art { background-image: url('../pictures/d20_orange.png'); }
+html[data-theme="green"]  .sidebar-art { background-image: url('../pictures/d20_green.png'); }
+html[data-theme="red"]    .sidebar-art { background-image: url('../pictures/d20_red.png'); }
+
+@media (max-width: 900px) {
+  .sidebar-art {
+    display: none;
+  }
+}
+
+
+/* ==========================================================================
+   5. Search
+   ========================================================================== */
+
+/* 5.1 Search box: icon on the left, clear (x) icon on the right once the
+   user has typed something (.has-query). */
+.search-wrap {
+  position: relative;
+}
+
+.search-wrap input {
+  width: 100%;
+  padding: 12px 14px 12px 38px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.02rem;
+  color: var(--parchment);
+  background: var(--ink-3);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color .15s;
+}
+
+.search-wrap input:focus {
+  border-color: var(--gold);
+}
+
+.search-wrap input::placeholder {
+  color: var(--parchment-dim);
+}
+
+.search-icon {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  width: 16px;
+  height: 16px;
+  opacity: .6;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.search-clear-icon {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  display: none;
+  width: 16px;
+  height: 16px;
+  color: #e0525f;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.search-wrap.has-query .search-clear-icon {
+  display: block;
+}
+
+.search-wrap.has-query input {
+  padding-right: 36px;
+}
+
+/* 5.2 Search scope toggle (shared)
    "Names Only | All Fields" two-button toggle injected right under the
    search box by initSearchScope() in base.js. Buttons reuse .sort-btn's
    look (colors, hover, .active tint) and just stretch to 50%/50% and get
    a bit more height. The negative margin tucks it closer to the search
    box than the sidebar's normal 22px section gap. */
-.search-scope{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:6px;
-  margin-top:-12px;
-}
-.search-scope .sort-btn{
-  width:100%;
-  padding:3px 10px;
-  text-align:center;
+.search-scope {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  margin-top: -12px;
 }
 
-.filter-group{
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+.search-scope .sort-btn {
+  width: 100%;
+  padding: 3px 10px;
+  text-align: center;
 }
-.filter-label{
-  font-family:'JetBrains Mono',monospace;
-  font-size:1rem;
-  letter-spacing:.14em;
-  font-variant-caps: small-caps;
-  color:var(--parchment);
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  color:var(--gold);
+
+
+/* ==========================================================================
+   6. Filters
+   ========================================================================== */
+
+/* 6.1 Filter group + label
+   A group is a label row (with an optional small action button, e.g.
+   "Clear") above its controls. */
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.filter-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
   font-weight: 600;
-}
-.filter-label button{
-  background:none;
-  border:none;
-  color:var(--gold);
-  font-family:'JetBrains Mono',monospace;
-  text-transform:uppercase;
-  font-size:.64rem;
-  font-weight:700;
-  letter-spacing:.08em;
-  cursor:pointer;
-  padding:0;
-  opacity:.85;
-}
-.filter-label button:hover{
-  opacity:1;
-  text-decoration:underline;
+  letter-spacing: .14em;
+  font-variant-caps: small-caps;
+  color: var(--gold);
 }
 
-.chip-row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
+.filter-label button {
+  padding: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .64rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: none;
+  border: none;
+  opacity: .85;
+  cursor: pointer;
 }
-.chip{
-  width:130px;
-  justify-content:left;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
-  padding:5px 10px;
-  border-radius:20px;
-  border:1px solid var(--hairline);
-  background:var(--ink-3);
-  color:var(--parchment-dim);
-  cursor:pointer;
-  user-select:none;
-  transition:all .12s;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  line-height:1.2;
+
+.filter-label button:hover {
+  opacity: 1;
+  text-decoration: underline;
 }
-.chip .dot{
-  width:7px;
-  height:7px;
-  border-radius:50%;
-  background:var(--dotc,var(--parchment-dim));
-  flex-shrink:0;
+
+/* 6.2 Chips: toggleable filter pills. The dot color and active color come
+   from --dotc / --chipc, set per chip by the page JS. */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
-.chip:hover{border-color:var(--parchment-dim);color:var(--parchment);}
+
+.chip {
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  gap: 6px;
+  width: 130px;
+  padding: 5px 10px;
+  overflow: hidden;
+
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: var(--parchment-dim);
+  background: var(--ink-3);
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
+
+  cursor: pointer;
+  user-select: none;
+  transition: all .12s;
+}
+
+.chip .dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  background: var(--dotc, var(--parchment-dim));
+  border-radius: 50%;
+}
+
+.chip:hover {
+  border-color: var(--parchment-dim);
+  color: var(--parchment);
+}
+
+/* Keep .active after :hover so the selected look wins while hovering */
 .chip.active {
-  background:color-mix(in srgb, var(--chipc, var(--gold)) 85%, var(--ink-2));
-  border-color:var(--chipc, var(--gold));
+  background: color-mix(in srgb, var(--chipc, var(--gold)) 85%, var(--ink-2));
+  border-color: var(--chipc, var(--gold));
   color: #ffffff;
   font-weight: 700;
   text-shadow: 3px 3px 2px #000;
 }
-.chip.active .dot{background:var(--ink);}
 
-/* Numeric-value chip grid modifier (Spell Levels, Rune Bonus, armor stats):
+.chip.active .dot {
+  background: var(--ink);
+}
+
+/* Numeric-value chip modifier (Spell Levels, Rune Bonus, armor stats):
    used together with .chip-grid cols-5. */
-.level-chip-row .chip{
-  padding:3px 4px;
-  font-size:.95rem;
+.level-chip-row .chip {
+  padding: 3px 4px;
+  font-size: .95rem;
 }
 
-select.select-filter{
-  width:100%;
-  background:var(--ink-3);
-  border:1px solid var(--hairline);
-  color:var(--parchment);
-  font-family:'Crimson Pro',serif;
-  font-size:.95rem;
-  padding:9px 10px;
-  border-radius:6px;
-  outline:none;
-}
-select.select-filter:focus{border-color:var(--gold);}
-select.select-filter:disabled{
-  opacity:.45;
-  cursor:not-allowed;
+/* 6.3 Chip grid
+   Fixed-column chip grid. Markup: class="chip-grid cols-2 [align-left]".
+   Chips are centred by default; .align-left left-aligns long labels. */
+.chip-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 2), 1fr);
+  gap: 6px;
 }
 
-/* Filters / Sorting */
-.filters-collapse{display:contents;}
-.filters-summary{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  font-family:'JetBrains Mono',monospace;
-  font-size:.92rem;
+.chip-grid.cols-2 { --cols: 2; }
+.chip-grid.cols-3 { --cols: 3; }
+.chip-grid.cols-5 { --cols: 5; }
+
+.chip-grid .chip {
+  width: auto;
+  justify-content: center;
+}
+
+.chip-grid.align-left .chip {
+  justify-content: left;
+}
+
+/* 6.4 Select */
+select.select-filter {
+  width: 100%;
+  padding: 9px 10px;
+  font-family: 'Crimson Pro', serif;
+  font-size: .95rem;
+  color: var(--parchment);
+  background: var(--ink-3);
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  outline: none;
+}
+
+select.select-filter:focus {
+  border-color: var(--gold);
+}
+
+select.select-filter:disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* 6.5 Numeric range filter
+   "Is lower than / equal / greater / between" row (CR, HD, rune/item
+   levels...). Pages tune the proportions through two variables:
+     --rf-select   width of the operator select
+     --rf-input    width of each numeric input */
+.range-filter-row {
+  --rf-select: 42%;
+  --rf-input:  60px;
+
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
+.range-filter-row select.select-filter {
+  flex: 0 0 var(--rf-select);
+  min-width: 0;
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+/* Numeric input (centered, spinner arrows removed) */
+.range-input {
+  flex: 0 0 var(--rf-input);
+  width: var(--rf-input);
+  min-width: 0;
+  padding: 9px 4px;
+  font-family: 'Crimson Pro', serif;
+  font-size: .95rem;
+  text-align: center;
+  color: var(--parchment);
+  background: var(--ink-3);
+  border: 1px solid var(--parchment-dim);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color .15s;
+  -moz-appearance: textfield;
+          appearance: textfield;
+}
+
+.range-input::-webkit-outer-spin-button,
+.range-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.range-input:focus {
+  border-color: var(--gold);
+}
+
+.range-input[hidden] {
+  display: none;
+}
+
+/* "and" label between the two inputs (the "between" operator) */
+.range-and {
+  flex: 0 0 auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .78rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--parchment-dim);
+}
+
+.range-and[hidden] {
+  display: none;
+}
+
+/* 6.6 Filters / Sorting header
+   On desktop .filters-collapse is transparent to layout (display: contents)
+   and the arrow is hidden. At <=900px it becomes a collapsible block: the
+   summary acts as the toggle and .filters-inner.collapsed hides the filters. */
+.filters-collapse {
+  display: contents;
+}
+
+.filters-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+  padding: 6px 0 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .92rem;
   font-weight: 700;
-  letter-spacing:.15em;
-  text-transform:uppercase;
-  color:var(--gold);
-  padding:6px 0 2px 0;
-  border-top:2px solid var(--gold);
-  margin-bottom:4px;
-}
-.filters-header-actions{
-  display:flex;
-  align-items:center;
-  gap:14px;
-}
-.filters-header-actions #clearAll{
-  background:none;
-  border:none;
-  color:var(--gold);
-  font-family:'JetBrains Mono',monospace;
-  font-size:.66rem;
-  font-weight:700;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  cursor:pointer;
-  padding:0;
-  opacity:.85;
-}
-.filters-header-actions #clearAll:hover{
-  opacity:1;
-  text-decoration:underline;
-}
-.fs-arrow{display:none;}
-.filters-inner{
-  display:flex;
-  flex-direction:column;
-  gap:22px;
-  flex:1;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--gold);
+  border-top: 2px solid var(--gold);
 }
 
-@media (max-width:900px){
-  .filters-collapse{display:block;}
-  .filters-inner{margin-top:16px;}
-  .filters-inner.collapsed{display:none;}
-  .filters-summary{cursor:pointer;}
-  .fs-arrow{
-    display:inline-block;
-    transition:transform .15s;
+.filters-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.filters-header-actions #clearAll {
+  padding: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .66rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--gold);
+  background: none;
+  border: none;
+  opacity: .85;
+  cursor: pointer;
+}
+
+.filters-header-actions #clearAll:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+.fs-arrow {
+  display: none;
+}
+
+.filters-inner {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  gap: 22px;
+}
+
+@media (max-width: 900px) {
+  .filters-collapse {
+    display: block;
   }
-  .filters-summary.open .fs-arrow{transform:rotate(180deg);}
-}
 
-/* ---------- Page header (shared by every page) ----------
-   Sticky header: stacks .page-title-top (nav) above .page-title-bottom
-   (item count + sort bar + theme toggle) and pins the whole thing while
-   the list scrolls beneath it. The margin-top/padding-top pair cancels
-   .main's own top padding and re-adds it inside the sticky box, so the
-   gap above the header is part of what gets pinned and nothing jumps when
-   it sticks. Keep the pair in sync with .main's padding-top (10px desktop
-   / 20px at <=900px). */
-.page-title-desktop{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  gap:8px;
-  position:sticky;
-  top:0;
-  z-index:10;
-  background:var(--ink);
-  margin-top:-10px;
-  margin-bottom:12px;
-  padding-top:10px;
-  padding-bottom:10px;
-  border-bottom:1px solid var(--hairline);
-}
-@media (max-width:900px){
-  .page-title-desktop{
-    margin-top:-20px;
-    padding-top:20px;
+  .filters-summary {
+    cursor: pointer;
+  }
+
+  .fs-arrow {
+    display: inline-block;
+    transition: transform .15s;
+  }
+
+  .filters-summary.open .fs-arrow {
+    transform: rotate(180deg);
+  }
+
+  .filters-inner {
+    margin-top: 16px;
+  }
+
+  .filters-inner.collapsed {
+    display: none;
   }
 }
-.page-title-desktop h1{
-  font-family:'Cinzel',serif;
-  font-size:1.1rem;
-  font-weight:600;
-  color:var(--parchment-dim);
-  margin:0;
-  letter-spacing:.02em;
-  white-space:nowrap;
+
+
+/* ==========================================================================
+   7. Page header (shared by every page)
+   ========================================================================== */
+
+/* 7.1 Sticky header
+   Stacks .page-title-top (nav) above .page-title-bottom (item count + sort
+   bar + theme toggle) and pins the whole thing while the list scrolls
+   beneath it. The margin-top/padding-top pair cancels .main's own top
+   padding and re-adds it inside the sticky box, so the gap above the header
+   is part of what gets pinned and nothing jumps when it sticks. Keep the
+   pair in sync with .main's padding-top (10px desktop / 20px at <=900px). */
+.page-title-desktop {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: -10px;
+  margin-bottom: 12px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+
+  background: var(--ink);
+  border-bottom: 1px solid var(--hairline);
 }
 
-.top-menu-nav{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-wrap:wrap;
+@media (max-width: 900px) {
+  .page-title-desktop {
+    margin-top: -20px;
+    padding-top: 20px;
+  }
 }
 
-/* ---------- Page-title top row (nav, centered) ----------
-   Wraps the top-menu-nav so it can be centered as a group on its own row,
-   independent of the item-count row below it. */
-.page-title-top{
-  display:flex;
-  justify-content:center;
+.page-title-desktop h1 {
+  margin: 0;
+  font-family: 'Cinzel', serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: .02em;
+  white-space: nowrap;
+  color: var(--parchment-dim);
 }
 
-/* ---------- Page-title bottom row (count + theme toggle) ----------
-   Wraps the "<N> Foo Listed" heading and the theme toggle on one row, with
-   the toggle pushed to the far right via justify-content:space-between. */
-.page-title-bottom{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  width:100%;
-  gap:10px;
-}
-.page-title-bottom .theme-toggle{
-  margin-left:auto;
+/* Top row: wraps the top menu so it can be centered as a group on its own
+   row, independent of the item-count row below it. */
+.page-title-top {
+  display: flex;
+  justify-content: center;
 }
 
-/* ---------- Header sort bar (shared) ----------
+/* Bottom row: the "<N> Foo Listed" heading, sort bar and theme toggle on
+   one row, with the toggle pushed to the far right. */
+.page-title-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+}
+
+.page-title-bottom .theme-toggle {
+  margin-left: auto;
+}
+
+/* When a sort bar sits before the toggle, the bar's flex:1 already pushes
+   the toggle right, so the auto margin is not needed. */
+.page-title-bottom .sort-bar + .theme-toggle {
+  margin-left: 0;
+}
+
+@media (max-width: 900px) {
+  .page-title-bottom {
+    flex-wrap: wrap;
+  }
+}
+
+/* 7.2 Top menu navigation (links between catalogue pages) */
+.top-menu-nav {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.top-menu-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 96px;
+  width: 96px;
+  padding: 7px 4px;
+  overflow: hidden;
+
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .76rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  color: var(--parchment-dim);
+  background: var(--ink-3);
+  border: 1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
+  border-radius: 8px;
+  transition: border-color .15s, background .15s, color .15s;
+}
+
+.top-menu-link:hover {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 8%, var(--ink-3));
+  color: var(--parchment);
+}
+
+/* Link for the page the user is currently on: filled, not clickable */
+.top-menu-link.current {
+  background: color-mix(in srgb, var(--gold) 85%, var(--ink-2));
+  border-color: var(--gold);
+  color: #ffffff;
+  font-weight: 700;
+  text-shadow: 3px 3px 2px #000;
+  cursor: default;
+  pointer-events: none;
+}
+
+@media (max-width: 900px) {
+  .top-menu-link {
+    flex: 0 0 76px;
+    width: 76px;
+    padding: 5px 4px;
+    font-size: .68rem;
+  }
+}
+
+/* 7.3 Sort bar (shared)
    "SORT BY: [btn] [btn] ..." group that sits inside .page-title-bottom,
    between the item-count heading and the theme toggle. flex:1 lets it take
    the free space and justify-content:center puts it midway between the two.
    Intentionally quieter than .top-menu-link: smaller, thinner, dimmed
    border and text, and only a soft tint (not the solid gold fill) when
-   active. Each page supplies its own buttons via data-sort="<key>" and
-   its own JS; the styling here is page-agnostic. */
-.sort-bar{
-  flex:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  flex-wrap:wrap;
-  gap:6px;
-  min-width:0;
-}
-.sort-bar-label{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--parchment-dim);
-  opacity:.7;
-  margin-right:4px;
-  white-space:nowrap;
-}
-.sort-btn{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.76rem;
-  white-space:nowrap;
-  color:var(--parchment-dim);
-  background:transparent;
-  border:1px solid color-mix(in srgb, var(--parchment-dim) 30%, transparent);
-  border-radius:6px;
-  padding:4px 10px;
-  cursor:pointer;
-  opacity:.8;
-  transition:background .15s, border-color .15s, color .15s, opacity .15s;
-}
-.sort-btn:hover{
-  opacity:1;
-  border-color:color-mix(in srgb, var(--gold) 45%, transparent);
-}
-.sort-btn.active{
-  opacity:1;
-  color:var(--parchment);
-  background:color-mix(in srgb, var(--gold) 22%, transparent);
-  border-color:color-mix(in srgb, var(--gold) 50%, transparent);
-}
-/* Optional: a labelled up/down pair (e.g. "Cost [↑][↓]") inside .sort-bar. */
-.sort-group{
-  display:inline-flex;
-  align-items:center;
-  gap:3px;
-  margin-left:8px;
-}
-.sort-group-label{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.76rem;
-  color:var(--parchment-dim);
-  opacity:.85;
-  margin-right:2px;
-  white-space:nowrap;
-}
-.sort-group .sort-btn{padding:4px 8px;min-width:26px;}
-.page-title-bottom .sort-bar + .theme-toggle{margin-left:0;}
-@media (max-width:900px){
-  .page-title-bottom{flex-wrap:wrap;}
-  .sort-bar{order:3;flex-basis:100%;}
+   active. Each page supplies its own buttons via data-sort="<key>" and its
+   own JS; the styling here is page-agnostic. */
+.sort-bar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
 }
 
-.top-menu-link{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  width:96px;
-  flex:0 0 96px;
-  padding:7px 4px;
-  text-decoration:none;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  color:var(--parchment-dim);
-  font-family:'JetBrains Mono',monospace;
-  font-size:.76rem;
-  font-weight:600;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  background:var(--ink-3);
-  border:1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
-  border-radius:8px;
-  transition:border-color .15s, background .15s, color .15s;
+.sort-bar-label {
+  margin-right: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--parchment-dim);
+  opacity: .7;
 }
-.top-menu-link:hover{
-  border-color:var(--gold);
-  background:color-mix(in srgb, var(--gold) 8%, var(--ink-3));
-  color:var(--parchment);
+
+.sort-btn {
+  padding: 4px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .76rem;
+  white-space: nowrap;
+  color: var(--parchment-dim);
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--parchment-dim) 30%, transparent);
+  border-radius: 6px;
+  opacity: .8;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, opacity .15s;
 }
-.top-menu-link.current{
-  background:color-mix(in srgb, var(--gold) 85%, var(--ink-2));
-  border-color:var(--gold);
-  color:#ffffff;
-  font-weight:700;
-  cursor:default;
-  pointer-events:none;
-  text-shadow:3px 3px 2px #000;
+
+.sort-btn:hover {
+  border-color: color-mix(in srgb, var(--gold) 45%, transparent);
+  opacity: 1;
 }
-@media (max-width:900px){
-  .top-menu-link{
-    width:76px;
-    flex:0 0 76px;
-    padding:5px 4px;
-    font-size:.68rem;
+
+.sort-btn.active {
+  background: color-mix(in srgb, var(--gold) 22%, transparent);
+  border-color: color-mix(in srgb, var(--gold) 50%, transparent);
+  color: var(--parchment);
+  opacity: 1;
+}
+
+/* Optional: a labelled up/down pair (e.g. "Cost [up][down]") inside
+   .sort-bar. */
+.sort-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 8px;
+}
+
+.sort-group-label {
+  margin-right: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .76rem;
+  white-space: nowrap;
+  color: var(--parchment-dim);
+  opacity: .85;
+}
+
+.sort-group .sort-btn {
+  min-width: 26px;
+  padding: 4px 8px;
+}
+
+/* Narrow screens: sort bar drops onto its own full-width row */
+@media (max-width: 900px) {
+  .sort-bar {
+    order: 3;
+    flex-basis: 100%;
   }
 }
 
-/* ---------- "Load More..." / "Show All" pagination controls ----------
-   Sit centered below the list once it's paginated (see paginate() /
-   showMoreButtonHTML() in base.js). Styled to match .top-menu-link above
-   rather than introducing a new button style. */
-.show-more-row{
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  gap:10px;
-  padding:18px 0 4px;
-}
-.show-more-btn{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  width:auto;
-  flex:0 0 auto;
-  padding:7px 16px;
-  text-decoration:none;
-  white-space:nowrap;
-  color:var(--parchment-dim);
-  font-family:'JetBrains Mono',monospace;
-  font-size:.76rem;
-  font-weight:600;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  background:var(--ink-3);
-  border:1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
-  border-radius:8px;
-  cursor:pointer;
-  transition:border-color .15s, background .15s, color .15s;
-}
-.show-more-btn:hover{
-  border-color:var(--gold);
-  background:color-mix(in srgb, var(--gold) 8%, var(--ink-3));
-  color:var(--parchment);
-}
-.show-more-remaining{
-  opacity:.75;
-  font-weight:400;
-  letter-spacing:.02em;
-  text-transform:none;
-}
-@media (max-width:900px){
-  .show-more-row{flex-wrap:wrap;}
-  .show-more-btn{padding:5px 12px; font-size:.68rem;}
-}
-
-/* ---------- Description tables (shared) ----------
-   Rendered by renderDescriptionHtml() in base.js on any page. */
-.desc-table-wrap{
-  overflow-x:auto;
-  margin:0 0 14px;
-  white-space:normal;
-}
-.desc-table{
-  border-collapse:collapse;
-  width:auto;            /* sized by content, not stretched to full width */
-  max-width:100%;
-  font-size:1.02rem;
-}
-.desc-table th,
-.desc-table td{
-  min-width:150px;       /* minimum column width */
-  border:1px solid var(--hairline);
-  padding:6px 12px;
-  text-align:left;
-  vertical-align:top;
-}
-.desc-table th{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.8rem;
-  font-weight:700;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--parchment);
-  background:color-mix(in srgb, var(--cardc,var(--gold)) 35%, var(--ink-2));
-  border-color: color-mix(in srgb, var(--cardc, var(--gold)) 60%, var(--ink-2));
-  white-space:nowrap;
-}
-.desc-table td{
-  color:var(--parchment);
-}
-/* odd rows: same dark tone as the stat boxes (school, casting time, ...) */
-.desc-table tbody tr:nth-child(odd) td{
-  background:var(--ink-2);
-}
-.desc-table tbody tr:nth-child(even) td{
-  background:transparent;
-}
-/* Outer table border: header color, dimmed. Header row excluded. */
-.desc-table{ --table-edge:color-mix(in srgb, var(--cardc,var(--gold)) 60%, var(--ink-2)); }
-.desc-table tbody tr > td:first-child{ border-left-color:var(--table-edge); }
-.desc-table tbody tr > td:last-child{ border-right-color:var(--table-edge); }
-.desc-table tbody tr:last-child > td{ border-bottom-color:var(--table-edge); }
-
-/* ---------- Main / list ---------- */
-.main{
-  padding:10px 20px 80px;
-  width:100%;
-}
-@media (max-width:900px){
-  .main{padding:20px 18px 60px;}
-}
-
-.list{
-  display:flex;
-  flex-direction:column;
-  gap:7px;
-}
-
-.chevron{
-  width:14px;height:14px;
-  flex-shrink:0;
-  opacity:.5;
-  transition:transform .18s;
-}
-
-.stat-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
-  gap:10px;
-  margin-bottom:10px;
-  padding-bottom:0px;
-}
-.stat{
-  display:flex;
-  flex-direction:column;
-  gap:4px;
-  padding:10px 14px;
-  background:var(--ink-2);
-  border-radius:6px;
-}
-.copyable{
-  cursor:copy;
-  transition:background .15s;
-  border-radius:4px;
-}
-.copyable:hover{
-  background:rgba(255,255,255,0.04);
-}
-.copyable.copied{
-  background:rgba(196,162,77,0.18);
-}
-.stat-label{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.82rem;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--gold);
-}
-.stat-value{
-  font-size:1rem;
-  color:var(--parchment);
-}
-
-/* ==========================================================================
-   Shared "entry card" family — the expandable card used by every list page.
-   Markup pattern: shared base class + page hook (+ optional modifiers), e.g.
-     <div class="entry-card entry-card--stats armor-card">
-       <div class="entry-head">…<span class="entry-name armor-name">…</span>
-     </div>
-   The page hooks (.armor-card, .armor-name, …) are what wireCardToggle() /
-   wireCopyableList() in each page's JS look for; page CSS only adds what is
-   genuinely unique to that page.
-   Tunables (override on the card in a page CSS file):
-     --cardc            accent colour (set inline per card by the JS)
-     --entry-head-pad   header padding
-     --entry-sec-mt/pt  gap/padding above each .entry-section
-     --entry-body-pt    body top padding when open
-     --qs-w / --qs-label-size   quick-stat box width / label size
-   Modifiers: --stats (header has quick-stat boxes → tighter header),
-              --tight (denser sections), --statblock (monster/NPC stat block).
-   ========================================================================== */
-.entry-card{
-  background:var(--ink-2);
-  border:1px solid var(--hairline);
-  border-left:5px solid var(--cardc,var(--gold));
-  border-radius:8px;
-  overflow:hidden;
-  transition:border-color .15s;
-}
-.entry-card.open{
-  border-color:var(--cardc,var(--gold));
-  background:color-mix(in srgb, var(--cardc, var(--gold)) 5%, var(--ink-2));
-}
-.entry-card--stats{--entry-head-pad:6px 18px 2px 18px;}
-.entry-card--tight{--entry-sec-mt:5px;--entry-sec-pt:7px;}
-
-.entry-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  padding:var(--entry-head-pad,8px 18px);
-  cursor:pointer;
-}
-.entry-head:hover{background:rgba(255,255,255,0.02);}
-.entry-card.open .entry-head{
-  background:color-mix(in srgb, var(--cardc, var(--gold)) 25%, var(--ink-2));
-}
-.entry-card.open .chevron{transform:rotate(180deg);}
-
-.entry-title-block{
-  display:flex;
-  align-items:baseline;
-  gap:12px;
-  flex-wrap:wrap;
-  min-width:0;
-}
-.entry-name{
-  font-family:'Cinzel',serif;
-  font-weight:600;
-  font-size:1.08rem;
-  color:var(--parchment);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.entry-right{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  flex-shrink:0;
-}
-
-/* Header tags */
-.entry-tag{                      /* coloured category / school / type label */
-  font-family:'JetBrains Mono',monospace;
-  font-size:.76rem;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--cardc,var(--gold));
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.entry-tag--lg{font-size:.86rem;font-weight:700;}
-.entry-meta{                     /* small dim mono text (level, bonus) */
-  font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
-  color:var(--parchment-dim);
-  white-space:nowrap;
-}
-.entry-badge{                    /* dim italic summary text */
-  font-family:'Crimson Pro',serif;
-  font-style:italic;
-  font-size:1rem;
-  color:var(--parchment-dim);
-  white-space:nowrap;
-}
-.entry-badge--responsive{        /* hidden on narrow screens, ellipsised */
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:320px;
-  display:none;
-}
-@media (min-width:640px){.entry-badge--responsive{display:inline-block;}}
-@media (min-width:1100px){.entry-badge--responsive{max-width:460px;}}
-
-/* Header quick-stat boxes (armor, weapon, monster, NPC) */
-.entry-qstats{
-  display:flex;
-  gap:6px;
-}
-.entry-qstat{
-  width:var(--qs-w,56px);
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:0px 1px;
-}
-.entry-qstat-label{
-  font-family:'JetBrains Mono',monospace;
-  font-size:var(--qs-label-size,.65rem);
-  letter-spacing:.04em;
-  text-transform:uppercase;
-  color:var(--parchment-dim);
-  white-space:nowrap;
-}
-.entry-qstat-value{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.95rem;
-  font-weight:700;
-  color:var(--gold);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:100%;
-  text-transform:capitalize;
-}
-
-/* Body */
-.entry-body{
-  display:none;
-  padding:0 18px 20px;
-  border-top:1px solid var(--hairline);
-}
-.entry-card.open .entry-body{
-  display:block;
-  padding-top:var(--entry-body-pt,16px);
-}
-.entry-section{
-  margin-top:var(--entry-sec-mt,10px);
-  padding-top:var(--entry-sec-pt,14px);
-}
-.entry-section-title{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.86rem;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--gold);
-  margin-bottom:8px;
-}
-.entry-desc{
-  font-size:1.1rem;
-  color:var(--parchment-dim);
-  white-space:pre-wrap;
-}
-.entry-desc b{
-  color:var(--parchment);
-  font-weight:600;
-}
-
-/* Monster / NPC stat block (modifier: .entry-card--statblock) */
-.entry-card--statblock .entry-section-title{
-  margin-bottom:4px;
-  border-bottom:1px solid var(--hairline);
-  padding-bottom:2px;
-}
-.statblock-visual{
-  font-family:'Crimson Pro',serif;
-  font-style:italic;
-  font-size:1.1rem;
-  color:var(--parchment-dim);
-  margin:0 0 12px;
-}
-.statblock-head{
-  margin-top:4px;
-  padding:6px 0 4px;
-}
-.statblock-titlerow{
-  display:flex;
-  align-items:baseline;
-  justify-content:space-between;
-  gap:16px;
-  flex-wrap:wrap;
-  font-family:'Cinzel',serif;
-  font-weight:700;
-  color:var(--cardc,var(--gold));
-  border-bottom:2px solid var(--cardc,var(--gold));
-  padding-bottom:4px;
-  margin-bottom:6px;
-}
-.statblock-name{font-size:1.4rem;}
-.statblock-cr{font-size:1.2rem;white-space:nowrap;}
-.statblock-line{
-  font-size:1.08rem;
-  line-height:1.45;
-  color:var(--parchment-dim);
-  margin:2px 0;
-}
-.statblock-line.gap{margin-top:9px;}
-.statblock-line.pre{white-space:pre-wrap;}
-.statblock-line b{
-  color:var(--parchment);
-  font-weight:600;
-}
-.statblock-line sup{
-  font-size:.7em;
-  line-height:0;
-  color:var(--parchment);
-}
-.statblock-copy{padding:2px 4px;}
-
-/* "No results" message (every list page) */
-.empty-state{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  padding:60px 20px;
-  color:var(--parchment-dim);
-  font-family:'Crimson Pro',serif;
-  text-align:center;
-}
-.empty-state .big{
-  font-family:'Cinzel',serif;
-  font-size:1.2rem;
-  color:var(--gold);
-}
-
-/* ---------- Filter helpers ---------- */
-/* Fixed-column chip grid. Markup: class="chip-grid cols-2 [align-left]".
-   Chips are centred by default; .align-left left-aligns long labels. */
-.chip-grid{
-  display:grid;
-  grid-template-columns:repeat(var(--cols,2), 1fr);
-  gap:6px;
-}
-.chip-grid.cols-2{--cols:2;}
-.chip-grid.cols-3{--cols:3;}
-.chip-grid.cols-5{--cols:5;}
-.chip-grid .chip{
-  width:auto;
-  justify-content:center;
-}
-.chip-grid.align-left .chip{justify-content:left;}
-
-/* "Is lower than / equal / greater / between" numeric filter row (CR, HD,
-   rune/item levels…). Pages tune the proportions through two variables. */
-.range-filter-row{
-  --rf-select:42%;
-  --rf-input:60px;
-  display:flex;
-  align-items:center;
-  gap:6px;
-  flex-wrap:nowrap;
-}
-.range-filter-row select.select-filter{
-  flex:0 0 var(--rf-select);
-  min-width:0;
-  padding-left:6px;
-  padding-right:6px;
-}
-.range-input{
-  width:var(--rf-input);
-  flex:0 0 var(--rf-input);
-  min-width:0;
-  background:var(--ink-3);
-  border:1px solid var(--parchment-dim);
-  color:var(--parchment);
-  font-family:'Crimson Pro',serif;
-  font-size:.95rem;
-  padding:9px 4px;
-  border-radius:6px;
-  outline:none;
-  text-align:center;
-  transition:border-color .15s;
-  -moz-appearance:textfield;
-  appearance:textfield;
-}
-.range-input::-webkit-outer-spin-button,
-.range-input::-webkit-inner-spin-button{
-  -webkit-appearance:none;
-  margin:0;
-}
-.range-input:focus{border-color:var(--gold);}
-.range-input[hidden]{display:none;}
-.range-and{
-  flex:0 0 auto;
-  font-family:'JetBrains Mono',monospace;
-  font-size:.78rem;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  color:var(--parchment-dim);
-  white-space:nowrap;
-}
-.range-and[hidden]{display:none;}
-
-/* Hover tooltip used by wireHoverCopyTooltip() (base.js) on any page;
-   the .search-tip variant above overrides it for search help. */
-.hover-tooltip{
-  position:fixed;
-  transform:translate(-50%,-100%);
-  background:var(--dark-gold);
-  color:var(--parchment);
-  padding:6px 10px;
-  border-radius:6px;
-  font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
-  font-weight:700;
-  text-align:center;
-  line-height:1.5;
-  pointer-events:none;
-  box-shadow:0 6px 18px rgba(0,0,0,0.4);
-  opacity:0;
-  transition:opacity .15s, transform .15s;
-  z-index:9999;
-  max-width:240px;
-  white-space:normal;
-}
-.hover-tooltip.show{
-  opacity:1;
-  transform:translate(-50%,-112%);
-}
-.hover-tooltip-value{
-  color:var(--parchment-dim);
-}
-
-/* scrollbar */
-.sidebar::-webkit-scrollbar{width:8px;}
-.sidebar::-webkit-scrollbar-track{background:transparent;}
-.sidebar::-webkit-scrollbar-thumb{
-  background:var(--hairline);
-  border-radius:4px;
-}
-
-/* Floating copied tooltip */
-.copy-tooltip{
-  position:fixed;
-  transform:translate(-50%,-140%);
-  background:var(--dark-gold);
-  color:var(--parchment);
-  padding:6px 10px;
-  border-radius:6px;
-  font-family:'JetBrains Mono',monospace;
-  font-size:.78rem;
-  font-weight:700;
-  pointer-events:none;
-  box-shadow:0 6px 18px rgba(0,0,0,0.4);
-  opacity:0;
-  transition:opacity .18s, transform .18s;
-  z-index:9999;
-}
-.copy-tooltip.show{opacity:1; transform:translate(-50%,-170%);}
-
-/* Search help tooltip — shared across all pages (used by any search box
-   that offers a hover hint, e.g. Monsters search, Prerequisites search). */
-.hover-tooltip.search-tip{
-  position:fixed;
-  transform:translate(-50%,-100%);
-  width:max-content;
-  max-width:min(340px, calc(100vw - 16px));
-  background:var(--ink-3);
-  border:1px solid var(--gold);
-  border-radius:6px;
-  padding:8px 12px;
-  font-family:'JetBrains Mono',monospace;
-  font-size:.74rem;
-  line-height:1.5;
-  color:var(--parchment);
-  text-align:left;
-  white-space:normal;
-  pointer-events:none;
-  box-shadow:0 6px 18px rgba(0,0,0,0.4);
-  opacity:0;
-  transition:opacity .15s;
-  z-index:9999;
-}
-.hover-tooltip.search-tip.below{transform:translate(-50%,0);}
-.hover-tooltip.search-tip.show{opacity:1;}
-.hover-tooltip.search-tip .hover-tooltip-value{
-  margin-top:4px;
-  color:var(--gold);
-  font-weight:700;
-}
-
-/* ---------- Theme toggle wrapper (catalogue-page layout only) ----------
-   Sits inline in the top nav row — inside .top-menu-nav on most pages, or
+/* 7.4 Theme toggle wrapper (catalogue-page layout only)
+   Sits inline in the top nav row: inside .top-menu-nav on most pages, or
    inside .page-title-bottom (next to the item-count heading) on pages
    using that newer wrapper (see Armor Catalogue). Either way the
    button/popup/swatch appearance itself is shared across ALL pages via
-   css/theme-toggle.css — that's the only file to touch for color changes. */
-.theme-toggle{
-  position:relative;
-  flex-shrink:0;
+   theme-toggle.css, which is the only file to touch for color changes. */
+.theme-toggle {
+  position: relative;
+  flex-shrink: 0;
 }
 
-/* ---------- Sidebar art (bottom of left sidebar) ----------
-   Copy of the home page hero image. margin-top:auto pins it to the bottom
-   of the sidebar's flex column when the filters are short; when they are
-   long it simply follows them and scrolls with the sidebar. The image
-   follows the active theme via the same data-theme attribute the rest of
-   the site uses (gold = no attribute). */
-.sidebar-art{
-  position:fixed;
-  left:22px;
-  bottom:20px;
-  width:276px;
-  height:276px;
-  z-index:-1;
-  pointer-events:none;
-  background:url('../pictures/d20.png') center / 100% 100% no-repeat;
-  opacity:.3;
+
+/* ==========================================================================
+   8. Main list + pagination
+   ========================================================================== */
+.main {
+  width: 100%;
+  padding: 10px 20px 80px;
 }
-html[data-theme="blue"]   .sidebar-art{background-image:url('../pictures/d20_blue.png');}
-html[data-theme="orange"] .sidebar-art{background-image:url('../pictures/d20_orange.png');}
-html[data-theme="green"]  .sidebar-art{background-image:url('../pictures/d20_green.png');}
-html[data-theme="red"]    .sidebar-art{background-image:url('../pictures/d20_red.png');}
-@media (max-width:900px){
-  .sidebar-art{display:none;}
+
+@media (max-width: 900px) {
+  .main {
+    padding: 20px 18px 60px;
+  }
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+/* Expand/collapse arrow shared by all card headers */
+.chevron {
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  opacity: .5;
+  transition: transform .18s;
+}
+
+/* "Load More..." / "Show All" controls
+   Centered below the list once it's paginated (see paginate() /
+   showMoreButtonHTML() in base.js). Styled to match .top-menu-link rather
+   than introducing a new button style. */
+.show-more-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 18px 0 4px;
+}
+
+.show-more-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: 6px;
+  width: auto;
+  padding: 7px 16px;
+
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .76rem;
+  font-weight: 600;
+  letter-spacing: .06em;
+  text-decoration: none;
+  text-transform: uppercase;
+  white-space: nowrap;
+
+  color: var(--parchment-dim);
+  background: var(--ink-3);
+  border: 1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
+  border-radius: 8px;
+
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+
+.show-more-btn:hover {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 8%, var(--ink-3));
+  color: var(--parchment);
+}
+
+/* "(N remaining)" suffix inside the button */
+.show-more-remaining {
+  font-weight: 400;
+  letter-spacing: .02em;
+  text-transform: none;
+  opacity: .75;
+}
+
+@media (max-width: 900px) {
+  .show-more-row {
+    flex-wrap: wrap;
+  }
+
+  .show-more-btn {
+    padding: 5px 12px;
+    font-size: .68rem;
+  }
+}
+
+
+/* ==========================================================================
+   9. Stat boxes + copy-to-clipboard
+   --------------------------------------------------------------------------
+   .copyable must stay after .stat: both set border-radius at the same
+   specificity, and the copyable value (4px) is the one that should win.
+   ========================================================================== */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+  padding-bottom: 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  background: var(--ink-2);
+  border-radius: 6px;
+}
+
+.stat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .82rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.stat-value {
+  font-size: 1rem;
+  color: var(--parchment);
+}
+
+/* Click-to-copy elements; .copied is toggled briefly by the page JS */
+.copyable {
+  border-radius: 4px;
+  cursor: copy;
+  transition: background .15s;
+}
+
+.copyable:hover {
+  background: rgba(255, 255, 255, .04);
+}
+
+.copyable.copied {
+  background: rgba(196, 162, 77, .18);
+}
+
+
+/* ==========================================================================
+   10. Entry card family
+   --------------------------------------------------------------------------
+   The expandable card used by every list page.
+   Markup pattern: shared base class + page hook (+ optional modifiers), e.g.
+     <div class="entry-card entry-card--stats armor-card">
+       <div class="entry-head">...<span class="entry-name armor-name">...</span>
+     </div>
+   The page hooks (.armor-card, .armor-name, ...) are what wireCardToggle() /
+   wireCopyableList() in each page's JS look for; page CSS only adds what is
+   genuinely unique to that page.
+
+   Tunables (override on the card in a page CSS file):
+     --cardc                    accent color (set inline per card by the JS)
+     --entry-head-pad           header padding
+     --entry-sec-mt / -sec-pt   gap / padding above each .entry-section
+     --entry-body-pt            body top padding when open
+     --qs-w / --qs-label-size   quick-stat box width / label size
+
+   Modifiers:
+     --stats      header has quick-stat boxes (tighter header)
+     --tight      denser sections
+     --statblock  monster / NPC stat block
+   ========================================================================== */
+
+/* 10.1 Card shell + header */
+.entry-card {
+  background: var(--ink-2);
+  border: 1px solid var(--hairline);
+  border-left: 5px solid var(--cardc, var(--gold));
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color .15s;
+}
+
+.entry-card.open {
+  background: color-mix(in srgb, var(--cardc, var(--gold)) 5%, var(--ink-2));
+  border-color: var(--cardc, var(--gold));
+}
+
+.entry-card--stats {
+  --entry-head-pad: 6px 18px 2px 18px;
+}
+
+.entry-card--tight {
+  --entry-sec-mt: 5px;
+  --entry-sec-pt: 7px;
+}
+
+.entry-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: var(--entry-head-pad, 8px 18px);
+  cursor: pointer;
+}
+
+.entry-head:hover {
+  background: rgba(255, 255, 255, .02);
+}
+
+.entry-card.open .entry-head {
+  background: color-mix(in srgb, var(--cardc, var(--gold)) 25%, var(--ink-2));
+}
+
+.entry-card.open .chevron {
+  transform: rotate(180deg);
+}
+
+.entry-title-block {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
+}
+
+.entry-name {
+  overflow: hidden;
+  font-family: 'Cinzel', serif;
+  font-size: 1.08rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--parchment);
+}
+
+.entry-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 14px;
+}
+
+/* 10.2 Header tags */
+
+/* Colored category / school / type label */
+.entry-tag {
+  overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .76rem;
+  letter-spacing: .08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--cardc, var(--gold));
+}
+
+.entry-tag--lg {
+  font-size: .86rem;
+  font-weight: 700;
+}
+
+/* Small dim mono text (level, bonus) */
+.entry-meta {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  white-space: nowrap;
+  color: var(--parchment-dim);
+}
+
+/* Dim italic summary text */
+.entry-badge {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  font-style: italic;
+  white-space: nowrap;
+  color: var(--parchment-dim);
+}
+
+/* Responsive badge: hidden on narrow screens, ellipsised when shown */
+.entry-badge--responsive {
+  display: none;
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@media (min-width: 640px) {
+  .entry-badge--responsive {
+    display: inline-block;
+  }
+}
+
+@media (min-width: 1100px) {
+  .entry-badge--responsive {
+    max-width: 460px;
+  }
+}
+
+/* 10.3 Header quick-stats (armor, weapon, monster, NPC) */
+.entry-qstats {
+  display: flex;
+  gap: 6px;
+}
+
+.entry-qstat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0 1px;
+  width: var(--qs-w, 56px);
+}
+
+.entry-qstat-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: var(--qs-label-size, .65rem);
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--parchment-dim);
+}
+
+.entry-qstat-value {
+  max-width: 100%;
+  overflow: hidden;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .95rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  text-transform: capitalize;
+  white-space: nowrap;
+  color: var(--gold);
+}
+
+/* 10.4 Body (collapsed until the card is open) */
+.entry-body {
+  display: none;
+  padding: 0 18px 20px;
+  border-top: 1px solid var(--hairline);
+}
+
+.entry-card.open .entry-body {
+  display: block;
+  padding-top: var(--entry-body-pt, 16px);
+}
+
+.entry-section {
+  margin-top: var(--entry-sec-mt, 10px);
+  padding-top: var(--entry-sec-pt, 14px);
+}
+
+.entry-section-title {
+  margin-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .86rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.entry-desc {
+  font-size: 1.1rem;
+  white-space: pre-wrap;
+  color: var(--parchment-dim);
+}
+
+.entry-desc b {
+  font-weight: 600;
+  color: var(--parchment);
+}
+
+/* 10.5 Monster / NPC stat block (modifier: .entry-card--statblock) */
+.entry-card--statblock .entry-section-title {
+  margin-bottom: 4px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.statblock-visual {
+  margin: 0 0 12px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--parchment-dim);
+}
+
+.statblock-head {
+  margin-top: 4px;
+  padding: 6px 0 4px;
+}
+
+.statblock-titlerow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 6px;
+  padding-bottom: 4px;
+  font-family: 'Cinzel', serif;
+  font-weight: 700;
+  color: var(--cardc, var(--gold));
+  border-bottom: 2px solid var(--cardc, var(--gold));
+}
+
+.statblock-name {
+  font-size: 1.4rem;
+}
+
+.statblock-cr {
+  font-size: 1.2rem;
+  white-space: nowrap;
+}
+
+.statblock-line {
+  margin: 2px 0;
+  font-size: 1.08rem;
+  line-height: 1.45;
+  color: var(--parchment-dim);
+}
+
+.statblock-line.gap {
+  margin-top: 9px;
+}
+
+.statblock-line.pre {
+  white-space: pre-wrap;
+}
+
+.statblock-line b {
+  font-weight: 600;
+  color: var(--parchment);
+}
+
+.statblock-line sup {
+  font-size: .7em;
+  line-height: 0;
+  color: var(--parchment);
+}
+
+.statblock-copy {
+  padding: 2px 4px;
+}
+
+
+/* ==========================================================================
+   11. Description tables
+   --------------------------------------------------------------------------
+   Shared. Rendered by renderDescriptionHtml() in base.js on any page.
+   Header and outer border are tinted with the card color (--cardc).
+   ========================================================================== */
+.desc-table-wrap {
+  margin: 0 0 14px;
+  overflow-x: auto;
+  white-space: normal;
+}
+
+.desc-table {
+  --table-edge: color-mix(in srgb, var(--cardc, var(--gold)) 60%, var(--ink-2));
+
+  width: auto;      /* sized by content, not stretched to full width */
+  max-width: 100%;
+  border-collapse: collapse;
+  font-size: 1.02rem;
+}
+
+.desc-table th,
+.desc-table td {
+  min-width: 150px; /* minimum column width */
+  padding: 6px 12px;
+  text-align: left;
+  vertical-align: top;
+  border: 1px solid var(--hairline);
+}
+
+.desc-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--parchment);
+  background: color-mix(in srgb, var(--cardc, var(--gold)) 35%, var(--ink-2));
+  border-color: color-mix(in srgb, var(--cardc, var(--gold)) 60%, var(--ink-2));
+}
+
+.desc-table td {
+  color: var(--parchment);
+}
+
+/* Odd rows: same dark tone as the stat boxes (school, casting time, ...) */
+.desc-table tbody tr:nth-child(odd) td {
+  background: var(--ink-2);
+}
+
+.desc-table tbody tr:nth-child(even) td {
+  background: transparent;
+}
+
+/* Outer table border: header color, dimmed. Header row excluded. */
+.desc-table tbody tr > td:first-child {
+  border-left-color: var(--table-edge);
+}
+
+.desc-table tbody tr > td:last-child {
+  border-right-color: var(--table-edge);
+}
+
+.desc-table tbody tr:last-child > td {
+  border-bottom-color: var(--table-edge);
+}
+
+
+/* ==========================================================================
+   12. Empty state
+   --------------------------------------------------------------------------
+   "No results" message (every list page).
+   ========================================================================== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 60px 20px;
+  font-family: 'Crimson Pro', serif;
+  text-align: center;
+  color: var(--parchment-dim);
+}
+
+.empty-state .big {
+  font-family: 'Cinzel', serif;
+  font-size: 1.2rem;
+  color: var(--gold);
+}
+
+
+/* ==========================================================================
+   13. Tooltips
+   ========================================================================== */
+
+/* 13.1 Hover tooltip: used by wireHoverCopyTooltip() (base.js) on any page.
+   The .search-tip variant (13.3) overrides it for search help. */
+.hover-tooltip {
+  position: fixed;
+  z-index: 9999;
+  max-width: 240px;
+  padding: 6px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  white-space: normal;
+  color: var(--parchment);
+  background: var(--dark-gold);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .4);
+  opacity: 0;
+  transform: translate(-50%, -100%);
+  transition: opacity .15s, transform .15s;
+  pointer-events: none;
+}
+
+.hover-tooltip.show {
+  opacity: 1;
+  transform: translate(-50%, -112%);
+}
+
+.hover-tooltip-value {
+  color: var(--parchment-dim);
+}
+
+/* 13.2 Floating "copied" tooltip */
+.copy-tooltip {
+  position: fixed;
+  z-index: 9999;
+  padding: 6px 10px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--parchment);
+  background: var(--dark-gold);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .4);
+  opacity: 0;
+  transform: translate(-50%, -140%);
+  transition: opacity .18s, transform .18s;
+  pointer-events: none;
+}
+
+.copy-tooltip.show {
+  opacity: 1;
+  transform: translate(-50%, -170%);
+}
+
+/* 13.3 Search help tooltip
+   Shared across all pages (used by any search box that offers a hover hint,
+   e.g. Monsters search, Prerequisites search). Add .below to show it under
+   the target instead of above. */
+.hover-tooltip.search-tip {
+  position: fixed;
+  z-index: 9999;
+  width: max-content;
+  max-width: min(340px, calc(100vw - 16px));
+  padding: 8px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .74rem;
+  line-height: 1.5;
+  text-align: left;
+  white-space: normal;
+  color: var(--parchment);
+  background: var(--ink-3);
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .4);
+  opacity: 0;
+  transform: translate(-50%, -100%);
+  transition: opacity .15s;
+  pointer-events: none;
+}
+
+.hover-tooltip.search-tip.below {
+  transform: translate(-50%, 0);
+}
+
+.hover-tooltip.search-tip.show {
+  opacity: 1;
+}
+
+.hover-tooltip.search-tip .hover-tooltip-value {
+  margin-top: 4px;
+  font-weight: 700;
+  color: var(--gold);
 }

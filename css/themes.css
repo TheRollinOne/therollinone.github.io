@@ -1,62 +1,102 @@
-/* ===== Blue theme ===== */
-/* Applied when <html data-theme="blue">. Overrides the default palette
-   defined in base.css's :root — every component already references
-   var(--ink), var(--gold), etc., so no other CSS needs to change. */
-[data-theme="blue"]{
-  --ink:#0a0e18;
-  --ink-2:#131a2b;
-  --ink-3:#1b2438;
-  --parchment:#e9f0fb;
-  --parchment-dim:#c3d2e8;
-  --hairline:#2c3a55;
-  --gold:#4f9dde;
-  --dark-gold:#3d7fb8;
+/* ==========================================================================
+   themes.css: Color themes
+   --------------------------------------------------------------------------
+   Each theme is applied when <html data-theme="...">. It overrides the
+   default (gold) palette defined in base.css's :root. Every component
+   already references var(--ink), var(--gold), etc., so no other CSS needs
+   to change.
+
+   Contents
+     1. Blue
+     2. Green
+     3. Orange
+     4. Red
+     5. Parchment
+
+   Palette roles (same eight tokens in every theme)
+     --ink, --ink-2, --ink-3     surfaces, darkest to lightest
+     --parchment, --parchment-dim  primary / secondary text
+     --hairline                  borders and dividers
+     --gold, --dark-gold         accent and its darker variant
+
+   Adding a theme
+     1. Add a block below defining all eight tokens.
+     2. Add its swatch rule in theme-toggle.css.
+     3. Add the matching option in includes/theme-toggle.html.
+     4. (Optional) add a sidebar-art image rule in base.css.
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. Blue
+   ========================================================================== */
+[data-theme="blue"] {
+  --ink:           #0a0e18;
+  --ink-2:         #131a2b;
+  --ink-3:         #1b2438;
+  --parchment:     #e9f0fb;
+  --parchment-dim: #c3d2e8;
+  --hairline:      #2c3a55;
+  --gold:          #4f9dde;
+  --dark-gold:     #3d7fb8;
 }
 
-/* ===== Green theme ===== */
-[data-theme="green"]{
-  --ink:#091311;
-  --ink-2:#101e19;
-  --ink-3:#182a22;
-  --parchment:#e9f7ee;
-  --parchment-dim:#c2dfcb;
-  --hairline:#294238;
-  --gold:#5cd486;
-  --dark-gold:#4caf6e;
+
+/* ==========================================================================
+   2. Green
+   ========================================================================== */
+[data-theme="green"] {
+  --ink:           #091311;
+  --ink-2:         #101e19;
+  --ink-3:         #182a22;
+  --parchment:     #e9f7ee;
+  --parchment-dim: #c2dfcb;
+  --hairline:      #294238;
+  --gold:          #5cd486;
+  --dark-gold:     #4caf6e;
 }
 
-/* ===== Orange theme ===== */
-[data-theme="orange"]{
-  --ink:#120c18;
-  --ink-2:#1c1224;
-  --ink-3:#28192f;
-  --parchment:#fbeee2;
-  --parchment-dim:#e8cdb5;
-  --hairline:#45304d;
-  --gold:#f18d35;
-  --dark-gold:#ce7629;
+
+/* ==========================================================================
+   3. Orange
+   ========================================================================== */
+[data-theme="orange"] {
+  --ink:           #120c18;
+  --ink-2:         #1c1224;
+  --ink-3:         #28192f;
+  --parchment:     #fbeee2;
+  --parchment-dim: #e8cdb5;
+  --hairline:      #45304d;
+  --gold:          #f18d35;
+  --dark-gold:     #ce7629;
 }
 
-/* ===== Red theme ===== */
-[data-theme="red"]{
-  --ink:#180b0d;
-  --ink-2:#1d090bea;
-  --ink-3:#33171b;
-  --parchment:#eee0d4;
-  --parchment-dim:#dbcfca;
-  --hairline:#4a282d;
-  --gold:#df3636;
-  --dark-gold:#963737;
+
+/* ==========================================================================
+   4. Red
+   ========================================================================== */
+[data-theme="red"] {
+  --ink:           #180b0d;
+  --ink-2:         #1d090bea; /* 8-digit hex: slightly translucent (alpha ea) */
+  --ink-3:         #33171b;
+  --parchment:     #eee0d4;
+  --parchment-dim: #dbcfca;
+  --hairline:      #4a282d;
+  --gold:          #df3636;
+  --dark-gold:     #963737;
 }
 
-/* ===== Parchment theme ===== */
-[data-theme="parchment"]{
-  --ink:#271e0d;
-  --ink-2:#1f180a;
-  --ink-3:#55411c73;
-  --parchment:#e7c59d;
+
+/* ==========================================================================
+   5. Parchment
+   ========================================================================== */
+[data-theme="parchment"] {
+  --ink:           #271e0d;
+  --ink-2:         #1f180a;
+  --ink-3:         #55411c73; /* 8-digit hex: translucent (alpha 73) */
+  --parchment:     #e7c59d;
   --parchment-dim: #f1d7b8;
-  --hairline:#79694f;
-  --gold:#d6be90;
-  --dark-gold:#aa956f;
+  --hairline:      #79694f;
+  --gold:          #d6be90;
+  --dark-gold:     #aa956f;
 }

@@ -1,188 +1,267 @@
-/* Slot chip colors: same 9-color palette, same order, as feats.css's
-   category colors (--cat-*). Slot labels are assigned to these in JS,
-   cycling back to the start once all 9 are used. */
+/* ==========================================================================
+   magic_items.css: Magic Item page
+   --------------------------------------------------------------------------
+   Only what differs from the shared styles in base.css.
 
-/* Slot: fixed 2-column grid, color-coded like feat categories. */
-.slot-chip-row{
-  display:grid;
-  grid-template-columns:repeat(2, 1fr);
-  gap:6px;
-}
-.slot-chip-row .chip{
-  width:auto;
-  justify-content:left;
+   Contents
+     1. Slot filter chips
+     2. Price range filter
+     3. Stat / construction lines
+     4. Item card
+        4.1 Card shell
+        4.2 Header
+        4.3 Body
+        4.4 Open state
+     5. Item sections
+     6. Empty state
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. Slot filter chips
+   --------------------------------------------------------------------------
+   Fixed 2-column grid, color-coded like the feat categories. The palette is
+   the same 9 colors, in the same order, as the feats category colors
+   (--cat-*). Slot labels are assigned to them in JS, cycling back to the
+   start once all 9 are used.
+   ========================================================================== */
+.slot-chip-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
 }
 
-/* Price: operator select + up to two numeric inputs, same shape as the
-   Monsters page's CR/HD range filters (see monsters.css). */
-.range-filter-row{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  flex-wrap:nowrap;
+.slot-chip-row .chip {
+  width: auto;
+  justify-content: left;
 }
-.range-filter-row select.select-filter{
-  flex:0 0 50%;
-  width:40%;
-  min-width:0;
-  padding-left:6px;
-  padding-right:6px;
+
+
+/* ==========================================================================
+   2. Price range filter
+   --------------------------------------------------------------------------
+   Operator select + up to two numeric inputs. Same shape as the Monsters
+   page's CR/HD range filters (see monsters.css).
+   ========================================================================== */
+.range-filter-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
 }
-.range-input{
-  width:48px;
-  flex:0 0 48px;
-  min-width:0;
-  background:var(--ink-3);
-  border:1px solid var(--parchment-dim);
-  color:var(--parchment);
-  font-family:'Crimson Pro',serif;
-  font-size:.95rem;
-  padding:9px 4px;
-  border-radius:6px;
-  outline:none;
-  text-align:center;
-  transition:border-color .15s;
-  -moz-appearance:textfield;
-  appearance:textfield;
+
+.range-filter-row select.select-filter {
+  flex: 0 0 50%;
+  width: 40%;
+  min-width: 0;
+  padding-left: 6px;
+  padding-right: 6px;
 }
+
+/* Numeric input (centered, spinner arrows removed) */
+.range-input {
+  flex: 0 0 48px;
+  width: 48px;
+  min-width: 0;
+  padding: 9px 4px;
+  font-family: 'Crimson Pro', serif;
+  font-size: .95rem;
+  text-align: center;
+  color: var(--parchment);
+  background: var(--ink-3);
+  border: 1px solid var(--parchment-dim);
+  border-radius: 6px;
+  outline: none;
+  transition: border-color .15s;
+  -moz-appearance: textfield;
+          appearance: textfield;
+}
+
 .range-input::-webkit-outer-spin-button,
-.range-input::-webkit-inner-spin-button{
-  -webkit-appearance:none;
-  margin:0;
+.range-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
-.range-input:focus{border-color:var(--gold);}
-.range-input[hidden]{display:none;}
-.range-and{
-  flex:0 0 auto;
-  font-family:'JetBrains Mono',monospace;
-  font-size:.78rem;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  color:var(--parchment-dim);
-  white-space:nowrap;
-}
-.range-and[hidden]{display:none;}
 
-/* Stat / construction line labels (Aura, CL, Slot, Weight, Requirements,
-   Cost, Made From, Destruction, intelligent-item stats): bold + card color,
-   same look as the rune cards' .rune-meta-line b. The extra selector beats
-   base.css's ".entry-desc b" (parchment) regardless of load order. */
+.range-input:focus {
+  border-color: var(--gold);
+}
+
+.range-input[hidden] {
+  display: none;
+}
+
+/* "and" label between the two inputs (used by the "between" operator) */
+.range-and {
+  flex: 0 0 auto;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .78rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--parchment-dim);
+}
+
+.range-and[hidden] {
+  display: none;
+}
+
+
+/* ==========================================================================
+   3. Stat / construction lines
+   --------------------------------------------------------------------------
+   Labels (Aura, CL, Slot, Weight, Requirements, Cost, Made From,
+   Destruction, intelligent-item stats): bold + card color, same look as the
+   rune cards' .rune-meta-line b. The extra selector beats base.css's
+   ".entry-desc b" (parchment) regardless of load order.
+   ========================================================================== */
 .item-stats-line b,
-.entry-desc.item-stats-line b{
-  color:var(--cardc,var(--gold));
-  font-weight:600;
+.entry-desc.item-stats-line b {
+  color: var(--cardc, var(--gold));
+  font-weight: 600;
 }
 
-.item-card{
-  background:var(--ink-2);
-  border:1px solid var(--hairline);
-  border-left:5px solid var(--cardc,var(--gold));
-  border-radius:8px;
-  overflow:hidden;
-  transition:border-color .15s;
-}
-.item-card.open{
-  border-color:var(--cardc,var(--gold));
+
+/* ==========================================================================
+   4. Item card
+   ========================================================================== */
+
+/* 4.1 Card shell: accent bar on the left, colored by --cardc */
+.item-card {
+  background: var(--ink-2);
+  border: 1px solid var(--hairline);
+  border-left: 5px solid var(--cardc, var(--gold));
+  border-radius: 8px;
+  overflow: hidden;
+  transition: border-color .15s;
 }
 
-.item-head{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:16px;
-  padding:8px 18px;
-  cursor:pointer;
-}
-.item-head:hover{background:rgba(255,255,255,0.02);}
-
-.item-title-block{
-  display:flex;
-  align-items:baseline;
-  gap:12px;
-  flex-wrap:wrap;
-  min-width:0;
-}
-.item-name{
-  font-family:'Cinzel',serif;
-  font-weight:600;
-  font-size:1.08rem;
-  color:var(--parchment);
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-}
-.item-category-tag{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.76rem;
-  letter-spacing:.08em;
-  text-transform:uppercase;
-  color:var(--cardc,var(--gold));
-  white-space:nowrap;
+/* 4.2 Header (always visible, click to expand) */
+.item-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 18px;
+  cursor: pointer;
 }
 
-.item-right{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  flex-shrink:0;
-}
-.item-badge{
-  font-family:'Crimson Pro',serif;
-  font-style:italic;
-  font-size:1rem;
-  color:var(--parchment-dim);
-  white-space:nowrap;
+.item-head:hover {
+  background: rgba(255, 255, 255, .02);
 }
 
-.item-card.open .chevron{transform:rotate(180deg);}
-
-.item-body{
-  display:none;
-  padding:0 18px 20px;
-  border-top:1px solid var(--hairline);
-}
-.item-card.open{
-  background:color-mix(in srgb, var(--cardc, var(--gold)) 5%, var(--ink-2));
-}
-.item-card.open .item-body{
-  display:block;
-  padding-top:16px;
-}
-.item-card.open .item-head{
-  background:color-mix(in srgb, var(--cardc, var(--gold)) 25%, var(--ink-2));
+.item-title-block {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 12px;
+  min-width: 0;
 }
 
-.item-section{
-  margin-top:10px;
-  padding-top:14px;
-}
-.item-section-title{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.86rem;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--gold);
-  margin-bottom:8px;
-}
-.item-desc{
-  font-size:1.1rem;
-  color:var(--parchment-dim);
-  white-space:pre-wrap;
+.item-name {
+  overflow: hidden;
+  font-family: 'Cinzel', serif;
+  font-size: 1.08rem;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  color: var(--parchment);
 }
 
-.empty-state{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  padding:60px 20px;
-  color:var(--parchment-dim);
-  font-family:'Crimson Pro',serif;
-  text-align:center;
+.item-category-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .76rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--cardc, var(--gold));
 }
-.empty-state .big{
-  font-family:'Cinzel',serif;
-  font-size:1.2rem;
-  color:var(--gold);
+
+.item-right {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 14px;
+}
+
+.item-badge {
+  font-family: 'Crimson Pro', serif;
+  font-size: 1rem;
+  font-style: italic;
+  white-space: nowrap;
+  color: var(--parchment-dim);
+}
+
+/* 4.3 Body (collapsed by default) */
+.item-body {
+  display: none;
+  padding: 0 18px 20px;
+  border-top: 1px solid var(--hairline);
+}
+
+/* 4.4 Open state */
+.item-card.open {
+  background: color-mix(in srgb, var(--cardc, var(--gold)) 5%, var(--ink-2));
+  border-color: var(--cardc, var(--gold));
+}
+
+.item-card.open .item-head {
+  background: color-mix(in srgb, var(--cardc, var(--gold)) 25%, var(--ink-2));
+}
+
+.item-card.open .chevron {
+  transform: rotate(180deg);
+}
+
+.item-card.open .item-body {
+  display: block;
+  padding-top: 16px;
+}
+
+
+/* ==========================================================================
+   5. Item sections
+   ========================================================================== */
+.item-section {
+  margin-top: 10px;
+  padding-top: 14px;
+}
+
+.item-section-title {
+  margin-bottom: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .86rem;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.item-desc {
+  font-size: 1.1rem;
+  white-space: pre-wrap; /* preserve line breaks from the data */
+  color: var(--parchment-dim);
+}
+
+
+/* ==========================================================================
+   6. Empty state
+   --------------------------------------------------------------------------
+   Shown when no items match the current filters.
+   ========================================================================== */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 60px 20px;
+  font-family: 'Crimson Pro', serif;
+  text-align: center;
+  color: var(--parchment-dim);
+}
+
+.empty-state .big {
+  font-family: 'Cinzel', serif;
+  font-size: 1.2rem;
+  color: var(--gold);
 }

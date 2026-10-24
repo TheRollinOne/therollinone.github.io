@@ -1,14 +1,27 @@
-/* Rune page — only what differs from the shared styles in base.css */
-.rune-meta-line{
-  font-size:1.05rem;
-  color:var(--parchment-dim);
-  margin:0 0 4px;
+/* ==========================================================================
+   runes.css: Rune page
+   --------------------------------------------------------------------------
+   Only what differs from the shared styles in base.css.
+
+   Contents
+     1. Card meta lines
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. Card meta lines
+   --------------------------------------------------------------------------
+   Labels (<b>) are bold and take the card's accent color (--cardc),
+   falling back to gold when no card color is set.
+   ========================================================================== */
+.rune-meta-line {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+  color: var(--parchment-dim);
 }
-.rune-meta-line b{
-  color:var(--cardc,var(--gold));
-  font-weight:600;
-}
-.rune-craft-line b{
-  color:var(--cardc,var(--gold));
-  font-weight:600;
+
+.rune-meta-line b,
+.rune-craft-line b {
+  color: var(--cardc, var(--gold));
+  font-weight: 600;
 }

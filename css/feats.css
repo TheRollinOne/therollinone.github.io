@@ -1,54 +1,95 @@
-/* Feat page — only what differs from the shared styles in base.css */
+/* ==========================================================================
+   feats.css: Feat page
+   --------------------------------------------------------------------------
+   Only what differs from the shared styles in base.css.
 
-/* Prerequisites search box (smaller variant of .search-wrap) */
-.search-wrap-sm{
-  width:97%;
-}
-.search-wrap-sm input{
-  font-size:.88rem;
-  padding:8px 12px 8px 32px;
-}
-.search-wrap-sm .search-icon{
-  left:10px;
-  width:14px;
-  height:14px;
-}
-.search-wrap-sm .search-clear-icon{
-  right:10px;
-  width:14px;
-  height:14px;
-}
-.search-wrap-sm.has-query input{padding-right:30px;}
+   Contents
+     1. Prerequisites search box
+     2. Prerequisite divider
+     3. Class feature filter row
+     4. Feat text (flavor + description)
+   ========================================================================== */
 
-.prereq-divider{
-  height:2px;
+
+/* ==========================================================================
+   1. Prerequisites search box
+   --------------------------------------------------------------------------
+   Smaller variant of the shared .search-wrap.
+   ========================================================================== */
+.search-wrap-sm {
+  width: 97%;
 }
 
-.class-feature-row{
-  display:flex;
-  align-items:center;
-  gap:10px;
-}
-.class-feature-label{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.78rem;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-  color:var(--parchment-dim);
-  white-space:nowrap;
-  flex-shrink:0;
-}
-.class-feature-row select.select-filter{
-  flex:1;
-  width:auto;
-  min-width:0;
+.search-wrap-sm input {
+  padding: 8px 12px 8px 32px;
+  font-size: .88rem;
 }
 
-.feat-flavor{
-  font-family:'Crimson Pro',serif;
-  font-style:italic;
-  font-size:1.1rem;
-  color:var(--parchment-dim);
-  margin:0 0 12px;
+.search-wrap-sm .search-icon {
+  left: 10px;
+  width: 14px;
+  height: 14px;
 }
-.feat-desc p{margin:0 0 12px;}
+
+.search-wrap-sm .search-clear-icon {
+  right: 10px;
+  width: 14px;
+  height: 14px;
+}
+
+/* Leave room for the clear icon while a query is typed */
+.search-wrap-sm.has-query input {
+  padding-right: 30px;
+}
+
+
+/* ==========================================================================
+   2. Prerequisite divider
+   ========================================================================== */
+.prereq-divider {
+  height: 2px;
+}
+
+
+/* ==========================================================================
+   3. Class feature filter row
+   --------------------------------------------------------------------------
+   Fixed-width label on the left, select filling the remaining space.
+   ========================================================================== */
+.class-feature-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.class-feature-label {
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .78rem;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--parchment-dim);
+}
+
+.class-feature-row select.select-filter {
+  flex: 1;
+  width: auto;
+  min-width: 0;
+}
+
+
+/* ==========================================================================
+   4. Feat text (flavor + description)
+   ========================================================================== */
+.feat-flavor {
+  margin: 0 0 12px;
+  font-family: 'Crimson Pro', serif;
+  font-size: 1.1rem;
+  font-style: italic;
+  color: var(--parchment-dim);
+}
+
+.feat-desc p {
+  margin: 0 0 12px;
+}

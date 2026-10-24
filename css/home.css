@@ -1,240 +1,374 @@
-:root{
---ink:#0e1018;
---ink-2:#171925;
---ink-3:#202334;
---parchment:#f3eedf;
---parchment-dim:#e0d8bf;
---hairline:#36394d;
---gold:#d3ac43;
---dark-gold:#b69028;
---impact:1.7s; /* moment the title punches in; title, buttons, glow, ring and shake all use it */
-}
-*{box-sizing:border-box;}
-html,body{margin:0;padding:0;}
-body{
-  background:var(--ink);
-  color:var(--parchment);
-  font-family:'Crimson Pro',serif;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  padding:0px 24px 24px 24px;
-}
-::selection{background:var(--gold);color:var(--ink);}
+/* ==========================================================================
+   home.css: Home page
+   --------------------------------------------------------------------------
+   Contents
+     1. Design tokens
+     2. Base / reset
+     3. Theme toggle (layout only)
+     4. Hero container
+     5. Hero image (logo + radial reveal)
+     6. Hero title (punch-in + glow)
+     7. Impact effects (shockwave ring + screen shake)
+     8. Navigation buttons
+     9. Responsive
+    10. Reduced motion (keep LAST)
 
-/* ---------- Theme toggle wrapper (home-page layout only) ----------
-   Floats top-right over the hero image. The button/popup/swatch
-   appearance itself is shared across ALL pages via css/theme-toggle.css —
-   that's the only file to touch for color changes. */
-.theme-toggle{
-  position:fixed;
-  top:16px;
-  right:16px;
-  z-index:3;
-}
+   Animation timeline
+     0s ........ 2s   logo reveals from the outer edges toward the center
+     --impact         title punches in, buttons flash, glow + ring + shake fire
+   ========================================================================== */
 
-.hero{
-  position:relative;
-  width:1000px;
-  height:1000px;
-  max-width:100%;
-  min-width:1000px;
-}
-.hero-image{
-  position:absolute;
-  top:0px;
-  left:40px;
-  right:40px;
-  bottom:0;
-  background-image:url('../pictures/d20.png');
-  background-size:100% 100%; /* stretch to fill the fixed 800x600 box */
-  background-repeat:no-repeat;
-  overflow:hidden;
 
-  /* Reveal: the logo starts fully invisible, then fades in from the outer
-     borders toward the center. A radial mask whose "hole" (the still-hidden
-     part) shrinks from the corners down to nothing. --hero-hole is a
-     registered property so the browser can animate it smoothly. */
-  --hero-hole:100%;
-  --hero-soft:30%; /* softness of the reveal edge */
-  -webkit-mask-image:radial-gradient(circle farthest-corner at 50% 50%, transparent var(--hero-hole), #000 calc(var(--hero-hole) + var(--hero-soft)));
-          mask-image:radial-gradient(circle farthest-corner at 50% 50%, transparent var(--hero-hole), #000 calc(var(--hero-hole) + var(--hero-soft)));
-  animation:hero-reveal 2.5s ease-in-out 0s forwards;
+/* ==========================================================================
+   1. Design tokens
+   ========================================================================== */
+:root {
+  /* Surfaces */
+  --ink:           #0e1018;
+  --ink-2:         #171925;
+  --ink-3:         #202334;
+
+  /* Text */
+  --parchment:     #f3eedf;
+  --parchment-dim: #e0d8bf;
+
+  /* Lines & accents */
+  --hairline:      #36394d;
+  --gold:          #d3ac43;
+  --dark-gold:     #b69028;
+
+  /* Timing: the moment the title punches in. The title, buttons, glow,
+     ring and shake all start at this delay. */
+  --impact: 1.2s;
 }
 
-@property --hero-hole{
-  syntax:'<percentage>';
-  inherits:false;
-  initial-value:100%;
+
+/* ==========================================================================
+   2. Base / reset
+   ========================================================================== */
+* {
+  box-sizing: border-box;
 }
 
-@keyframes hero-reveal{
-  from{--hero-hole:100%;}
-  to{--hero-hole:-30%;} /* = minus --hero-soft, so the center ends fully visible */
+html,
+body {
+  margin: 0;
+  padding: 0;
 }
 
-.hero-title{
-  position:absolute;
-  top:0px;
-  left:40px;
-  right:40px;
-  bottom:0;
-  background-image:url('../pictures/d20_title.png');
-  background-repeat:no-repeat;
-  background-size:100% 100%;
-  pointer-events:none;
+body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 0 24px 24px;
+  background: var(--ink);
+  color: var(--parchment);
+  font-family: 'Crimson Pro', serif;
+}
 
-  opacity:0;
-  /* Starts at --impact (1.7s). The logo reveal ends at 2.5s, so that is 0.8s
-     before the end; for exactly 0.5s before, set --impact to 2s in :root. */
+::selection {
+  background: var(--gold);
+  color: var(--ink);
+}
+
+
+/* ==========================================================================
+   3. Theme toggle (home-page layout only)
+   --------------------------------------------------------------------------
+   Floats top-right over the hero image. The button/popup/swatch appearance
+   is shared across ALL pages via css/theme-toggle.css, which is the only
+   file to touch for color changes.
+   ========================================================================== */
+.theme-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 3;
+}
+
+
+/* ==========================================================================
+   4. Hero container
+   --------------------------------------------------------------------------
+   Fixed 1000x1000 stage that holds the logo, title and buttons. It also
+   plays the impact shake (see section 7).
+   ========================================================================== */
+.hero {
+  position: relative;
+  width: 1000px;
+  height: 1000px;
+  min-width: 1000px;
+  max-width: 100%;
+
+  animation: hero-shake .3s linear var(--impact) both;
+}
+
+
+/* ==========================================================================
+   5. Hero image (logo + radial reveal)
+   --------------------------------------------------------------------------
+   The logo starts fully invisible and fades in from the outer borders
+   toward the center. A radial mask's "hole" (the still-hidden part) shrinks
+   from the corners down to nothing. --hero-hole is a registered property
+   so the browser can animate it smoothly.
+   ========================================================================== */
+@property --hero-hole {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: 75%;
+}
+
+.hero-image {
+  position: absolute;
+  top: 0;
+  right: 40px;
+  bottom: 0;
+  left: 40px;
+  overflow: hidden;
+
+  background-image: url('../pictures/d20.png');
+  background-repeat: no-repeat;
+  background-size: 100% 100%; /* stretch to fill the hero box */
+
+  /* Reveal mask */
+  --hero-hole: 100%;
+  --hero-soft: 30%; /* softness of the reveal edge */
+  -webkit-mask-image: radial-gradient(circle farthest-corner at 50% 50%,
+                        transparent var(--hero-hole),
+                        #000 calc(var(--hero-hole) + var(--hero-soft)));
+          mask-image: radial-gradient(circle farthest-corner at 50% 50%,
+                        transparent var(--hero-hole),
+                        #000 calc(var(--hero-hole) + var(--hero-soft)));
+
+  animation: hero-reveal 2s ease-in-out 0s forwards;
+}
+
+@keyframes hero-reveal {
+  from { --hero-hole: 75%; }
+  to   { --hero-hole: -30%; } /* = minus --hero-soft, so the center ends fully visible */
+}
+
+
+/* ==========================================================================
+   6. Hero title (punch-in + glow)
+   --------------------------------------------------------------------------
+   Starts at --impact (1.2s). The logo reveal ends at 2s, so that is 0.8s
+   before the end; for exactly 0.5s before, set --impact to 2s in :root.
+   ========================================================================== */
+.hero-title {
+  position: absolute;
+  top: 310px;
+  right: 40px;
+  bottom: 0;
+  left: 285px;
+  pointer-events: none;
+
+  background-image: url('../pictures/d20_title.png');
+  background-repeat: no-repeat;
+  background-size: 64% 59%;
+
+  opacity: 0; /* hidden until the punch animation starts */
   animation:
-    title-punch .3s cubic-bezier(.2,.8,.3,1) var(--impact) both,
-    title-glow .9s ease-out var(--impact) both;
+    title-punch .3s cubic-bezier(.2, .8, .3, 1) var(--impact) both,
+    title-glow  .9s ease-out                    var(--impact) both;
+}
+
+/* Scale/opacity: appears instantly 40% bigger, then settles to normal */
+@keyframes title-punch {
+  0%   { opacity: 0; transform: scale(1.4); }
+  1%   { opacity: 1; transform: scale(1.4); }
+  80%  { transform: scale(.98); } /* slight undershoot */
+  100% { opacity: 1; transform: scale(1); }
 }
 
 /* Gold glow spike + brightness flash on impact, fading out over .9s */
-@keyframes title-glow{
-  0%  {filter:brightness(1.8) drop-shadow(0 0 28px var(--gold)) drop-shadow(0 0 60px color-mix(in srgb, var(--gold) 70%, transparent));}
-  100%{filter:brightness(1) drop-shadow(0 0 0 color-mix(in srgb, var(--gold) 0%, transparent));}
+@keyframes title-glow {
+  0% {
+    filter: brightness(1.8)
+            drop-shadow(0 0 28px var(--gold))
+            drop-shadow(0 0 60px color-mix(in srgb, var(--gold) 70%, transparent));
+  }
+  100% {
+    filter: brightness(1)
+            drop-shadow(0 0 0 color-mix(in srgb, var(--gold) 0%, transparent));
+  }
 }
 
-@keyframes title-punch{
-  0%  {opacity:0; transform:scale(1.2);}
-  1%  {opacity:1; transform:scale(1.2);} /* appears instantly, 20% bigger */
-  80% {transform:scale(.98);}            /* slight undershoot */
-  100%{opacity:1; transform:scale(1);}   /* settles back to normal */
-}
+
+/* ==========================================================================
+   7. Impact effects (shockwave ring + screen shake)
+   ========================================================================== */
 
 /* Shockwave ring: expands from the logo center on impact and fades out. */
-.hero::after{
-  content:'';
-  position:absolute;
-  top:50%;
-  left:50%;
-  width:600px;
-  height:600px;
-  border-radius:50%;
-  border:3px solid var(--gold);
-  box-shadow:0 0 24px var(--gold);
-  transform:translate(-50%,-50%) scale(.2);
-  opacity:0;
-  pointer-events:none;
-  z-index:1;
-  animation:title-shockwave .9s cubic-bezier(.1,.7,.3,1) var(--impact) backwards;
+.hero::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 1;
+  width: 600px;
+  height: 600px;
+  border: 3px solid var(--gold);
+  border-radius: 50%;
+  box-shadow: 0 0 24px var(--gold);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(.2);
+  pointer-events: none;
+
+  animation: title-shockwave .9s cubic-bezier(.1, .7, .3, 1) var(--impact) backwards;
 }
-@keyframes title-shockwave{
-  0%  {opacity:0;  transform:translate(-50%,-50%) scale(.2); border-width:6px;} /* hidden during the delay */
-  1%  {opacity:.9; transform:translate(-50%,-50%) scale(.2); border-width:6px;} /* appears on impact */
-  100%{opacity:0;  transform:translate(-50%,-50%) scale(1.6); border-width:1px;}
+
+@keyframes title-shockwave {
+  0%   { opacity: 0;  transform: translate(-50%, -50%) scale(.2);  border-width: 6px; } /* hidden during the delay */
+  1%   { opacity: .9; transform: translate(-50%, -50%) scale(.2);  border-width: 6px; } /* appears on impact */
+  100% { opacity: 0;  transform: translate(-50%, -50%) scale(1.6); border-width: 1px; }
 }
 
 /* Impact shake: the whole hero jolts briefly, decaying quickly. */
-.hero{animation:hero-shake .3s linear var(--impact) both;}
-@keyframes hero-shake{
-  0%  {transform:translate(0,0);}
-  15% {transform:translate(-7px,3px);}
-  30% {transform:translate(6px,-3px);}
-  45% {transform:translate(-4px,2px);}
-  60% {transform:translate(3px,-1px);}
-  80% {transform:translate(-1px,1px);}
-  100%{transform:translate(0,0);}
+@keyframes hero-shake {
+  0%   { transform: translate(0, 0); }
+  15%  { transform: translate(-7px, 3px); }
+  30%  { transform: translate(6px, -3px); }
+  45%  { transform: translate(-4px, 2px); }
+  60%  { transform: translate(3px, -1px); }
+  80%  { transform: translate(-1px, 1px); }
+  100% { transform: translate(0, 0); }
 }
 
-/* Buttons are now a direct child of .hero (not of .hero-image), so they are
-   not affected by the logo's mask. left/right match the image's 40px inset
-   so they stay where they were. */
-.hero-buttons-wrap{
-  position:absolute;
-  left:40px;
-  right:40px;
-  bottom:0;
-  display:flex;
-  flex-direction:column;
-  gap:16px;
-  padding:56px 10px 10px;
-  z-index:2; /* keeps the buttons above the title while it scales up */
+
+/* ==========================================================================
+   8. Navigation buttons
+   --------------------------------------------------------------------------
+   The wrapper is a direct child of .hero (not of .hero-image), so the
+   logo's mask does not affect it. left/right match the image's 40px inset.
+   ========================================================================== */
+
+/* 8.1 Wrapper */
+.hero-buttons-wrap {
+  position: absolute;
+  right: 40px;
+  bottom: 0;
+  left: 40px;
+  z-index: 2; /* keeps the buttons above the title while it scales up */
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 56px 10px 10px;
 }
 
-.hero-buttons{
-  display:flex;
-  gap:12px;
-  justify-content:center;  
+.hero-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
 }
 
-.nav-btn{
-  flex:1 1 0;
-  max-width:240px;
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:2px;
-  text-decoration:none;
-  background:rgba(23,25,37,0.82);
+/* 8.2 Button */
+.nav-btn {
+  flex: 1 1 0;
+  max-width: 240px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 12px 10px;
+
+  text-decoration: none;
+  background: rgba(23, 25, 37, .82);
   border: 1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
-  border-radius:10px;
-  padding:12px 10px;
-  transition:border-color .18s, background .18s, transform .18s;
+  border-radius: 10px;
+
+  transition: border-color .18s, background .18s, transform .18s;
 
   /* Appears with the title punch (--impact): quick fade-in, border flashes
-     bright parchment, then returns to normal. `backwards` keeps the buttons
-     hidden during the delay without overriding hover styles afterwards. */
-  animation:btn-flash 1.5s ease-out var(--impact) backwards;
+     bright, then returns to normal. `backwards` keeps the buttons hidden
+     during the delay without overriding hover styles afterwards. */
+  animation: btn-flash 1.5s ease-out var(--impact) backwards;
 }
 
-@keyframes btn-flash{
-  0%  {opacity:0; border-color:var(--gold);}
-  12% {opacity:1; border-color:var(--gold);} /* quick fade-in, ~0.1s */
-  62% {opacity:1; border-color:var(--gold);} /* holds bright until 0.5s after appearing */
-  100%{opacity:1; border-color:color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));} /* back to normal */
+@keyframes btn-flash {
+  0%   { opacity: 0; border-color: var(--gold); }
+  12%  { opacity: 1; border-color: var(--gold); } /* quick fade-in, ~0.1s */
+  62%  { opacity: 1; border-color: var(--gold); } /* holds bright until 0.5s after appearing */
+  100% { opacity: 1; border-color: color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3)); } /* back to normal */
 }
 
-.nav-btn:hover{
-  border-color:var(--gold);
-  background:color-mix(in srgb, var(--gold) 8%, var(--ink-3));
-  transform:translateY(-2px);
-}
-.nav-btn:active{transform:translateY(0px);}
-.nav-btn .btn-main{
-  font-family:'Cinzel',serif;
-  font-weight:800;
-  font-size:1.7rem;
-  color:var(--gold);
-  letter-spacing:.1em;
-}
-.nav-btn .btn-sub{
-  font-family:'JetBrains Mono',monospace;
-  font-size:1rem;
-  letter-spacing:.2em;
-  text-transform:uppercase;
-  color:var(--parchment-dim);
+/* 8.3 Interaction states */
+.nav-btn:hover {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 8%, var(--ink-3));
+  transform: translateY(-2px);
 }
 
-@media (max-width:640px){
-  .hero{width:100%;height:70vh;min-height:420px;}
-  .nav-btn .btn-main{font-size:1.4rem;}
+.nav-btn:active {
+  transform: translateY(0);
 }
 
-/* Keep this block LAST so it overrides the animations defined above
-   (same specificity, later rule wins). */
-@media (prefers-reduced-motion: reduce){
-  .hero-image{
-    animation:none;
-    -webkit-mask-image:none;
-            mask-image:none;
+/* 8.4 Button text */
+.nav-btn .btn-main {
+  font-family: 'Cinzel', serif;
+  font-weight: 800;
+  font-size: 1.7rem;
+  letter-spacing: .1em;
+  color: var(--gold);
+}
+
+.nav-btn .btn-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1rem;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--parchment-dim);
+}
+
+
+/* ==========================================================================
+   9. Responsive
+   ========================================================================== */
+@media (max-width: 640px) {
+  .hero {
+    width: 100%;
+    height: 70vh;
+    min-height: 420px;
   }
-  .hero-title{
-    animation:none;
-    opacity:1;
+
+  .nav-btn .btn-main {
+    font-size: 1.4rem;
   }
-  .nav-btn{
-    animation:none;
+}
+
+
+/* ==========================================================================
+   10. Reduced motion
+   --------------------------------------------------------------------------
+   Keep this block LAST so it overrides the animations defined above
+   (same specificity, later rule wins). Everything is shown in its final
+   state with no motion.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .hero {
+    animation: none;
   }
-  .hero{
-    animation:none;
+
+  .hero-image {
+    animation: none;
+    -webkit-mask-image: none;
+            mask-image: none;
   }
-  .hero::after{
-    display:none;
+
+  .hero-title {
+    animation: none;
+    opacity: 1;
+  }
+
+  .nav-btn {
+    animation: none;
+  }
+
+  .hero::after {
+    display: none;
   }
 }

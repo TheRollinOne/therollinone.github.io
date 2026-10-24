@@ -1,6 +1,31 @@
-/* Weapon page — only what differs from the shared .entry-card family in base.css */
-.weapon-card{--qs-w:84px;}
-.weapon-card .entry-qstat.type{width:40px;}
+/* ==========================================================================
+   weapons.css: Weapon page
+   --------------------------------------------------------------------------
+   Only what differs from the shared .entry-card family in base.css.
 
-/* Weapon group sits in the title block between name and category */
-.weapon-group-tag{text-transform:capitalize;}
+   Contents
+     1. Card sizing
+     2. Title block
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. Card sizing
+   ========================================================================== */
+.weapon-card {
+  --qs-w: 84px; /* quick-stat column width */
+}
+
+.weapon-card .entry-qstat.type {
+  width: 40px;
+}
+
+
+/* ==========================================================================
+   2. Title block
+   --------------------------------------------------------------------------
+   The weapon group tag sits between the name and the category.
+   ========================================================================== */
+.weapon-group-tag {
+  text-transform: capitalize;
+}

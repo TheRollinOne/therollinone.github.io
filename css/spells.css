@@ -1,130 +1,196 @@
-/* Spell page — only what differs from the shared styles in base.css */
+/* ==========================================================================
+   spells.css: Spell page
+   --------------------------------------------------------------------------
+   Only what differs from the shared styles in base.css.
 
-/* Save filter: flex row with per-chip widths (shortest labels first) */
-.save-chip-row{
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-}
-.save-chip-row .chip{
-  width:50px;
-}
-.save-chip-row .chip[data-save="Fortitude"]{
-  width:84px;
-}
-.save-chip-row .chip[data-save="Reflex"]{
-  width:62px;
-}
+   Contents
+     1. Save filter chips
+     2. Header badge
+     3. Description title row + tags
+     4. Class / level pills
+        4.1 Base pill
+        4.2 Click-to-copy damage pill
+        4.3 Split pill (two copy halves on hover)
+     5. Description / Heightened text
+   ========================================================================== */
 
-/* Header: "N / C" class-level summary is plain (not italic) */
-.spell-classlevel-badge{font-style:normal;}
 
-/* Description title row with the Ritual tag on the right */
-.spell-section-title-row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin-bottom:8px;
-}
-.spell-section-title-row .entry-section-title{
-  margin-bottom:0;
-}
-.spell-badges{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  flex-shrink:0;
-}
-.ritual-tag{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.72rem;
-  font-weight:700;
-  letter-spacing:.1em;
-  text-transform:uppercase;
-  color:var(--parchment);
-  background:color-mix(in srgb, var(--cardc,var(--gold)) 35%, var(--ink-2));
-  border:1px solid var(--cardc,var(--gold));
-  border-radius:5px;
-  padding:4px 9px;
-  white-space:nowrap;
-}
-.roll20-tag{
-  opacity:.9;
+/* ==========================================================================
+   1. Save filter chips
+   --------------------------------------------------------------------------
+   Flex row with a fixed width per chip so the labels line up
+   (shortest labels first).
+   ========================================================================== */
+.save-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-/* Class / level pills (some are click-to-copy damage formulas) */
-.classes-row{
-  margin-bottom:10px;
-  display:flex;
-  flex-wrap:wrap;
-  gap:6px;
-  align-items:center;
+.save-chip-row .chip {
+  width: 50px;
 }
-.class-pill{
-  font-family:'JetBrains Mono',monospace;
-  font-size:.78rem;
+
+.save-chip-row .chip[data-save="Fortitude"] {
+  width: 84px;
+}
+
+.save-chip-row .chip[data-save="Reflex"] {
+  width: 62px;
+}
+
+
+/* ==========================================================================
+   2. Header badge
+   --------------------------------------------------------------------------
+   The "N / C" class-level summary is plain text (not italic).
+   ========================================================================== */
+.spell-classlevel-badge {
+  font-style: normal;
+}
+
+
+/* ==========================================================================
+   3. Description title row + tags
+   --------------------------------------------------------------------------
+   Section title on the left, badges (e.g. the Ritual tag) on the right.
+   ========================================================================== */
+.spell-section-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.spell-section-title-row .entry-section-title {
+  margin-bottom: 0;
+}
+
+.spell-badges {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+/* Ritual tag: tinted with the card color */
+.ritual-tag {
+  padding: 4px 9px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--parchment);
+  background: color-mix(in srgb, var(--cardc, var(--gold)) 35%, var(--ink-2));
+  border: 1px solid var(--cardc, var(--gold));
+  border-radius: 5px;
+}
+
+.roll20-tag {
+  opacity: .9;
+}
+
+
+/* ==========================================================================
+   4. Class / level pills
+   --------------------------------------------------------------------------
+   Some pills are click-to-copy damage formulas.
+   ========================================================================== */
+.classes-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+/* 4.1 Base pill */
+.class-pill {
+  padding: 5px 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .78rem;
   text-transform: capitalize;
-  padding:5px 8px;
-  border-radius:20px;
-  background:var(--ink-2);
-  border:1px solid var(--hairline);
-  color:var(--parchment-dim);
-}
-.class-pill-damage{
-  position:relative;
-  cursor:copy;
-  border-color:color-mix(in srgb, var(--cardc,var(--gold)) 85%, var(--hairline));
-  transition:background .15s, border-color .15s;
-}
-.class-pill-damage:hover{
-  border-color:var(--cardc,var(--gold));
-}
-.class-pill-damage.copied{
-  background:rgba(196,162,77,0.18);
-}
-.class-pill-split{
-  overflow:hidden;
-}
-.pill-halves{
-  position:absolute;
-  inset:0;
-  display:flex;
-  opacity:0;
-  transition:opacity .12s;
-}
-.class-pill-split:hover .pill-halves{
-  opacity:1;
-}
-.pill-half{
-  flex:1;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-family:'JetBrains Mono',monospace;
-  font-weight:700;
-  font-size:.78rem;
-  color:var(--parchment);
-  background:var(--ink-2);
-  cursor:copy;
-  transition:background .12s;
-}
-.pill-half-2{
-  border-left:1px solid color-mix(in srgb, var(--ink) 25%, transparent);
-}
-.pill-half:hover{
-  background:color-mix(in srgb, var(--cardc,var(--gold)) 65%, var(--ink-2));
-}
-.pill-half.copied{
-  background:rgba(196,162,77,0.4);
+  color: var(--parchment-dim);
+  background: var(--ink-2);
+  border: 1px solid var(--hairline);
+  border-radius: 20px;
 }
 
-/* Description / Heightened text (shared .entry-desc + spacing) */
-.desc-copy,
-.heightened-item{
-  margin-bottom:4px;
+/* 4.2 Click-to-copy damage pill */
+.class-pill-damage {
+  position: relative;
+  cursor: copy;
+  border-color: color-mix(in srgb, var(--cardc, var(--gold)) 85%, var(--hairline));
+  transition: background .15s, border-color .15s;
 }
-.heightened-item > b:first-child{
-  color:var(--cardc,var(--gold));
-  font-weight:600;
+
+.class-pill-damage:hover {
+  border-color: var(--cardc, var(--gold));
+}
+
+.class-pill-damage.copied {
+  background: rgba(196, 162, 77, .18);
+}
+
+/* 4.3 Split pill: hovering reveals two halves, each copying its own value */
+.class-pill-split {
+  overflow: hidden;
+}
+
+.pill-halves {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  opacity: 0;
+  transition: opacity .12s;
+}
+
+.class-pill-split:hover .pill-halves {
+  opacity: 1;
+}
+
+.pill-half {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .78rem;
+  font-weight: 700;
+  color: var(--parchment);
+  background: var(--ink-2);
+  cursor: copy;
+  transition: background .12s;
+}
+
+.pill-half-2 {
+  border-left: 1px solid color-mix(in srgb, var(--ink) 25%, transparent);
+}
+
+.pill-half:hover {
+  background: color-mix(in srgb, var(--cardc, var(--gold)) 65%, var(--ink-2));
+}
+
+.pill-half.copied {
+  background: rgba(196, 162, 77, .4);
+}
+
+
+/* ==========================================================================
+   5. Description / Heightened text
+   --------------------------------------------------------------------------
+   Shared .entry-desc styling plus spacing between items.
+   ========================================================================== */
+.desc-copy,
+.heightened-item {
+  margin-bottom: 4px;
+}
+
+/* "Heightened (+N)" label */
+.heightened-item > b:first-child {
+  color: var(--cardc, var(--gold));
+  font-weight: 600;
 }

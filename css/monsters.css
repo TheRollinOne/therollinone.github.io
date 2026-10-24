@@ -1,21 +1,46 @@
-/* Monster page — only what differs from the shared styles in base.css */
-.range-filter-row{
-  --rf-select:50%;
-  --rf-input:48px;
+/* ==========================================================================
+   monsters.css: Monster page
+   --------------------------------------------------------------------------
+   Only what differs from the shared styles in base.css.
+
+   Contents
+     1. Range filter tokens (CR / HD)
+     2. Environment filter
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. Range filter tokens (CR / HD)
+   --------------------------------------------------------------------------
+   Operator select takes 50% of the row, each numeric input is 48px wide.
+   The same filter shape is reused on the Magic Items page (price).
+   ========================================================================== */
+.range-filter-row {
+  --rf-select: 50%;
+  --rf-input:  48px;
 }
 
-/* Environment filter: a row of equal-width selects */
-.env-filter-row{
-  display:flex;
-  align-items:center;
-  gap:6px;
-  flex-wrap:nowrap;
+
+/* ==========================================================================
+   2. Environment filter
+   --------------------------------------------------------------------------
+   A row of equal-width selects.
+   ========================================================================== */
+.env-filter-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
 }
-.env-filter-row select.select-filter{
-  flex:1 1 0;
-  min-width:0;
-  width:auto;
-  padding-left:6px;
-  padding-right:6px;
+
+.env-filter-row select.select-filter {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+  padding-left: 6px;
+  padding-right: 6px;
 }
-.env-filter-row select.select-filter[hidden]{display:none;}
+
+.env-filter-row select.select-filter[hidden] {
+  display: none;
+}

@@ -1,20 +1,53 @@
-/* NPC page — only what differs from the shared styles in base.css */
-.range-filter-row{
-  --rf-select:50%;
-  --rf-input:48px;
+/* ==========================================================================
+   npcs.css: NPC page
+   --------------------------------------------------------------------------
+   Only what differs from the shared styles in base.css.
+
+   Contents
+     1. Range filter tokens
+     2. Class filter (category + class selects)
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. Range filter tokens
+   --------------------------------------------------------------------------
+   Overrides the shared range-filter layout: operator select takes 50% of
+   the row, each numeric input is 48px wide.
+   ========================================================================== */
+.range-filter-row {
+  --rf-select: 50%;
+  --rf-input:  48px;
 }
 
-/* Class category + class: two selects split 36% / 64% */
-.class-select-row{
-  display:flex;
-  gap:6px;
-  flex-wrap:nowrap;
+
+/* ==========================================================================
+   2. Class filter (category + class selects)
+   --------------------------------------------------------------------------
+   Two selects on one row, split 36% / 64%. The 3px offset in each calc()
+   accounts for half of the 6px gap, so the two always add up to 100%.
+   ========================================================================== */
+.class-select-row {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
 }
-.class-select-row select.select-filter{
-  min-width:0;
-  padding-left:6px;
-  padding-right:6px;
-  text-overflow:ellipsis;
+
+.class-select-row select.select-filter {
+  min-width: 0;
+  padding-left: 6px;
+  padding-right: 6px;
+  text-overflow: ellipsis;
 }
-.class-select-row select.select-filter:nth-child(1){flex:0 0 calc(36% - 3px); width:calc(36% - 3px);}
-.class-select-row select.select-filter:nth-child(2){flex:0 0 calc(64% - 3px); width:calc(64% - 3px);}
+
+/* Class category (first select) */
+.class-select-row select.select-filter:nth-child(1) {
+  flex: 0 0 calc(36% - 3px);
+  width: calc(36% - 3px);
+}
+
+/* Class (second select) */
+.class-select-row select.select-filter:nth-child(2) {
+  flex: 0 0 calc(64% - 3px);
+  width: calc(64% - 3px);
+}

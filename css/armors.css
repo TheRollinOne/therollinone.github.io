@@ -1,6 +1,28 @@
-/* Armor page — only what differs from the shared .entry-card family in base.css */
-.armor-card{
-  --qs-w:60px;
-  --qs-label-size:.7rem;
+/* ==========================================================================
+   armors.css: Armor page
+   --------------------------------------------------------------------------
+   Only what differs from the shared .entry-card family in base.css.
+
+   Contents
+     1. Card sizing
+     2. Quick-stat values
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. Card sizing
+   ========================================================================== */
+.armor-card {
+  --qs-w: 60px;          /* quick-stat column width */
+  --qs-label-size: .7rem; /* quick-stat label font size */
 }
-.armor-card .entry-qstat-value{text-transform:none;}
+
+
+/* ==========================================================================
+   2. Quick-stat values
+   --------------------------------------------------------------------------
+   Keep the original casing (no forced uppercase).
+   ========================================================================== */
+.armor-card .entry-qstat-value {
+  text-transform: none;
+}
