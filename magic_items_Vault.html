@@ -56,7 +56,7 @@
                 
         <div class="filter-group">
           <div class="filter-label"><span>Price</span><button id="clearPrice" type="button">clear</button></div>
-          <div class="range-filter-row">
+          <div class="range-filter-row range-filter-row--compact">
             <select class="select-filter" id="priceOperatorSelect">
               <option value="">Any</option>
               <option value="lt">Less than</option>
@@ -72,7 +72,7 @@
 
         <div class="filter-group">
           <div class="filter-label"><span>Caster Level</span><button id="clearCL" type="button">clear</button></div>
-          <div class="range-filter-row">
+          <div class="range-filter-row range-filter-row--compact">
             <select class="select-filter" id="clOperatorSelect">
               <option value="">Any</option>
               <option value="lt">Less than</option>
@@ -123,23 +123,23 @@
           <span class="sort-bar-label">Sort:</span>
           <span class="sort-group">
             <span class="sort-group-label">Name</span>
-            <button type="button" class="sort-btn" data-sort="name-asc" aria-label="Name ascending">↑</button>
-            <button type="button" class="sort-btn" data-sort="name-desc" aria-label="Name descending">↓</button>
+            <button type="button" class="sort-btn" data-sort="name" aria-label="Name ascending">↑</button>
+            <button type="button" class="sort-btn" data-sort="name_desc" aria-label="Name descending">↓</button>
           </span>
           <span class="sort-group">
             <span class="sort-group-label">Price</span>
-            <button type="button" class="sort-btn" data-sort="price-asc" aria-label="Price ascending">↑</button>
-            <button type="button" class="sort-btn" data-sort="price-desc" aria-label="Price descending">↓</button>
+            <button type="button" class="sort-btn" data-sort="price" aria-label="Price ascending">↑</button>
+            <button type="button" class="sort-btn" data-sort="price_desc" aria-label="Price descending">↓</button>
           </span>
           <span class="sort-group">
             <span class="sort-group-label">CL</span>
-            <button type="button" class="sort-btn" data-sort="cl-asc" aria-label="Caster level ascending">↑</button>
-            <button type="button" class="sort-btn" data-sort="cl-desc" aria-label="Caster level descending">↓</button>
+            <button type="button" class="sort-btn" data-sort="cl" aria-label="Caster level ascending">↑</button>
+            <button type="button" class="sort-btn" data-sort="cl_desc" aria-label="Caster level descending">↓</button>
           </span>
           <span class="sort-group">
             <span class="sort-group-label">Weight</span>
-            <button type="button" class="sort-btn" data-sort="weight-asc" aria-label="Weight ascending">↑</button>
-            <button type="button" class="sort-btn" data-sort="weight-desc" aria-label="Weight descending">↓</button>
+            <button type="button" class="sort-btn" data-sort="weight" aria-label="Weight ascending">↑</button>
+            <button type="button" class="sort-btn" data-sort="weight_desc" aria-label="Weight descending">↓</button>
           </span>
         </div>
         <div class="theme-toggle" id="themeToggle">

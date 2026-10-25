@@ -1,23 +1,23 @@
 /* ==========================================================================
    themes.css: Color themes
    --------------------------------------------------------------------------
-   Each theme is applied when <html data-theme="...">. It overrides the
-   default (gold) palette defined in base.css's :root. Every component
-   already references var(--ink), var(--gold), etc., so no other CSS needs
-   to change.
+   The default (gold) palette is defined first; each theme overrides it
+   when <html data-theme="...">. Every component already references
+   var(--ink), var(--gold), etc., so no other CSS needs to change.
 
    Contents
-     1. Blue
-     2. Green
-     3. Orange
-     4. Red
-     5. Parchment
+     1. Default (gold)
+     2. Blue
+     3. Green
+     4. Orange
+     5. Red
+     6. Parchment
 
    Palette roles (same eight tokens in every theme)
-     --ink, --ink-2, --ink-3     surfaces, darkest to lightest
+     --ink, --ink-2, --ink-3       surfaces, darkest to lightest
      --parchment, --parchment-dim  primary / secondary text
-     --hairline                  borders and dividers
-     --gold, --dark-gold         accent and its darker variant
+     --hairline                    borders and dividers
+     --gold, --dark-gold           accent and its darker variant
 
    Adding a theme
      1. Add a block below defining all eight tokens.
@@ -28,7 +28,22 @@
 
 
 /* ==========================================================================
-   1. Blue
+   1. Default (gold)
+   ========================================================================== */
+:root {
+  --ink:           #0e1018;
+  --ink-2:         #171925;
+  --ink-3:         #202334;
+  --parchment:     #f3eedf;
+  --parchment-dim: #e0d8bf;
+  --hairline:      #36394d;
+  --gold:          #d3ac43;
+  --dark-gold:     #b69028;
+}
+
+
+/* ==========================================================================
+   2. Blue
    ========================================================================== */
 [data-theme="blue"] {
   --ink:           #0a0e18;
@@ -43,7 +58,7 @@
 
 
 /* ==========================================================================
-   2. Green
+   3. Green
    ========================================================================== */
 [data-theme="green"] {
   --ink:           #091311;
@@ -58,7 +73,7 @@
 
 
 /* ==========================================================================
-   3. Orange
+   4. Orange
    ========================================================================== */
 [data-theme="orange"] {
   --ink:           #120c18;
@@ -73,11 +88,11 @@
 
 
 /* ==========================================================================
-   4. Red
+   5. Red
    ========================================================================== */
 [data-theme="red"] {
   --ink:           #180b0d;
-  --ink-2:         #1d090bea; /* 8-digit hex: slightly translucent (alpha ea) */
+  --ink-2:         #1d090b;
   --ink-3:         #33171b;
   --parchment:     #eee0d4;
   --parchment-dim: #dbcfca;
@@ -88,12 +103,12 @@
 
 
 /* ==========================================================================
-   5. Parchment
+   6. Parchment
    ========================================================================== */
 [data-theme="parchment"] {
   --ink:           #271e0d;
   --ink-2:         #1f180a;
-  --ink-3:         #55411c73; /* 8-digit hex: translucent (alpha 73) */
+  --ink-3:         #55411c;
   --parchment:     #e7c59d;
   --parchment-dim: #f1d7b8;
   --hairline:      #79694f;

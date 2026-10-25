@@ -1,7 +1,5 @@
 (function(){
-  // Canonical display order for the category chips (matches the old
-  // --cat-* var order in weapons.css). Any category present in the data
-  // that isn't listed here is appended afterward, alphabetically.
+  // Canonical display order for the category chips
   const CATEGORY_ORDER = ['Unarmed', 'Light', 'One-Handed', 'Two-Handed', 'Ranged', 'Ammunition'];
 
   const state = {
@@ -17,185 +15,58 @@
     open: new Set()
   };
 
-  document.getElementById('brandSub').textContent = `Weapon Arsenal · ${WEAPONS_DATA.length} Weapons`;
+  setBrandSub('Weapon Arsenal', WEAPONS_DATA.length, 'Weapons');
 
   WEAPONS_DATA.forEach((w, i) => {
     w._idx = i;
+    w._category = w.category ? formatTitleCase(w.category) : '';
     w._nameBlob = (w.name || '').toLowerCase();
     w._blob = [
-      w.name, w.category, w.proficiency, (w.damage_type||[]).join(' '),
+      w.name, w._category, w.proficiency, (w.damage_type||[]).join(' '),
       (w.weapon_group||[]).join(' '), (w.special||[]).join(' '), w.description
     ].filter(Boolean).join(' ').toLowerCase();
   });
 
-  const categoryColorOf = buildTypeColorMap(WEAPONS_DATA.map(w => w.category).filter(cat => cat != null), CATEGORY_ORDER);
-  WEAPONS_DATA.forEach(w => { w._cardColor = categoryColorOf[w.category]; });
+  const categoryColorOf = buildTypeColorMap(WEAPONS_DATA.map(w => w._category).filter(Boolean), CATEGORY_ORDER);
+  WEAPONS_DATA.forEach(w => { w._cardColor = categoryColorOf[w._category]; });
 
-  initMobileFiltersCollapse();
-  initThemeToggle();
+  initPageChrome();
 
-  const proficiencyChips = document.getElementById('proficiencyChips');
-  proficiencyChips.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const val = chip.dataset.proficiency;
-      if (state.proficiencies.has(val)) state.proficiencies.delete(val);
-      else state.proficiencies.add(val);
-      chip.classList.toggle('active');
-      render();
-    });
-  });
-  document.getElementById('clearProficiencies').addEventListener('click', () => {
-    state.proficiencies.clear();
-    proficiencyChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    render();
-  });
+  // Static chip groups: each toggles a value in its own Set.
+  const chipResets = [
+    wireChipSet({ container: 'proficiencyChips', set: state.proficiencies, dataAttr: 'proficiency', clearId: 'clearProficiencies', render }),
+    wireChipSet({ container: 'damageTypeChips', set: state.damageTypes, dataAttr: 'damageType', clearId: 'clearDamageTypes', render }),
+    wireChipSet({ container: 'criticalChips', set: state.criticals, dataAttr: 'critical', clearId: 'clearCritical', render }),
+    wireChipSet({ container: 'weaponGroupChips', set: state.weaponGroups, dataAttr: 'weaponGroup', clearId: 'clearWeaponGroups', render }),
+    wireChipSet({ container: 'specialChips', set: state.specials, dataAttr: 'special', clearId: 'clearSpecial', render })
+  ];
 
-  // Category chips are generated dynamically (colors depend on the data),
-  // the same way feats.js/armors.js build their category chips.
-  const categoryChips = document.getElementById('categoryChips');
-  Object.keys(categoryColorOf).forEach(cat => {
-    const color = categoryColorOf[cat];
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.style.setProperty('--dotc', color);
-    chip.style.setProperty('--chipc', color);
-    chip.dataset.category = cat;
-    const displayCat = cat.replace(/\b\w/g, c => c.toUpperCase());
-    chip.innerHTML = `<span class="dot"></span>${escapeHtml(displayCat)}`;
-    chip.addEventListener('click', () => {
-      if (state.categories.has(cat)) state.categories.delete(cat);
-      else state.categories.add(cat);
-      chip.classList.toggle('active');
-      render();
-    });
-    categoryChips.appendChild(chip);
-  });
-  document.getElementById('clearCategories').addEventListener('click', () => {
-    state.categories.clear();
-    categoryChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    render();
-  });
+  // Category chips are generated dynamically (colors depend on the data).
+  chipResets.push(buildColorChips(categoryColorOf, state.categories, 'categoryChips', {
+    dataAttr: 'category', clearId: 'clearCategories', render
+  }));
 
-  const damageTypeChips = document.getElementById('damageTypeChips');
-  damageTypeChips.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const val = chip.dataset.damageType;
-      if (state.damageTypes.has(val)) state.damageTypes.delete(val);
-      else state.damageTypes.add(val);
-      chip.classList.toggle('active');
-      render();
-    });
-  });
-  document.getElementById('clearDamageTypes').addEventListener('click', () => {
-    state.damageTypes.clear();
-    damageTypeChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    render();
-  });
-
-  const criticalChips = document.getElementById('criticalChips');
-  criticalChips.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const val = chip.dataset.critical;
-      if (state.criticals.has(val)) state.criticals.delete(val);
-      else state.criticals.add(val);
-      chip.classList.toggle('active');
-      render();
-    });
-  });
-  document.getElementById('clearCritical').addEventListener('click', () => {
-    state.criticals.clear();
-    criticalChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    render();
-  });
-
-  const weaponGroupChips = document.getElementById('weaponGroupChips');
-  weaponGroupChips.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const val = chip.dataset.weaponGroup;
-      if (state.weaponGroups.has(val)) state.weaponGroups.delete(val);
-      else state.weaponGroups.add(val);
-      chip.classList.toggle('active');
-      render();
-    });
-  });
-  document.getElementById('clearWeaponGroups').addEventListener('click', () => {
-    state.weaponGroups.clear();
-    weaponGroupChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    render();
-  });
-
-  const specialChips = document.getElementById('specialChips');
-  specialChips.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const val = chip.dataset.special;
-      if (state.specials.has(val)) state.specials.delete(val);
-      else state.specials.add(val);
-      chip.classList.toggle('active');
-      render();
-    });
-  });
-  document.getElementById('clearSpecial').addEventListener('click', () => {
-    state.specials.clear();
-    specialChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    render();
-  });
-
-  const searchInputEl = document.getElementById('searchInput');
-  const searchWrapEl = document.getElementById('searchWrap');
-  const searchClearIcon = document.getElementById('searchClearIcon');
-  wireSearchInput({
-    inputEl: searchInputEl,
-    wrapEl: searchWrapEl,
-    clearIconEl: searchClearIcon,
-    onQuery: (q) => { state.query = q; },
-    render: () => render(),
-    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
-  });
-
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'longsword +slashing -reach', { prefix: true });
-  initSearchScope(searchWrapEl, (scope) => { state.searchScope = scope; render(); });
+  const search = initSearch({ state, render, example: 'longsword +slashing -reach' });
 
   document.getElementById('clearAll').addEventListener('click', (e) => {
     e.stopPropagation();
-    state.query = '';
-    searchInputEl.value = '';
-    searchWrapEl.classList.remove('has-query');
-    state.proficiencies.clear();
-    proficiencyChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    state.categories.clear();
-    categoryChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    state.damageTypes.clear();
-    damageTypeChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    state.criticals.clear();
-    criticalChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    state.weaponGroups.clear();
-    weaponGroupChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    state.specials.clear();
-    specialChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
+    search.reset();
+    chipResets.forEach(reset => reset());
     render();
   });
 
-  // ---- Sort (header buttons) ----
-  document.querySelectorAll('#sortBar .sort-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.sort = btn.dataset.sort;
-      render();
-    });
-  });
-  function syncSortButtons(){
-    document.querySelectorAll('#sortBar .sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
-  }
+  const syncSortButtons = wireSortBar(state, render);
 
   wireCopyableList('weaponList', 'weapon-name');
 
-  const queryMatch = createQueryMatcher({ prefix: true });
+  const queryMatch = createQueryMatcher();
   function matchesQuery(weapon, query) {
     return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? weapon._blob : weapon._nameBlob, query);
   }
 
-  function parseLeadingNumber(str){
-    const n = parseFloat(str);
-    return Number.isNaN(n) ? -1 : n;
+  // Price is an integer/number; a missing price sorts before everything else.
+  function priceValue(w){
+    return typeof w.price === 'number' ? w.price : -1;
   }
 
   function rangeIncrementText(w){
@@ -219,16 +90,13 @@
     return '';
   }
 
-  function quickStatsHTML(w){
-    const boxes = [
+  function weaponQuickStats(w){
+    return quickStatsHTML([
       ['Proficiency', w.proficiency || '—', ''],
       ['Damage', damageQuickText(w) || '—', ''],
       ['Type', damageTypeAbbrev(w.damage_type) || '—', ' type'],
       ['Critical', w.critical || '—', ''],
-    ];
-    return `<div class="entry-qstats">${boxes.map(([l, v, cls]) =>
-      `<div class="entry-qstat${cls}"><div class="entry-qstat-label">${escapeHtml(l)}</div><div class="entry-qstat-value">${escapeHtml(v)}</div></div>`
-    ).join('')}</div>`;
+    ]);
   }
 
   function buildStatFields(w){
@@ -238,11 +106,11 @@
       ['Critical', w.critical],
       ['Damage Type', (w.damage_type||[]).join(', ')],
       ['Proficiency', w.proficiency],
-      ['Category', w.category],
+      ['Category', w._category],
       ['Weapon Groups', (w.weapon_group||[]).join(', ')],
       ['Range Increment', rangeIncrementText(w)],
       ['Special', (w.special||[]).join(', ')],
-      ['Cost', w.cost],
+      ['Price', formatGp(w.price)],
       ['Weight', w.weight],
     ].filter(([, val]) => val && val.length > 0);
   }
@@ -251,7 +119,7 @@
     const cardStyle = w._cardColor ? ` style="--cardc:${w._cardColor}"` : '';
     const isOpen = state.open.has(w._idx);
 
-    const categoryTagHtml = w.category ? `<span class="entry-tag">${escapeHtml(w.category)}</span>` : '';
+    const categoryTagHtml = w._category ? `<span class="entry-tag">${escapeHtml(w._category)}</span>` : '';
     const weaponGroupsText = (w.weapon_group||[]).join(', ');
     const weaponGroupTagHtml = weaponGroupsText ? `<span class="entry-badge weapon-group-tag">${escapeHtml(weaponGroupsText)}</span>` : '';
 
@@ -276,7 +144,7 @@
           ${categoryTagHtml}
         </div>
         <div class="entry-right">
-          ${quickStatsHTML(w)}
+          ${weaponQuickStats(w)}
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
@@ -296,7 +164,7 @@
       list = list.filter(w => state.proficiencies.has(w.proficiency));
     }
     if (state.categories.size) {
-      list = list.filter(w => state.categories.has(w.category));
+      list = list.filter(w => state.categories.has(w._category));
     }
     if (state.damageTypes.size) {
       list = list.filter(w => (w.damage_type||[]).some(t => state.damageTypes.has(t)));
@@ -316,15 +184,15 @@
     } else if (state.sort === 'name_desc') {
       sorted.sort((a, b) => b.name.localeCompare(a.name));
     } else if (state.sort === 'category_desc') {
-      sorted.sort((a, b) => (b.category || '').localeCompare(a.category || '') || a.name.localeCompare(b.name));
+      sorted.sort((a, b) => (b._category || '').localeCompare(a._category || '') || a.name.localeCompare(b.name));
     } else if (state.sort === 'category') {
-      sorted.sort((a, b) => (a.category || '').localeCompare(b.category || '') || a.name.localeCompare(b.name));
-    } else if (state.sort === 'cost') {
-      sorted.sort((a, b) => parseLeadingNumber(a.cost) - parseLeadingNumber(b.cost) || a.name.localeCompare(b.name));
+      sorted.sort((a, b) => (a._category || '').localeCompare(b._category || '') || a.name.localeCompare(b.name));
+    } else if (state.sort === 'price') {
+      sorted.sort((a, b) => priceValue(a) - priceValue(b) || a.name.localeCompare(b.name));
     } else if (state.sort === 'weight') {
       sorted.sort((a, b) => parseLeadingNumber(a.weight) - parseLeadingNumber(b.weight) || a.name.localeCompare(b.name));
-    } else if (state.sort === 'cost_desc') {
-    sorted.sort((a, b) => parseLeadingNumber(b.cost) - parseLeadingNumber(a.cost) || a.name.localeCompare(b.name));
+    } else if (state.sort === 'price_desc') {
+      sorted.sort((a, b) => priceValue(b) - priceValue(a) || a.name.localeCompare(b.name));
     } else if (state.sort === 'weight_desc') {
       sorted.sort((a, b) => parseLeadingNumber(b.weight) - parseLeadingNumber(a.weight) || a.name.localeCompare(b.name));
     }
@@ -334,18 +202,11 @@
   function render(){
     syncSortButtons();
     const results = filtered();
-    document.getElementById('listTitle').textContent = `${results.length} Weapon${results.length !== 1 ? 's' : ''} Listed`;
-    const listEl = document.getElementById('weaponList');
-    if (results.length === 0) {
-      listEl.innerHTML = `<div class="empty-state"><span class="big">No weapons found</span>Try a different search term or clear a filter.</div>`;
-      return;
-    }
-    const shown = paginate(state, results);
-    listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Weapons');
-    wireCardToggle(listEl, state, 'weapon-card', 'weapon-name');
-    wireShowMore(listEl, {
-      onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
-      onShowAll: () => { state.visibleCount = results.length; render(); }
+    setListTitle(results.length, 'Weapon');
+    renderList({
+      state, results, listId: 'weaponList', cardHTML,
+      cardClass: 'weapon-card', nameClass: 'weapon-name',
+      emptyNoun: 'weapons', labelPlural: 'Weapons', rerender: render
     });
   }
 

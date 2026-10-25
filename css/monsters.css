@@ -4,25 +4,12 @@
    Only what differs from the shared styles in base.css.
 
    Contents
-     1. Range filter tokens (CR / HD)
-     2. Environment filter
+     1. Environment filter
    ========================================================================== */
 
 
 /* ==========================================================================
-   1. Range filter tokens (CR / HD)
-   --------------------------------------------------------------------------
-   Operator select takes 50% of the row, each numeric input is 48px wide.
-   The same filter shape is reused on the Magic Items page (price).
-   ========================================================================== */
-.range-filter-row {
-  --rf-select: 50%;
-  --rf-input:  48px;
-}
-
-
-/* ==========================================================================
-   2. Environment filter
+   1. Environment filter
    --------------------------------------------------------------------------
    A row of equal-width selects.
    ========================================================================== */

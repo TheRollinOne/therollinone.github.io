@@ -1,43 +1,19 @@
 (function(){
-  // Canonical display order for the type chips (matches the old
-  // --type-<name> var order in npcs.css — already alphabetical).
-  // Any type present in the data that isn't listed here is appended
-  // afterward, alphabetically.
+  // Canonical display order for the type chips
   const TYPE_ORDER = ['Aberration', 'Animal', 'Construct', 'Dragon', 'Fey', 'Humanoid', 'Magical Beast', 'Monstrous Humanoid', 'Ooze', 'Outsider', 'Plant', 'Undead', 'Vermin'];
 
   // NPCS_DATA holds only slim list records (see build-npcs.js). The full
   // stat blocks live in chunked files (data/npcs-<N>.js) that are loaded
   // the first time a card in that chunk is opened.
-  const NPCS = (typeof NPCS_DATA !== 'undefined') ? NPCS_DATA.slice() : [];
+  const NPCS = (typeof NPCS_DATA !== 'undefined') ? NPCS_DATA : [];
 
   // ---- Lazy-loaded full records ----
+  // The slim record is NOT merged in; only _type is copied (bodyHTML uses m._type).
   const META = (typeof NPCS_DATA_META !== 'undefined') ? NPCS_DATA_META : { chunkSize: 20 };
-  const CH = META.chunkSize;
-  const chunkPromises = {};
-  function loadChunk(c){
-    return chunkPromises[c] || (chunkPromises[c] = new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = META['c' + c];
-      s.onload = () => res(window['NPC_CHUNK_' + c]);
-      s.onerror = () => { delete chunkPromises[c]; s.remove(); rej(new Error('chunk ' + c)); };
-      document.head.appendChild(s);
-    }));
-  }
-  function loadDetail(idx){
-    return loadChunk(Math.floor(idx / CH)).then(arr => {
-      const full = arr[idx % CH];
-      full._type = NPCS[idx]._type;   // bodyHTML() uses m._type
-      return full;
-    });
-  }
-  function hydrate(idx, card){
-    const body = card.querySelector('.entry-body');
-    if(!body || body.dataset.ready) return;
-    body.innerHTML = '<div class="entry-desc">Loading…</div>';
-    loadDetail(idx)
-      .then(full => { body.innerHTML = bodyHTML(full); body.dataset.ready = '1'; })
-      .catch(() => { body.innerHTML = '<div class="entry-desc">Could not load details.</div>'; });
-  }
+  const { hydrate } = createChunkLoader(META, 'NPC_CHUNK_', {
+    list: NPCS, bodyHTML,
+    merge: (full, slim) => { full._type = slim._type; return full; }
+  });
 
   // Colors are computed from whatever types are actually present in the
   // data, title-cased so inconsistent source casing doesn't produce
@@ -118,7 +94,7 @@
     open: new Set()
   };
 
-  document.getElementById('brandSub').textContent = `NPC Registry · ${NPCS.length} NPCs`;
+  setBrandSub('NPC Registry', NPCS.length, 'NPCs');
 
   function prepare(m, i){
     m._idx = i;
@@ -147,8 +123,7 @@
   const HD_MIN = HD_VALUES.length ? Math.min(...HD_VALUES) : 0;
   const HD_MAX = HD_VALUES.length ? Math.max(...HD_VALUES) : 30;
 
-  initMobileFiltersCollapse();
-  initThemeToggle();
+  initPageChrome();
 
   // ---- Numeric range filters (Challenge Rating, Hit Dice) ----
   // wireRangeFilter/matchesRange are shared helpers in base.js. Bounds and
@@ -180,27 +155,8 @@
   });
 
   // ---- Type filter ----
-  const typeChips = document.getElementById('typeChips');
-  Object.keys(typeColorOf).forEach(type => {
-    const color = typeColorOf[type];
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.style.setProperty('--dotc', color);
-    chip.style.setProperty('--chipc', color);
-    chip.dataset.type = type;
-    chip.innerHTML = `<span class="dot"></span>${escapeHtml(type)}`;
-    chip.addEventListener('click', () => {
-      if (state.types.has(type)) state.types.delete(type);
-      else state.types.add(type);
-      chip.classList.toggle('active');
-      render();
-    });
-    typeChips.appendChild(chip);
-  });
-  document.getElementById('clearTypes').addEventListener('click', () => {
-    state.types.clear();
-    typeChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    render();
+  const resetTypes = buildColorChips(typeColorOf, state.types, 'typeChips', {
+    dataAttr: 'type', clearId: 'clearTypes', render
   });
 
   // ---- Subtype filter (single select; options are rebuilt on every
@@ -240,83 +196,34 @@
   });
 
   // ---- Spellcasting filter (multi-select, plain gold-when-active chips) ----
-  const spellcastingChips = document.getElementById('spellcastingChips');
-  spellcastingChips.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const val = chip.dataset.spellcasting;
-      if (state.spellcasting.has(val)) state.spellcasting.delete(val);
-      else state.spellcasting.add(val);
-      chip.classList.toggle('active');
-      render();
-    });
-  });
-  document.getElementById('clearSpellcasting').addEventListener('click', () => {
-    state.spellcasting.clear();
-    spellcastingChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    render();
+  const resetSpellcasting = wireChipSet({
+    container: 'spellcastingChips', set: state.spellcasting, dataAttr: 'spellcasting', clearId: 'clearSpellcasting', render
   });
 
-  // ---- Search ----
-  const searchInputEl = document.getElementById('searchInput');
-  const searchWrapEl = document.getElementById('searchWrap');
-  const searchClearIcon = document.getElementById('searchClearIcon');
-  wireSearchInput({
-    inputEl: searchInputEl,
-    wrapEl: searchWrapEl,
-    clearIconEl: searchClearIcon,
-    onQuery: (q) => { state.query = q; },
-    render: () => render(),
-    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
-  });
-
-  // ---- Search help tooltip (hover; hidden while the box has focus) ----
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'bandit +stealth -evil +shortbow', { prefix: true });
-  initSearchScope(searchWrapEl, (scope) => { state.searchScope = scope; render(); });
+  // ---- Search (+ help tooltip and Names/All Fields scope) ----
+  const search = initSearch({ state, render, example: 'bandit +stealth -evil +shortbow' });
 
   // ---- Clear all ----
   document.getElementById('clearAll').addEventListener('click', (e) => {
     e.stopPropagation();
-    state.query = '';
-    searchInputEl.value = '';
-    searchWrapEl.classList.remove('has-query');
-
-    state.cr.operator = ''; state.cr.v1 = null; state.cr.v2 = null;
-    crFilter.operatorSelect.value = ''; crFilter.input1.value = ''; crFilter.input2.value = '';
-    crFilter.syncVisibility();
-
-    state.hd.operator = ''; state.hd.v1 = null; state.hd.v2 = null;
-    hdFilter.operatorSelect.value = ''; hdFilter.input1.value = ''; hdFilter.input2.value = '';
-    hdFilter.syncVisibility();
-
-    state.types.clear();
-    typeChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-
+    search.reset();
+    crFilter.reset();
+    hdFilter.reset();
+    resetTypes();
     state.subtype = '';
     subtypeSelect.value = '';
-
     state.classCat = ''; state.cls = '';
     classCategorySelect.value = ''; classSelect.value = '';
-
-    state.spellcasting.clear();
-    spellcastingChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-
+    resetSpellcasting();
     render();
   });
 
-// ---- Sort (header buttons) ----
-  document.querySelectorAll('#sortBar .sort-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.sort = btn.dataset.sort;
-      render();
-    });
-  });
-  function syncSortButtons(){
-    document.querySelectorAll('#sortBar .sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
-  }
+  // ---- Sort (header buttons) ----
+  const syncSortButtons = wireSortBar(state, render);
 
   wireCopyableList('npcList', 'npc-name');
 
-  const queryMatch = createQueryMatcher({ prefix: true });
+  const queryMatch = createQueryMatcher();
   function matchesQuery(npc, query){
     return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? npc._blob : npc._nameBlob, query);
   }
@@ -412,11 +319,11 @@
       sorted.sort((a,b) => a.name.localeCompare(b.name));
     } else if(state.sort === 'name_desc'){
       sorted.sort((a,b) => b.name.localeCompare(a.name));
-    } else if(state.sort === 'cr_asc'){
+    } else if(state.sort === 'cr'){
       sorted.sort((a,b) => (a.cr ?? -1) - (b.cr ?? -1) || a.name.localeCompare(b.name));
     } else if(state.sort === 'cr_desc'){
       sorted.sort((a,b) => (b.cr ?? -1) - (a.cr ?? -1) || a.name.localeCompare(b.name));
-    } else if(state.sort === 'hd_asc'){
+    } else if(state.sort === 'hd'){
       sorted.sort((a,b) => (a.hd_value ?? -1) - (b.hd_value ?? -1) || a.name.localeCompare(b.name));
     } else if(state.sort === 'hd_desc'){
       sorted.sort((a,b) => (b.hd_value ?? -1) - (a.hd_value ?? -1) || a.name.localeCompare(b.name));
@@ -428,16 +335,13 @@
     return sorted;
   }
 
-  function quickStatsHTML(m){
+  function npcQuickStats(m){
     const hdText = (typeof m.hd_value === 'number') ? String(m.hd_value) : '';
-    const boxes = [
+    return quickStatsHTML([
       ['CR', formatChallengeRating(m.cr, '-')],
       ['HD', hdText || '—'],
       ['Size', m.size || '—'],
-    ];
-    return `<div class="entry-qstats">${boxes.map(([l, v]) =>
-      `<div class="entry-qstat"><div class="entry-qstat-label">${escapeHtml(l)}</div><div class="entry-qstat-value">${escapeHtml(v)}</div></div>`
-    ).join('')}</div>`;
+    ]);
   }
 
   // ---------- Stat block helpers ----------
@@ -772,7 +676,7 @@
       });
     }
 
-    const crText = `CR ${formatChallengeRating(m.cr, '-')}`;
+    const crText = formatChallengeRatingLabel(m.cr, '-');
     const hLines = headerLines(m);
     parts.push({
       text: [`**${m.name}${crText ? ' ' + crText : ''}**`, ...hLines.map(partsText)].join('\n'),
@@ -824,7 +728,7 @@
           ${subtypeTagHtml}
         </div>
         <div class="entry-right">
-          ${quickStatsHTML(m)}
+          ${npcQuickStats(m)}
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
@@ -835,22 +739,12 @@
   function render(){
     syncSortButtons();
     const results = filtered();
-    document.getElementById('listTitle').textContent = `${results.length} NPC${results.length !== 1 ? 's' : ''} Listed`;
-    const listEl = document.getElementById('npcList');
-    if(results.length === 0){
-      listEl.innerHTML = `<div class="empty-state"><span class="big">No npcs found</span>Try a different search term or clear a filter.</div>`;
-      return;
-    }
-    const shown = paginate(state, results);
-    listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'NPCs');
-    // The full record is fetched (chunked, cached) and the stat block built
-    // when a card is opened; cards that are already open (state.open) after a
-    // re-render are hydrated here too.
-    wireCardToggle(listEl, state, 'npc-card', 'npc-name', (idx, card) => hydrate(idx, card));
-    listEl.querySelectorAll('.npc-card.open').forEach(card => hydrate(+card.dataset.idx, card));
-    wireShowMore(listEl, {
-      onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
-      onShowAll: () => { state.visibleCount = results.length; render(); }
+    setListTitle(results.length, 'NPC');
+    renderList({
+      state, results, listId: 'npcList', cardHTML,
+      cardClass: 'npc-card', nameClass: 'npc-name',
+      emptyNoun: 'NPCs', labelPlural: 'NPCs', rerender: render,
+      onOpen: hydrate
     });
   }
 

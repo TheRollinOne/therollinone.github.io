@@ -6,7 +6,7 @@
    widget lives in theme-toggle.css.
 
    Contents
-      1. Design tokens
+      1. Type color tokens
       2. Base / reset
       3. App layout
       4. Sidebar (container, brand, scrollbar, background art)
@@ -38,25 +38,9 @@
 
 
 /* ==========================================================================
-   1. Design tokens
-   --------------------------------------------------------------------------
-   Default (gold) palette. Other themes override these in themes.css.
+   1. Type color tokens
    ========================================================================== */
 :root {
-  /* Surfaces, darkest to lightest */
-  --ink:           #0e1018;
-  --ink-2:         #171925;
-  --ink-3:         #202334;
-
-  /* Text */
-  --parchment:     #f3eedf;
-  --parchment-dim: #e0d8bf;
-
-  /* Lines & accents */
-  --hairline:      #36394d;
-  --gold:          #d3ac43;
-  --dark-gold:     #b69028;
-
   /* Type colors: 1-8 are the bright set, 9-16 their darker counterparts
      (same hue order); gray is the neutral. Used to color-code entry types. */
   --type-1:  #78dc6e;
@@ -215,8 +199,8 @@ body {
 
 html[data-theme="blue"]   .sidebar-art { background-image: url('../pictures/d20_logo_blue.png'); }
 html[data-theme="orange"] .sidebar-art { background-image: url('../pictures/d20_logo_orange.png'); }
-html[data-theme="green"]  .sidebar-art { background-image: url('../pictures/d20__logogreen.png'); }
-html[data-theme="red"]    .sidebar-art { background-image: url('../pictures/d20__logored.png'); }
+html[data-theme="green"]  .sidebar-art { background-image: url('../pictures/d20_logo_green.png'); }
+html[data-theme="red"]    .sidebar-art { background-image: url('../pictures/d20_logo_red.png'); }
 
 @media (max-width: 900px) {
   .sidebar-art {
@@ -463,7 +447,8 @@ select.select-filter:disabled {
 
 /* 6.5 Numeric range filter
    "Is lower than / equal / greater / between" row (CR, HD, rune/item
-   levels...). Pages tune the proportions through two variables:
+   levels...). The --compact modifier narrows the inputs for denser filter
+   sidebars. Proportions can be tuned through two variables:
      --rf-select   width of the operator select
      --rf-input    width of each numeric input */
 .range-filter-row {
@@ -474,6 +459,11 @@ select.select-filter:disabled {
   align-items: center;
   flex-wrap: nowrap;
   gap: 6px;
+}
+
+.range-filter-row--compact {
+  --rf-select: 50%;
+  --rf-input:  48px;
 }
 
 .range-filter-row select.select-filter {
@@ -1178,7 +1168,7 @@ select.select-filter:disabled {
   max-width: 100%;
   overflow: hidden;
   font-family: 'JetBrains Mono', monospace;
-  font-size: .95rem;
+  font-size: .9rem;
   font-weight: 700;
   text-overflow: ellipsis;
   text-transform: capitalize;

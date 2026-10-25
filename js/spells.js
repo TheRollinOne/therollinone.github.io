@@ -1,6 +1,5 @@
 (function(){
   const SCHOOL_ORDER = ['abjuration','conjuration','divination','enchantment','evocation','illusion','necromancy','transmutation','universal'];
-  const SCHOOL_LABEL = {abjuration:'Abjuration',conjuration:'Conjuration',divination:'Divination',enchantment:'Enchantment',evocation:'Evocation',illusion:'Illusion',necromancy:'Necromancy',transmutation:'Transmutation',universal:'Universal'};
   // subschool is a list, e.g. ["Figment","Glamer"] or []
   const subschoolText = s => (s.subschool || []).join(', ');
   // school + subschool, e.g. "illusion (Figment, Glamer)"; no empty "()" when the list is empty
@@ -29,7 +28,7 @@
     open:new Set()
   };
 
-  document.getElementById('brandSub').textContent = `Spell Compendium · ${SPELLS_DATA.length} Spells`;
+  setBrandSub('Spell Compendium', SPELLS_DATA.length, 'Spells');
 
   SPELLS_DATA.forEach((s,i)=>{
     s._idx = i;
@@ -49,64 +48,21 @@
   schoolColorOf.universal = TYPE_GRAY;
   SPELLS_DATA.forEach(s=>{ s._cardColor = schoolColorOf[s.school || 'universal'] || TYPE_GRAY; });
 
-  initMobileFiltersCollapse();
-  initThemeToggle();
+  initPageChrome();
 
   const allClasses = Array.from(new Set(SPELLS_DATA.flatMap(s=>s._classes))).sort();
-  const classChips = document.getElementById('classChips');
-  allClasses.forEach(c=>{
-    const chip = document.createElement('div');
-    chip.className='chip';
-    chip.dataset.cls = c;
-    chip.textContent = formatCapitalize(c);
-    chip.addEventListener('click', ()=>{
-      if(state.classes.has(c)){
-        state.classes.delete(c);
-      } else {
-        state.classes.add(c);
-      }
-      chip.classList.toggle('active');
-      render();
-    });
-    classChips.appendChild(chip);
+  const resetClasses = buildPlainChips(allClasses, state.classes, 'classChips', {
+    dataAttr: 'cls', clearId: 'clearClasses', render, labelOf: formatCapitalize
   });
 
-  const allLevelValues = [0,1,2,3,4,5,6,7,8,9];
-  const levelChips = document.getElementById('levelChips');
-  allLevelValues.forEach(l=>{
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.dataset.level = l;
-    chip.textContent = l;
-    chip.addEventListener('click', ()=>{
-      if(state.levels.has(l)){
-        state.levels.delete(l);
-      } else {
-        state.levels.add(l);
-      }
-      chip.classList.toggle('active');
-      render();
-    });
-    levelChips.appendChild(chip);
+  const resetLevels = buildPlainChips([0,1,2,3,4,5,6,7,8,9], state.levels, 'levelChips', {
+    dataAttr: 'level', clearId: 'clearLevels', render, parse: Number
   });
 
   const SAVE_TYPES = ['Fortitude','Reflex','Will','None'];
   const saveChips = document.getElementById('saveChips');
-  SAVE_TYPES.forEach(sv=>{
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.dataset.save = sv;
-    chip.textContent = sv;
-    chip.addEventListener('click', ()=>{
-      if(state.saves.has(sv)){
-        state.saves.delete(sv);
-      } else {
-        state.saves.add(sv);
-      }
-      chip.classList.toggle('active');
-      render();
-    });
-    saveChips.appendChild(chip);
+  const resetSaves = buildPlainChips(SAVE_TYPES, state.saves, saveChips, {
+    dataAttr: 'save', clearId: 'clearSaves', render
   });
 
   // Ritual Casting section — no static markup exists for this yet, so build
@@ -119,44 +75,17 @@
     <div class="chip-grid cols-2" id="ritualChips"></div>`;
   savesGroup.insertAdjacentElement('afterend', ritualGroup);
 
-  const ritualChips = ritualGroup.querySelector('#ritualChips');
-  const RITUAL_OPTIONS = [{key:'yes', label:'Yes'}, {key:'no', label:'No'}];
-  RITUAL_OPTIONS.forEach(opt=>{
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.dataset.ritual = opt.key;
-    chip.textContent = opt.label;
-    chip.addEventListener('click', ()=>{
-      if(state.ritual === opt.key){
-        state.ritual = null;
-      } else {
-        state.ritual = opt.key;
-      }
-      ritualChips.querySelectorAll('.chip').forEach(c=>{
-        c.classList.toggle('active', c.dataset.ritual === state.ritual);
-      });
-      render();
-    });
-    ritualChips.appendChild(chip);
+  const resetRitual = wireYesNoToggle({
+    container: ritualGroup.querySelector('#ritualChips'), state, key: 'ritual', render
   });
 
-  const schoolChips = document.getElementById('schoolChips');
+  // Only schools present in the data get a chip (Universal keeps its gray).
+  const presentSchoolColors = {};
   SCHOOL_ORDER.forEach(sch=>{
-    if(!SPELLS_DATA.some(s=>s.school===sch)) return;
-    const chip = document.createElement('div');
-    chip.className='chip';
-    const color = schoolColorOf[sch] || TYPE_GRAY;
-    chip.style.setProperty('--dotc', color);
-    chip.style.setProperty('--chipc', color);
-    chip.dataset.school = sch;
-    chip.innerHTML = `<span class="dot"></span>${SCHOOL_LABEL[sch]}`;
-    chip.addEventListener('click', ()=>{
-      if(state.schools.has(sch)) state.schools.delete(sch);
-      else state.schools.add(sch);
-      chip.classList.toggle('active');
-      render();
-    });
-    schoolChips.appendChild(chip);
+    if(SPELLS_DATA.some(s=>s.school===sch)) presentSchoolColors[sch] = schoolColorOf[sch] || TYPE_GRAY;
+  });
+  const resetSchools = buildColorChips(presentSchoolColors, state.schools, 'schoolChips', {
+    dataAttr: 'school', clearId: 'clearSchools', render, labelOf: formatCapitalize
   });
 
   // Subschool select: options are rebuilt on every render() from the spells
@@ -172,72 +101,22 @@
     render();
   });
 
-  document.getElementById('clearSchools').addEventListener('click', ()=>{
-    state.schools.clear();
-    document.querySelectorAll('#schoolChips .chip').forEach(c=>c.classList.remove('active'));
-    render();
-  });
-  document.getElementById('clearClasses').addEventListener('click', ()=>{
-    state.classes.clear();
-    document.querySelectorAll('#classChips .chip').forEach(el=>el.classList.remove('active'));
-    render();
-  });
-  document.getElementById('clearLevels').addEventListener('click', ()=>{
-    state.levels.clear();
-    document.querySelectorAll('#levelChips .chip').forEach(el=>el.classList.remove('active'));
-    render();
-  });
-  document.getElementById('clearSaves').addEventListener('click', ()=>{
-    state.saves.clear();
-    document.querySelectorAll('#saveChips .chip').forEach(el=>el.classList.remove('active'));
-    render();
-  });
-
-  const searchInputEl = document.getElementById('searchInput');
-  const searchWrapEl = document.querySelector('.search-wrap');
-  const searchClearIcon = document.getElementById('searchClearIcon');
-  const syncSearchClearIcon = wireSearchInput({
-    inputEl: searchInputEl,
-    wrapEl: searchWrapEl,
-    clearIconEl: searchClearIcon,
-    onQuery: (q)=>{ state.query = q; },
-    render: ()=>render(),
-    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
-  });
-
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'fireball +evocation -verbal', { prefix: true });
-  initSearchScope(searchWrapEl, (scope)=>{ state.searchScope = scope; render(); });
+  const search = initSearch({ state, render, example: 'fireball +evocation -verbal' });
 
   document.getElementById('clearAll').addEventListener('click', (e)=>{
     e.stopPropagation();
-    state.query = '';
-    searchInputEl.value = '';
-    syncSearchClearIcon();
-    state.schools.clear();
-    document.querySelectorAll('#schoolChips .chip').forEach(el=>el.classList.remove('active'));
+    search.reset();
+    resetSchools();
     state.subschool = '';
     subschoolSelect.value = '';
-    state.classes.clear();
-    document.querySelectorAll('#classChips .chip').forEach(el=>el.classList.remove('active'));
-    state.levels.clear();
-    document.querySelectorAll('#levelChips .chip').forEach(el=>el.classList.remove('active'));
-    state.saves.clear();
-    document.querySelectorAll('#saveChips .chip').forEach(el=>el.classList.remove('active'));
-    state.ritual = null;
-    document.querySelectorAll('#ritualChips .chip').forEach(el=>el.classList.remove('active'));
+    resetClasses();
+    resetLevels();
+    resetSaves();
+    resetRitual();
     render();
   });
 
-  // ---- Sort (header buttons) ----
-  document.querySelectorAll('#sortBar .sort-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.sort = btn.dataset.sort;
-      render();
-    });
-  });
-  function syncSortButtons(){
-    document.querySelectorAll('#sortBar .sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
-  }
+  const syncSortButtons = wireSortBar(state, render);
 
   wireCopyableList('spellList', 'spell-name');
   wireHoverCopyTooltip('spellList', '.class-pill-damage:not(.class-pill-split)');
@@ -268,7 +147,7 @@
     return lines.join('\n');
   }
 
-  const queryMatch = createQueryMatcher({ prefix: true });
+  const queryMatch = createQueryMatcher();
   function matchesQuery(spell, query){
     return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? spell._blob : spell._nameBlob, query);
   }
@@ -301,7 +180,7 @@
     const classesHTML = s.level_entries.map(le=>{
       const formula = le.damage_formula;
       if(!formula){
-        return `<span class="class-pill">${escapeHtml(le.class)} ${le.level}</span>`;
+        return `<span class="class-pill">${escapeHtml(le.class)} ${escapeHtml(le.level)}</span>`;
       }
       if(!/c1_/.test(formula)){
         return `<span class="class-pill class-pill-damage copyable" data-copy="${escapeHtml(formula)}">${escapeHtml(le.class)} ${le.level}</span>`;
@@ -331,8 +210,33 @@
       if(m) return `<div class="entry-desc heightened-item"><b>${escapeHtml(m[1].replace(/^\(\s*|\s*\)$/g, ''))}</b>: ${htmlFormatText(m[2])}</div>`;
       return `<div class="entry-desc heightened-item">${htmlFormatText(h)}</div>`;
     }).join('') : '';
-    const heightenedCopyBlock = heightenedText ? `\n      <div class="entry-section copyable" data-copy="${escapeHtml(heightenedText)}">\n        <div class="entry-section-title">Heightened</div>\n        <div >${heightenedItemsHtml}</div>\n      </div>` : '';
-    return `\n    <div class="entry-card spell-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${s._idx}">\n      <div class="entry-head" data-toggle="${s._idx}">\n        <div class="entry-title-block">\n          <span class="entry-name spell-name copyable" data-copy="${escapeHtml(s.name)}">${escapeHtml(s.name)}</span>\n          <span class="entry-meta">${levelDisp}</span>\n          <span class="entry-tag">${escapeHtml(schoolDisplay(s) || sch)}</span>\n        </div>\n        <div class="entry-right">\n          <span class="entry-badge entry-badge--responsive spell-classlevel-badge" title="${escapeHtml(shortDescInline)}">${escapeHtml(shortDescInline)}</span>\n          ${roll20TagHTML}\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="entry-body">\n        <div class="stat-grid">\n          ${statFields.map(([l,v])=>`<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`).join('')}\n        </div>\n        <div class="classes-row">${classesHTML}</div>\n        <div class="entry-desc desc-copy copyable" data-copy="${escapeHtml(descText)}">${descHtml}</div>${heightenedCopyBlock}\n      </div>\n    </div>`;
+    const heightenedCopyBlock = heightenedText ? `
+      <div class="entry-section copyable" data-copy="${escapeHtml(heightenedText)}">
+        <div class="entry-section-title">Heightened</div>
+        <div >${heightenedItemsHtml}</div>
+      </div>` : '';
+    return `
+    <div class="entry-card spell-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${s._idx}">
+      <div class="entry-head" data-toggle="${s._idx}">
+        <div class="entry-title-block">
+          <span class="entry-name spell-name copyable" data-copy="${escapeHtml(s.name)}">${escapeHtml(s.name)}</span>
+          <span class="entry-meta">${levelDisp}</span>
+          <span class="entry-tag">${escapeHtml(schoolDisplay(s) || sch)}</span>
+        </div>
+        <div class="entry-right">
+          <span class="entry-badge entry-badge--responsive spell-classlevel-badge" title="${escapeHtml(shortDescInline)}">${escapeHtml(shortDescInline)}</span>
+          ${roll20TagHTML}
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="entry-body">
+        <div class="stat-grid">
+          ${statFields.map(([l,v])=>`<div class="stat copyable" data-copy="${escapeHtml(v)}"><div class="stat-label">${escapeHtml(l)}</div><div class="stat-value">${escapeHtml(v)}</div></div>`).join('')}
+        </div>
+        <div class="classes-row">${classesHTML}</div>
+        <div class="entry-desc desc-copy copyable" data-copy="${escapeHtml(descText)}">${descHtml}</div>${heightenedCopyBlock}
+      </div>
+    </div>`;
   }
 
   // Rebuilds the Subschool <select> from the subschools present in `list`
@@ -387,17 +291,17 @@
     const list = applyFilters(null);
     const sorted = list.slice();
     if(state.sort==='name'){
-      sorted.sort((a,b)=>a.name.localeCompare(b.name));
+      sorted.sort((a,b)=>naturalCompare(a.name, b.name));
     } else if(state.sort==='name_desc'){
-      sorted.sort((a,b)=>b.name.localeCompare(a.name));
+      sorted.sort((a,b)=>naturalCompare(b.name, a.name));
     } else if(state.sort==='level_desc'){
-      sorted.sort((a,b)=>(b.min_level-a.min_level) || a.name.localeCompare(b.name));
+      sorted.sort((a,b)=>(b.min_level-a.min_level) || naturalCompare(a.name, b.name));
     } else if(state.sort==='school_desc'){
-      sorted.sort((a,b)=>(b.school||'').localeCompare(a.school||'') || a.name.localeCompare(b.name));
+      sorted.sort((a,b)=>(b.school||'').localeCompare(a.school||'') || naturalCompare(a.name, b.name));
     } else if(state.sort==='level'){
-      sorted.sort((a,b)=>(a.min_level-b.min_level) || a.name.localeCompare(b.name));
+      sorted.sort((a,b)=>(a.min_level-b.min_level) || naturalCompare(a.name, b.name));
     } else if(state.sort==='school'){
-      sorted.sort((a,b)=>(a.school||'').localeCompare(b.school||'') || a.name.localeCompare(b.name));
+      sorted.sort((a,b)=>(a.school||'').localeCompare(b.school||'') || naturalCompare(a.name, b.name));
     }
     return sorted;
   }
@@ -405,18 +309,11 @@
   function render(){
     syncSortButtons();
     const results = filtered();
-    document.getElementById('listTitle').textContent = `${results.length} Spell${results.length!==1?'s':''} Listed`;
-    const listEl = document.getElementById('spellList');
-    if(results.length===0){
-      listEl.innerHTML = `<div class="empty-state"><span class="big">No spells found</span>Try a different search term or clear a filter.</div>`;
-      return;
-    }
-    const shown = paginate(state, results);
-    listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Spells');
-    wireCardToggle(listEl, state, 'spell-card', 'spell-name');
-    wireShowMore(listEl, {
-      onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
-      onShowAll: () => { state.visibleCount = results.length; render(); }
+    setListTitle(results.length, 'Spell');
+    renderList({
+      state, results, listId: 'spellList', cardHTML,
+      cardClass: 'spell-card', nameClass: 'spell-name',
+      emptyNoun: 'spells', labelPlural: 'Spells', rerender: render
     });
   }
 

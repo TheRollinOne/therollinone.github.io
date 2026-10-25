@@ -174,16 +174,43 @@ function formatSigned(value){
   return value >= 0 ? `+${value}` : `–${Math.abs(value)}`;
 }
 
+// Number with thousands separators and an optional 2-digit decimal part:
+// "XXX,XXX.YY" - YY is dropped when it is 00. Locale-independent (no
+// toLocaleString). 1000 -> "1,000", 1234.5 -> "1,234.5", 7 -> "7",
+// 1234567.891 -> "1,234,567.89". null/undefined/''/non-numeric -> ''.
+function formatNumber(value){
+  if(value === null || value === undefined || value === '') return '';
+  const n = Number(value);
+  if(!isFinite(n)) return '';
+  const fixed = Math.abs(n).toFixed(2);
+  const [int, rawDec] = fixed.split('.');
+  const dec = rawDec.replace(/0+$/, '');   // "50" -> "5", "00" -> ""
+  const sign = (n < 0 && Number(fixed) !== 0) ? '-' : '';
+  return sign + int.replace(/\B(?=(\d{3})+(?!\d))/g, ',') + (dec ? '.' + dec : '');
+}
+
+// Price/cost in gold pieces: formatNumber + " gp" ("XXX,XXX.YY gp").
+// 1000 -> "1,000 gp", 0.5 -> "0.5 gp". null/non-numeric -> ''.
+// Pass withUnit = false for the bare number ("1,000"), e.g. compact headers.
+function formatGp(value, withUnit = true){
+  const text = formatNumber(value);
+  if(!text) return '';
+  return withUnit ? `${text} gp` : text;
+}
+
 // Uppercases the first character only ("light armor" -> "Light armor").
 function formatCapitalize(str){
   return str ? str.charAt(0).toUpperCase() + str.slice(1) : str;
 }
 
-// Title-cases every word ("light armor" -> "Light Armor"). Used to normalize
-// category/type-like fields that may come from the data with inconsistent
-// casing, before they're used as chip labels / color-map keys.
+// Title-cases a string: lower-cases it, then capitalizes the first letter of
+// each word, including after a hyphen, "(" or "/" ("light armor" -> "Light
+// Armor", "one-handed" -> "One-Handed", "neck (but see text)" -> "Neck (But See
+// Text)"). Used to normalize category/type/subtype-like fields that may come
+// from the data with inconsistent casing, before they're used as chip labels /
+// color-map keys / display text.
 function formatTitleCase(str){
-  return (str || '').replace(/\w\S*/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
+  return (str || '').toLowerCase().replace(/(^|[\s\-(\/])([a-z])/g, (m, p, c) => p + c.toUpperCase());
 }
 
 // Decimal challenge rating -> the fraction form used in the books
@@ -203,4 +230,14 @@ function formatChallengeRating(cr, emptyText = '—'){
     }
   }
   return String(cr);
+}
+
+// "CR 1/2"-style label for stat-block titles. Built on formatChallengeRating
+// so the fraction logic and the "missing" test live in one place.
+// Missing CR: '' by default (no label at all, monsters page); pass emptyText
+// to show "CR <emptyText>" instead (the NPC page passes '-').
+function formatChallengeRatingLabel(cr, emptyText = null){
+  const missing = cr === null || cr === undefined || cr === '';
+  if(missing) return emptyText === null ? '' : `CR ${emptyText}`;
+  return `CR ${formatChallengeRating(cr)}`;
 }

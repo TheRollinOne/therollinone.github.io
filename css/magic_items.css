@@ -5,15 +5,13 @@
 
    Contents
      1. Slot filter chips
-     2. Price range filter
-     3. Stat / construction lines
-     4. Item card
-        4.1 Card shell
-        4.2 Header
-        4.3 Body
-        4.4 Open state
-     5. Item sections
-     6. Empty state
+     2. Stat / construction lines
+     3. Item card
+        3.1 Card shell
+        3.2 Header
+        3.3 Body
+        3.4 Open state
+     4. Item sections
    ========================================================================== */
 
 
@@ -38,77 +36,7 @@
 
 
 /* ==========================================================================
-   2. Price range filter
-   --------------------------------------------------------------------------
-   Operator select + up to two numeric inputs. Same shape as the Monsters
-   page's CR/HD range filters (see monsters.css).
-   ========================================================================== */
-.range-filter-row {
-  display: flex;
-  align-items: center;
-  flex-wrap: nowrap;
-  gap: 6px;
-}
-
-.range-filter-row select.select-filter {
-  flex: 0 0 50%;
-  width: 40%;
-  min-width: 0;
-  padding-left: 6px;
-  padding-right: 6px;
-}
-
-/* Numeric input (centered, spinner arrows removed) */
-.range-input {
-  flex: 0 0 48px;
-  width: 48px;
-  min-width: 0;
-  padding: 9px 4px;
-  font-family: 'Crimson Pro', serif;
-  font-size: .95rem;
-  text-align: center;
-  color: var(--parchment);
-  background: var(--ink-3);
-  border: 1px solid var(--parchment-dim);
-  border-radius: 6px;
-  outline: none;
-  transition: border-color .15s;
-  -moz-appearance: textfield;
-          appearance: textfield;
-}
-
-.range-input::-webkit-outer-spin-button,
-.range-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.range-input:focus {
-  border-color: var(--gold);
-}
-
-.range-input[hidden] {
-  display: none;
-}
-
-/* "and" label between the two inputs (used by the "between" operator) */
-.range-and {
-  flex: 0 0 auto;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: .78rem;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  white-space: nowrap;
-  color: var(--parchment-dim);
-}
-
-.range-and[hidden] {
-  display: none;
-}
-
-
-/* ==========================================================================
-   3. Stat / construction lines
+   2. Stat / construction lines
    --------------------------------------------------------------------------
    Labels (Aura, CL, Slot, Weight, Requirements, Cost, Made From,
    Destruction, intelligent-item stats): bold + card color, same look as the
@@ -123,10 +51,10 @@
 
 
 /* ==========================================================================
-   4. Item card
+   3. Item card
    ========================================================================== */
 
-/* 4.1 Card shell: accent bar on the left, colored by --cardc */
+/* 3.1 Card shell: accent bar on the left, colored by --cardc */
 .item-card {
   background: var(--ink-2);
   border: 1px solid var(--hairline);
@@ -136,7 +64,7 @@
   transition: border-color .15s;
 }
 
-/* 4.2 Header (always visible, click to expand) */
+/* 3.2 Header (always visible, click to expand) */
 .item-head {
   display: flex;
   align-items: center;
@@ -192,14 +120,14 @@
   color: var(--parchment-dim);
 }
 
-/* 4.3 Body (collapsed by default) */
+/* 3.3 Body (collapsed by default) */
 .item-body {
   display: none;
   padding: 0 18px 20px;
   border-top: 1px solid var(--hairline);
 }
 
-/* 4.4 Open state */
+/* 3.4 Open state */
 .item-card.open {
   background: color-mix(in srgb, var(--cardc, var(--gold)) 5%, var(--ink-2));
   border-color: var(--cardc, var(--gold));
@@ -220,7 +148,7 @@
 
 
 /* ==========================================================================
-   5. Item sections
+   4. Item sections
    ========================================================================== */
 .item-section {
   margin-top: 10px;
@@ -240,28 +168,4 @@
   font-size: 1.1rem;
   white-space: pre-wrap; /* preserve line breaks from the data */
   color: var(--parchment-dim);
-}
-
-
-/* ==========================================================================
-   6. Empty state
-   --------------------------------------------------------------------------
-   Shown when no items match the current filters.
-   ========================================================================== */
-.empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 60px 20px;
-  font-family: 'Crimson Pro', serif;
-  text-align: center;
-  color: var(--parchment-dim);
-}
-
-.empty-state .big {
-  font-family: 'Cinzel', serif;
-  font-size: 1.2rem;
-  color: var(--gold);
 }

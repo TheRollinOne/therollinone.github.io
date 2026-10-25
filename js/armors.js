@@ -4,9 +4,6 @@
   // title-cased and alphabetized, after these (see buildTypeColorMap
   // in base.js).
   const CATEGORY_ORDER = ['Light Armor', 'Shield', 'Medium Armor', 'Extra', 'Heavy Armor'];
-  let categoryColorOf = {};
-  let orderedCategories = [];
-
   const state = {
     query: '',
     searchScope: SEARCH_SCOPE_NAMES,
@@ -19,140 +16,66 @@
     open: new Set()
   };
 
-  if (typeof ARMORS_DATA !== 'undefined') {
-    document.getElementById('brandSub').textContent = `Armor Catalogue · ${ARMORS_DATA.length} Armors`;
-    ARMORS_DATA.forEach((a, i) => {
-      a._idx = i;
-      a._category = formatTitleCase(a.category);
-      a._nameBlob = (a.name || '').toLowerCase();
-      a._blob = [
-        a.name, a._category, a.description
-      ].filter(Boolean).join(' ').toLowerCase();
-    });
-
-    categoryColorOf = buildTypeColorMap(ARMORS_DATA.map(a => a._category), CATEGORY_ORDER);
-    orderedCategories = Object.keys(categoryColorOf);
-    ARMORS_DATA.forEach(a => { a._cardColor = categoryColorOf[a._category]; });
-  }
-
-  initMobileFiltersCollapse();
-  initThemeToggle();
-  
-  // Category chips are generated dynamically (colors depend on the data),
-  // the same way feats.js builds its category chips.
-  const categoryChips = document.getElementById('categoryChips');
-  orderedCategories.forEach(cat => {
-      const color = categoryColorOf[cat];
-      const chip = document.createElement('div');
-      chip.className = 'chip';
-      chip.style.setProperty('--dotc', color);
-      chip.style.setProperty('--chipc', color);
-      chip.dataset.category = cat;
-      chip.innerHTML = `<span class="dot"></span>${escapeHtml(cat)}`;
-      chip.addEventListener('click', () => {
-        if (state.categories.has(cat)) state.categories.delete(cat);
-        else state.categories.add(cat);
-        chip.classList.toggle('active');
-        render();
-      });
-      categoryChips.appendChild(chip);
-  });
-  document.getElementById('clearCategories').addEventListener('click', () => {
-    state.categories.clear();
-    categoryChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    render();
+  setBrandSub('Armor Catalogue', ARMORS_DATA.length, 'Armors');
+  ARMORS_DATA.forEach((a, i) => {
+    a._idx = i;
+    a._category = formatTitleCase(a.category);
+    a._nameBlob = (a.name || '').toLowerCase();
+    a._blob = [
+      a.name, a._category, a.description
+    ].filter(Boolean).join(' ').toLowerCase();
   });
 
-  // Armor Bonus, Max Dexterity, Armor Check Penalty, and Arcana Spell
-  // Failure all follow the same "toggle a chip -> toggle a value in a Set"
-  // shape, each wired against its own state field/container/clear-button
-  // trio. Unlike Category, these chips are static markup (a small fixed
-  // set of values), so they're just wired up here rather than generated.
-  const chipGroups = [
-    { key: 'armorBonuses', containerId: 'armorBonusChips', clearId: 'clearArmorBonus', dataAttr: 'armorBonus' },
-    { key: 'maxDexes', containerId: 'maxDexChips', clearId: 'clearMaxDex', dataAttr: 'maxDex' },
-    { key: 'acps', containerId: 'acpChips', clearId: 'clearACP', dataAttr: 'acp' },
-    { key: 'spellFailures', containerId: 'spellFailureChips', clearId: 'clearSpellFailure', dataAttr: 'spellFailure' }
+  const categoryColorOf = buildTypeColorMap(ARMORS_DATA.map(a => a._category), CATEGORY_ORDER);
+  ARMORS_DATA.forEach(a => { a._cardColor = categoryColorOf[a._category]; });
+
+  initPageChrome();
+
+  // Category chips are generated dynamically (colors depend on the data).
+  const chipResets = [
+    buildColorChips(categoryColorOf, state.categories, 'categoryChips', {
+      dataAttr: 'category', clearId: 'clearCategories', render
+    })
   ];
 
-  chipGroups.forEach(group => {
-    group.containerEl = document.getElementById(group.containerId);
-    group.containerEl.querySelectorAll('.chip').forEach(chip => {
-      chip.addEventListener('click', () => {
-        const val = chip.dataset[group.dataAttr];
-        const set = state[group.key];
-        if (set.has(val)) set.delete(val);
-        else set.add(val);
-        chip.classList.toggle('active');
-        render();
-      });
-    });
-    document.getElementById(group.clearId).addEventListener('click', () => {
-      state[group.key].clear();
-      group.containerEl.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-      render();
-    });
+  // Armor Bonus, Max Dexterity, Armor Check Penalty, and Arcane Spell
+  // Failure chips are static markup (a small fixed set of values).
+  [
+    { set: state.armorBonuses, containerId: 'armorBonusChips', clearId: 'clearArmorBonus', dataAttr: 'armorBonus' },
+    { set: state.maxDexes, containerId: 'maxDexChips', clearId: 'clearMaxDex', dataAttr: 'maxDex' },
+    { set: state.acps, containerId: 'acpChips', clearId: 'clearACP', dataAttr: 'acp' },
+    { set: state.spellFailures, containerId: 'spellFailureChips', clearId: 'clearSpellFailure', dataAttr: 'spellFailure' }
+  ].forEach(g => {
+    chipResets.push(wireChipSet({
+      container: g.containerId, set: g.set, dataAttr: g.dataAttr, clearId: g.clearId, render
+    }));
   });
-
-  const searchInputEl = document.getElementById('searchInput');
-  const searchWrapEl = document.getElementById('searchWrap');
-  const searchClearIcon = document.getElementById('searchClearIcon');
-  wireSearchInput({
-    inputEl: searchInputEl,
-    wrapEl: searchWrapEl,
-    clearIconEl: searchClearIcon,
-    onQuery: (q) => { state.query = q; },
-    render: () => render(),
-    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
-  });
-
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'chain sh +light -heavy', { prefix: true });
 
   // "Names Only | All Fields" toggle under the search box (default: names).
-  initSearchScope(searchWrapEl, (scope) => {
-    state.searchScope = scope;
-    render();
-  });
+  const search = initSearch({ state, render, example: 'chain sh +light -heavy' });
 
   document.getElementById('clearAll').addEventListener('click', (e) => {
     e.stopPropagation();
-    state.query = '';
-    searchInputEl.value = '';
-    searchWrapEl.classList.remove('has-query');
-    state.categories.clear();
-    categoryChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    chipGroups.forEach(group => {
-      state[group.key].clear();
-      group.containerEl.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    });
+    search.reset();
+    chipResets.forEach(reset => reset());
     render();
   });
 
-  // Sort buttons in the page header.
-  const sortBtns = document.querySelectorAll('#sortBar .sort-btn');
-  sortBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.sort = btn.dataset.sort;
-      render();
-    });
-  });
-  function syncSortButtons(){
-    sortBtns.forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
-  }
+  const syncSortButtons = wireSortBar(state, render);
 
   wireCopyableList('armorList', 'armor-name');
 
   // Live search:  terms match from the start of a word,
   // so results narrow as the user types instead of waiting for a full word.
-  const queryMatch = createQueryMatcher({ prefix: true });
+  const queryMatch = createQueryMatcher();
   function matchesQuery(armor, query) {
     const blob = state.searchScope === SEARCH_SCOPE_ALL ? armor._blob : armor._nameBlob;
     return queryMatch(blob, query);
   }
 
-  function parseLeadingNumber(str){
-    const n = parseFloat(str);
-    return Number.isNaN(n) ? -1 : n;
+  // Price is an integer/number; a missing price sorts before everything else.
+  function priceValue(a){
+    return typeof a.price === 'number' ? a.price : -1;
   }
 
   function speedReductionText(a){
@@ -167,11 +90,11 @@
   function buildStatFields(a){
     return [
       ['Armor Bonus', a.armor_bonus],
-      ['Max Dexterity', a.max_dex === '+0' ? '—' : a.max_dex],
+      ['Max Dexterity', a.max_dex ? a.max_dex : '—'],
       ['Armor Check Penalty', a.acp],
       ['Arcane Spell Failure', a.spell_failure],
       ['Speed Reduction 30/20', speedReductionText(a)],
-      ['Cost', a.cost],
+      ['Price', formatGp(a.price)],
       ['Weight', a.weight],
     ].filter(([, val]) => val && val.length > 0);
   }
@@ -182,18 +105,15 @@
     return (val && /\d/.test(val)) ? val : '—';
   }
 
-  function quickStatsHTML(a){
-    const boxes = [
+  function armorQuickStats(a){
+    return quickStatsHTML([
       ['Bonus', numericOrDash(a.armor_bonus)],
-      ['Max Dex', a.max_dex === '+0' ? '—' : numericOrDash(a.max_dex)],
+      ['Max Dex', numericOrDash(a.max_dex)],
       ['ACP', numericOrDash(a.acp)],
       ['S.F.', a.spell_failure === '0%' ? '—' : (a.spell_failure || '—')],
-      ['Cost', (a.cost || '').replace(/\s*gp?\.?/i, '') || '—'],
+      ['Price', formatGp(a.price, false) || '—'],
       ['Weight', (a.weight || '').replace(/\s*lbs?\.?/i, '') || '—'],
-    ];
-    return `<div class="entry-qstats">${boxes.map(([l, v]) =>
-      `<div class="entry-qstat"><div class="entry-qstat-label">${escapeHtml(l)}</div><div class="entry-qstat-value">${escapeHtml(v)}</div></div>`
-    ).join('')}</div>`;
+    ]);
   }
 
   function cardHTML(a){
@@ -222,7 +142,7 @@
           ${categoryTagHtml}
         </div>
         <div class="entry-right">
-          ${quickStatsHTML(a)}
+          ${armorQuickStats(a)}
           <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
         </div>
       </div>
@@ -234,7 +154,6 @@
   }
 
   function filtered(){
-    if (typeof ARMORS_DATA === 'undefined') return [];
     let list = ARMORS_DATA;
     if (state.query) {
       list = list.filter(a => matchesQuery(a, state.query));
@@ -246,7 +165,7 @@
       list = list.filter(a => state.armorBonuses.has(a.armor_bonus));
     }
     if (state.maxDexes.size) {
-      list = list.filter(a => state.maxDexes.has(a.max_dex));
+      list = list.filter(a => state.maxDexes.has(a.max_dex || ''));
     }
     if (state.acps.size) {
       list = list.filter(a => state.acps.has(a.acp));
@@ -261,10 +180,10 @@
       sorted.sort((a, b) => b.name.localeCompare(a.name));
     } else if (state.sort === 'category') {
       sorted.sort((a, b) => (a._category || '').localeCompare(b._category || '') || a.name.localeCompare(b.name));
-    } else if (state.sort === 'cost') {
-      sorted.sort((a, b) => parseLeadingNumber(a.cost) - parseLeadingNumber(b.cost) || a.name.localeCompare(b.name));
-    } else if (state.sort === 'cost_desc') {
-      sorted.sort((a, b) => parseLeadingNumber(b.cost) - parseLeadingNumber(a.cost) || a.name.localeCompare(b.name));
+    } else if (state.sort === 'price') {
+      sorted.sort((a, b) => priceValue(a) - priceValue(b) || a.name.localeCompare(b.name));
+    } else if (state.sort === 'price_desc') {
+      sorted.sort((a, b) => priceValue(b) - priceValue(a) || a.name.localeCompare(b.name));
     } else if (state.sort === 'weight') {
       sorted.sort((a, b) => parseLeadingNumber(a.weight) - parseLeadingNumber(b.weight) || a.name.localeCompare(b.name));
     } else if (state.sort === 'weight_desc') {
@@ -282,23 +201,15 @@
   }
 
   function render(){
-    if (typeof ARMORS_DATA === 'undefined') return;
     syncSortButtons();
     const results = filtered();
-    document.getElementById('listTitle').textContent = `${results.length} Armor${results.length !== 1 ? 's' : ''} & Shield${results.length !== 1 ? 's' : ''} Listed`;
-    const listEl = document.getElementById('armorList');
-    if (results.length === 0) {
-      listEl.innerHTML = `<div class="empty-state"><span class="big">No armor found</span>Try a different search term or clear a filter.</div>`;
-      return;
-    }
-    const shown = paginate(state, results);
-    listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Armors & Shields');
-    wireCardToggle(listEl, state, 'armor-card', 'armor-name');
-    wireShowMore(listEl, {
-      onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
-      onShowAll: () => { state.visibleCount = results.length; render(); }
+    setListTitle(results.length, 'Armor & Shield', 'Armors & Shields');
+    renderList({
+      state, results, listId: 'armorList', cardHTML,
+      cardClass: 'armor-card', nameClass: 'armor-name',
+      emptyNoun: 'armor', labelPlural: 'Armors & Shields', rerender: render
     });
   }
-  
+
   render();
 })();

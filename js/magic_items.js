@@ -37,7 +37,7 @@
   // else (0.5, 5, 1,000...) -> "<n> lbs."
   function weightLabel(w){
     if(w === 0) return '—';
-    return `${w.toLocaleString()} ${w === 1 ? 'lb.' : 'lbs.'}`;
+    return `${formatNumber(w)} ${w === 1 ? 'lb.' : 'lbs.'}`;
   }
 
   // Aura strength: data has "moderate or strong" (both), "varies", "none", or
@@ -59,40 +59,21 @@
     strengths:new Set(),
     pfs:null,
     group:'',
-    sort:'name-asc',
+    sort:'name',
     open:new Set()
   };
 
-  document.getElementById('brandSub').textContent = `Magic Item Vault · ${MAGIC_ITEMS_DATA.length} Items`;
+  setBrandSub('Magic Item Vault', MAGIC_ITEMS_DATA.length, 'Items');
 
   // MAGIC_ITEMS_DATA holds only slim list records (see build-magic_items.js).
   // Full records live in chunked files (data/magic_items-<N>.js) loaded the
   // first time a card in that chunk is opened; the "All Fields" search text
   // is one extra file loaded the first time it is needed.
   const META = (typeof MAGIC_ITEMS_DATA_META !== 'undefined') ? MAGIC_ITEMS_DATA_META : { chunkSize: 50 };
-  const CH = META.chunkSize;
-  const chunkPromises = {};
-  function loadChunk(c){
-    return chunkPromises[c] || (chunkPromises[c] = new Promise((res, rej) => {
-      const s = document.createElement('script');
-      s.src = META['c' + c];
-      s.onload = () => res(window['MAGIC_CHUNK_' + c]);
-      s.onerror = () => { delete chunkPromises[c]; s.remove(); rej(new Error('chunk ' + c)); };
-      document.head.appendChild(s);
-    }));
-  }
   // Full record + the fields prepare() derived on the slim record (_aura, ...).
-  function loadDetail(idx){
-    return loadChunk(Math.floor(idx / CH)).then(arr => Object.assign({}, arr[idx % CH], MAGIC_ITEMS_DATA[idx]));
-  }
-  function hydrate(idx, card){
-    const body = card.querySelector('.entry-body');
-    if(!body || body.dataset.ready) return;
-    body.innerHTML = '<div class="entry-desc">Loading…</div>';
-    loadDetail(idx)
-      .then(full => { body.innerHTML = bodyHTML(full); body.dataset.ready = '1'; })
-      .catch(() => { body.innerHTML = '<div class="entry-desc">Could not load details.</div>'; });
-  }
+  const { hydrate } = createChunkLoader(META, 'MAGIC_CHUNK_', {
+    list: MAGIC_ITEMS_DATA, bodyHTML, defaultChunkSize: 50
+  });
 
   // 'idle' | 'loading' | 'loaded' | 'error'. With no blob file (older build)
   // there is nothing to load.
@@ -114,12 +95,6 @@
     s.onerror = () => { blobStatus = 'error'; s.remove(); render(); };
     document.head.appendChild(s);
   }
-  function showStatus(title, msg){
-    document.getElementById('listTitle').textContent = title;
-    document.getElementById('itemList').innerHTML =
-      `<div class="empty-state"><span class="big">${escapeHtml(title)}</span>${escapeHtml(msg)}</div>`;
-  }
-
   MAGIC_ITEMS_DATA.forEach((it,i)=>{
     it._idx = i;
 
@@ -155,41 +130,21 @@
     it._blob = '';
   });
 
-  initMobileFiltersCollapse();
-  initThemeToggle();
+  initPageChrome();
 
   // ---- Slot filter (multi-select chips, feats-style colors) ----
   const slotColorOf = buildTypeColorMap(MAGIC_ITEMS_DATA.map(it=>it._slot));
   const allSlots = Object.keys(slotColorOf);
   MAGIC_ITEMS_DATA.forEach(it=>{ it._cardColor = slotColorOf[it._slot]; });
 
-  const slotChips = document.getElementById('slotChips');
-  allSlots.forEach(slot=>{
-    const color = slotColorOf[slot];
-    const chip = document.createElement('div');
-    chip.className='chip';
-    chip.style.setProperty('--dotc', color);
-    chip.style.setProperty('--chipc', color);
-    chip.dataset.slot = slot;
-    chip.innerHTML = `<span class="dot"></span>${escapeHtml(slot)}`;
-    chip.addEventListener('click', ()=>{
-      if(state.slots.has(slot)) state.slots.delete(slot);
-      else state.slots.add(slot);
-      chip.classList.toggle('active');
-      render();
-    });
-    slotChips.appendChild(chip);
-  });
-  document.getElementById('clearSlot').addEventListener('click', ()=>{
-    state.slots.clear();
-    slotChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
-    render();
+  const resetSlots = buildColorChips(slotColorOf, state.slots, 'slotChips', {
+    dataAttr: 'slot', clearId: 'clearSlot', render
   });
 
   // ---- Price / Caster Level filters (operator select + up to two numeric
   // inputs; wireRangeFilter/matchesRange are shared helpers in base.js).
   // Price arrives as a plain number directly on the item. ----
-  wireRangeFilter({
+  const priceFilter = wireRangeFilter({
     rangeState: state.price,
     operatorId: 'priceOperatorSelect',
     input1Id: 'priceInput1',
@@ -197,10 +152,11 @@
     input2Id: 'priceInput2',
     clearId: 'clearPrice',
     render,
-    clamp: makeClamp(0, 999999)
+    min: 0,
+    max: 999999
   });
 
-  wireRangeFilter({
+  const clFilter = wireRangeFilter({
     rangeState: state.cl,
     operatorId: 'clOperatorSelect',
     input1Id: 'clInput1',
@@ -208,7 +164,8 @@
     input2Id: 'clInput2',
     clearId: 'clearCL',
     render,
-    clamp: makeClamp(1, 30)
+    min: 1,
+    max: 30
   });
 
   // ---- Aura Strength (multi-select chips) ----
@@ -217,47 +174,15 @@
   const presentStrengths = new Set(MAGIC_ITEMS_DATA.flatMap(it=>it._strengths));
   const strengthLabels = STRENGTH_ORDER.filter(s=>presentStrengths.has(s))
     .concat(Array.from(presentStrengths).filter(s=>!STRENGTH_ORDER.includes(s)).sort());
-  const strengthChips = document.getElementById('strengthChips');
-  strengthLabels.forEach(str=>{
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.textContent = str;
-    chip.addEventListener('click', ()=>{
-      if(state.strengths.has(str)) state.strengths.delete(str);
-      else state.strengths.add(str);
-      chip.classList.toggle('active');
-      render();
-    });
-    strengthChips.appendChild(chip);
-  });
-  document.getElementById('clearStrength').addEventListener('click', ()=>{
-    state.strengths.clear();
-    strengthChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
-    render();
+  const resetStrengths = buildPlainChips(strengthLabels, state.strengths, 'strengthChips', {
+    dataAttr: 'strength', clearId: 'clearStrength', render
   });
 
   // ---- PFS Content (Yes / No, single select toggle like Spells' Ritual
   // Casting). pfs_content is 1 for Pathfinder Society items, 0 otherwise. ----
   const isPfs = it => Number(it.pfs_content) === 1;
-  const pfsChips = document.getElementById('pfsChips');
-  [{key:'yes', label:'Yes'}, {key:'no', label:'No'}].forEach(opt=>{
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.dataset.pfs = opt.key;
-    chip.textContent = opt.label;
-    chip.addEventListener('click', ()=>{
-      state.pfs = (state.pfs === opt.key) ? null : opt.key;
-      pfsChips.querySelectorAll('.chip').forEach(c=>{
-        c.classList.toggle('active', c.dataset.pfs === state.pfs);
-      });
-      render();
-    });
-    pfsChips.appendChild(chip);
-  });
-  document.getElementById('clearPfs').addEventListener('click', ()=>{
-    state.pfs = null;
-    pfsChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
-    render();
+  const resetPfs = wireYesNoToggle({
+    container: 'pfsChips', state, key: 'pfs', clearId: 'clearPfs', render
   });
 
   // ---- Group filter (single select). Items can belong to more than one
@@ -275,59 +200,28 @@
     render();
   });
 
-  const searchInputEl = document.getElementById('searchInput');
-  const searchWrapEl = document.getElementById('searchWrap');
-  const searchClearIcon = document.getElementById('searchClearIcon');
-  const syncSearchClearIcon = wireSearchInput({
-    inputEl: searchInputEl,
-    wrapEl: searchWrapEl,
-    clearIconEl: searchClearIcon,
-    onQuery: (q)=>{ state.query = q; },
-    render: ()=>render(),
-    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
-  });
-
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'ring of protection +armor -cursed', { prefix: true });
-  initSearchScope(searchWrapEl, (scope)=>{ state.searchScope = scope; render(); });
+  const search = initSearch({ state, render, example: 'ring of protection +armor -cursed' });
 
   document.getElementById('clearAll').addEventListener('click', (e)=>{
     e.stopPropagation();
-    state.query = '';
-    searchInputEl.value = '';
-    syncSearchClearIcon();
-    state.slots.clear();
-    slotChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
-    document.getElementById('clearPrice').click();
-    document.getElementById('clearCL').click();
-    state.strengths.clear();
-    strengthChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
-    state.pfs = null;
-    pfsChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
+    search.reset();
+    resetSlots();
+    priceFilter.reset();
+    clFilter.reset();
+    resetStrengths();
+    resetPfs();
     state.group = '';
     groupSelectEl.value = '';
     render();
   });
 
-  // ---- Sort (header buttons) ----
-  document.querySelectorAll('#sortBar .sort-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.sort = btn.dataset.sort;
-      render();
-    });
-  });
-  function syncSortButtons(){
-    document.querySelectorAll('#sortBar .sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
-  }
+  const syncSortButtons = wireSortBar(state, render);
 
   wireCopyableList('itemList', 'item-name');
 
-  const queryMatch = createQueryMatcher({ prefix: true });
+  const queryMatch = createQueryMatcher();
   function matchesQuery(item, query){
     return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? item._blob : item._nameBlob, query);
-  }
-
-  function priceLabel(it){
-    return (typeof it.price === 'number' && it.price > 0) ? `${it.price.toLocaleString()} gp` : '—';
   }
 
   // Ability/ego scores are ints in the data (null = unknown "?"), with an
@@ -339,7 +233,11 @@
 
   // Card body, built from the full record once its chunk has loaded.
   function bodyHTML(it){
-    const descHtml = it.description ? `\n        <div class="entry-section">\n          <div class="entry-section-title">Description</div>\n          <div class="entry-desc">${htmlFormatDescription(it.description)}</div>\n        </div>` : '';
+    const descHtml = it.description ? `
+        <div class="entry-section">
+          <div class="entry-section-title">Description</div>
+          <div class="entry-desc">${htmlFormatDescription(it.description)}</div>
+        </div>` : '';
 
     const statBits = [];
     if(it._aura) statBits.push(`<b>Aura</b> ${escapeHtml(it._aura)}`);
@@ -347,19 +245,30 @@
     else statBits.push(`<b>CL</b> varies`);
     if(it._slotLabel) statBits.push(`<b>Slot</b> ${escapeHtml(it._slotLabel)}`);
     if(it._weight !== null) statBits.push(`<b>Weight</b> ${escapeHtml(weightLabel(it._weight))}`);
-    const statsHtml = statBits.length ? `\n        <div class="entry-section">\n          <div class="entry-desc item-stats-line">${statBits.join(' &nbsp; ')}</div>\n        </div>` : '';
+    const statsHtml = statBits.length ? `
+        <div class="entry-section">
+          <div class="entry-desc item-stats-line">${statBits.join(' &nbsp; ')}</div>
+        </div>` : '';
 
     const constructionBits = [];
     const reqCostBits = [];
     if(it.requirements) reqCostBits.push(`<b>Requirements</b> ${escapeHtml(it.requirements)}`);
-    if(it.cost) reqCostBits.push(`<b>Cost</b> ${Number(it.cost).toLocaleString()} gp`);
+    if(it.cost) reqCostBits.push(`<b>Cost</b> ${formatGp(it.cost)}`);
     if(reqCostBits.length) constructionBits.push(`<span class="item-stats-line">${reqCostBits.join(' &nbsp; ')}</span>`);
     if(it.magic_items) constructionBits.push(`<b>Made From</b> ${escapeHtml(it.magic_items)}`);
-    const constructionHtml = constructionBits.length ? `\n        <div class="entry-section">\n          <div class="entry-section-title">Construction</div>\n          <div class="entry-desc item-stats-line">${constructionBits.join('<br>')}</div>\n        </div>` : '';
+    const constructionHtml = constructionBits.length ? `
+        <div class="entry-section">
+          <div class="entry-section-title">Construction</div>
+          <div class="entry-desc item-stats-line">${constructionBits.join('<br>')}</div>
+        </div>` : '';
 
     // Destruction gets its own section, after Construction; the value is
     // shown on its own (no "Destruction" label before it).
-    const destructionHtml = it.destruction ? `\n        <div class="entry-section">\n          <div class="entry-section-title">Destruction</div>\n          <div class="entry-desc">${escapeHtml(it.destruction)}</div>\n        </div>` : '';
+    const destructionHtml = it.destruction ? `
+        <div class="entry-section">
+          <div class="entry-section-title">Destruction</div>
+          <div class="entry-desc">${escapeHtml(it.destruction)}</div>
+        </div>` : '';
 
     const ii = it.intelligent_item;
     let intelligentHtml = '';
@@ -383,7 +292,11 @@
       if(ii.powers) iiLines.push(`<b>Powers</b> ${escapeHtml(ii.powers)}`);
 
       if(iiLines.length){
-        intelligentHtml = `\n        <div class="entry-section">\n          <div class="entry-section-title">Intelligent Item Stats</div>\n          <div class="entry-desc item-stats-line">${iiLines.join('<br>')}</div>\n        </div>`;
+        intelligentHtml = `
+        <div class="entry-section">
+          <div class="entry-section-title">Intelligent Item Stats</div>
+          <div class="entry-desc item-stats-line">${iiLines.join('<br>')}</div>
+        </div>`;
       }
     }
 
@@ -396,7 +309,21 @@
     const slotTagHtml = it._slot ? `<span class="entry-tag entry-tag--lg">${escapeHtml(it._slot)}</span>` : '';
     const groupTagHtml = it._groupLabel ? `<span class="entry-tag">(${escapeHtml(it._groupLabel)})</span>` : '';
 
-    return `\n    <div class="entry-card entry-card--tight item-card${isOpen?' open':''}" style="--cardc:${it._cardColor}" data-idx="${it._idx}">\n      <div class="entry-head" data-toggle="${it._idx}">\n        <div class="entry-title-block">\n          <span class="entry-name item-name copyable" data-copy="${escapeHtml(it.name)}">${escapeHtml(it.name)}</span>\n          ${slotTagHtml}\n          ${groupTagHtml}\n        </div>\n        <div class="entry-right">\n          <span class="entry-badge">${escapeHtml(priceLabel(it))}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="entry-body"></div>\n    </div>`;
+    return `
+    <div class="entry-card entry-card--tight item-card${isOpen?' open':''}" style="--cardc:${it._cardColor}" data-idx="${it._idx}">
+      <div class="entry-head" data-toggle="${it._idx}">
+        <div class="entry-title-block">
+          <span class="entry-name item-name copyable" data-copy="${escapeHtml(it.name)}">${escapeHtml(it.name)}</span>
+          ${slotTagHtml}
+          ${groupTagHtml}
+        </div>
+        <div class="entry-right">
+          <span class="entry-badge">${escapeHtml(it.price > 0 ? formatGp(it.price) : '—')}</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="entry-body"></div>
+    </div>`;
   }
 
   // Every filter except Group — the population the Group dropdown's own
@@ -444,22 +371,22 @@
     updateGroupOptions(base);
     const list = state.group ? base.filter(it=>it._groups.includes(state.group)) : base;
     const sorted = list.slice();
-    if(state.sort==='name-asc'){
+    if(state.sort==='name'){
       sorted.sort((a,b)=>naturalCompare(a.name, b.name));
-    } else if(state.sort==='name-desc'){
+    } else if(state.sort==='name_desc'){
       sorted.sort((a,b)=>naturalCompare(b.name, a.name));
-    } else if(state.sort==='price-asc'){
+    } else if(state.sort==='price'){
       sorted.sort((a,b)=>(a.price??-1)-(b.price??-1) || a.name.localeCompare(b.name));
-    } else if(state.sort==='price-desc'){
+    } else if(state.sort==='price_desc'){
       sorted.sort((a,b)=>(b.price??-1)-(a.price??-1) || a.name.localeCompare(b.name));
-    } else if(state.sort==='cl-asc'){
+    } else if(state.sort==='cl'){
       // items with no numeric CL ("varies") always sort last
       sorted.sort((a,b)=>(a.cl??Infinity)-(b.cl??Infinity) || a.name.localeCompare(b.name));
-    } else if(state.sort==='cl-desc'){
+    } else if(state.sort==='cl_desc'){
       sorted.sort((a,b)=>(b.cl??-1)-(a.cl??-1) || a.name.localeCompare(b.name));
-    } else if(state.sort==='weight-asc'){
+    } else if(state.sort==='weight'){
       sorted.sort((a,b)=>(a._weight??Infinity)-(b._weight??Infinity) || a.name.localeCompare(b.name));
-    } else if(state.sort==='weight-desc'){
+    } else if(state.sort==='weight_desc'){
       sorted.sort((a,b)=>(b._weight??-1)-(a._weight??-1) || a.name.localeCompare(b.name));
     }
     return sorted;
@@ -469,12 +396,12 @@
     syncSortButtons();
     if(needsBlob()){
       if(blobStatus === 'error'){
-        showStatus('Could not load full-text search', 'Check your connection, then edit the search to retry.');
+        showStatus('itemList', 'Could not load full-text search', 'Check your connection, then edit the search to retry.');
         blobStatus = 'idle';   // next render retries
         return;
       }
       if(blobStatus === 'idle') loadBlob();
-      showStatus('Loading…', 'Fetching full-text search data.');
+      showStatus('itemList', 'Loading…', 'Fetching full-text search data.');
       return;
     }
     renderNow();
@@ -482,21 +409,14 @@
 
   function renderNow(){
     const results = filtered();
-    document.getElementById('listTitle').textContent = `${results.length} Magic Item${results.length!==1?'s':''} Listed`;
-    const listEl = document.getElementById('itemList');
-    if(results.length===0){
-      listEl.innerHTML = `<div class="empty-state"><span class="big">No magic items found</span>Try a different search term or clear a filter.</div>`;
-      return;
-    }
-    const shown = paginate(state, results);
-    listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Magic Items');
-    // The full record is fetched (chunked, cached) when a card is opened;
-    // cards still open (state.open) after a re-render are hydrated here too.
-    wireCardToggle(listEl, state, 'item-card', 'item-name', (idx, card) => hydrate(idx, card));
-    listEl.querySelectorAll('.item-card.open').forEach(card => hydrate(+card.dataset.idx, card));
-    wireShowMore(listEl, {
-      onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
-      onShowAll: () => { state.visibleCount = results.length; render(); }
+    setListTitle(results.length, 'Magic Item');
+    renderList({
+      state, results, listId: 'itemList', cardHTML,
+      cardClass: 'item-card', nameClass: 'item-name',
+      emptyNoun: 'magic items', labelPlural: 'Magic Items', rerender: render,
+      // The full record is fetched (chunked, cached) when a card is opened;
+      // cards still open after a re-render are hydrated too.
+      onOpen: hydrate
     });
   }
 

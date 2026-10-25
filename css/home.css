@@ -2,7 +2,7 @@
    home.css: Home page
    --------------------------------------------------------------------------
    Contents
-     1. Design tokens
+     1. Animation token
      2. Base / reset
      3. Theme toggle (layout only)
      4. Hero container
@@ -20,23 +20,9 @@
 
 
 /* ==========================================================================
-   1. Design tokens
+   1. Animation token
    ========================================================================== */
 :root {
-  /* Surfaces */
-  --ink:           #0e1018;
-  --ink-2:         #171925;
-  --ink-3:         #202334;
-
-  /* Text */
-  --parchment:     #f3eedf;
-  --parchment-dim: #e0d8bf;
-
-  /* Lines & accents */
-  --hairline:      #36394d;
-  --gold:          #d3ac43;
-  --dark-gold:     #b69028;
-
   /* Timing: the moment the title punches in. The title, buttons, glow,
      ring and shake all start at this delay. */
   --impact: 1.2s;
@@ -91,17 +77,23 @@ body {
 /* ==========================================================================
    4. Hero container
    --------------------------------------------------------------------------
-   Fixed 1000x1000 stage that holds the logo, title and buttons. It also
-   plays the impact shake (see section 7).
+   Square stage that scales to fit smaller screens. It holds the logo,
+   centered title and buttons, and plays the impact shake (see section 7).
    ========================================================================== */
 .hero {
   position: relative;
-  width: 1000px;
-  height: 1000px;
-  min-width: 1000px;
+  width: min(1000px, calc(100vw - 32px), calc(100vh - 32px));
+  width: min(1000px, calc(100vw - 32px), calc(100svh - 32px));
+  aspect-ratio: 1;
+  min-width: 0;
   max-width: 100%;
 
   animation: hero-shake .3s linear var(--impact) both;
+}
+
+.hero-visual {
+  position: absolute;
+  inset: 0;
 }
 
 
@@ -122,9 +114,9 @@ body {
 .hero-image {
   position: absolute;
   top: 0;
-  right: 40px;
+  right: 4%;
   bottom: 0;
-  left: 40px;
+  left: 4%;
   overflow: hidden;
 
   background-image: url('../pictures/d20.png');
@@ -158,15 +150,14 @@ body {
    ========================================================================== */
 .hero-title {
   position: absolute;
-  top: 310px;
-  right: 40px;
-  bottom: 0;
-  left: 285px;
+  inset: 0;
   pointer-events: none;
 
   background-image: url('../pictures/d20_title.png');
   background-repeat: no-repeat;
-  background-size: 64% 59%;
+  background-position: center;
+  background-size: 45% auto;
+  transform-origin: center;
 
   opacity: 0; /* hidden until the punch animation starts */
   animation:
@@ -201,14 +192,14 @@ body {
    ========================================================================== */
 
 /* Shockwave ring: expands from the logo center on impact and fades out. */
-.hero::after {
+.hero-visual::after {
   content: '';
   position: absolute;
   top: 50%;
   left: 50%;
   z-index: 1;
-  width: 600px;
-  height: 600px;
+  width: 60%;
+  aspect-ratio: 1;
   border: 3px solid var(--gold);
   border-radius: 50%;
   box-shadow: 0 0 24px var(--gold);
@@ -241,21 +232,21 @@ body {
    8. Navigation buttons
    --------------------------------------------------------------------------
    The wrapper is a direct child of .hero (not of .hero-image), so the
-   logo's mask does not affect it. left/right match the image's 40px inset.
+   logo's mask does not affect it. Its inset scales with the hero.
    ========================================================================== */
 
 /* 8.1 Wrapper */
 .hero-buttons-wrap {
   position: absolute;
-  right: 40px;
-  bottom: 0;
-  left: 40px;
+  right: 4%;
+  bottom: 2%;
+  left: 4%;
   z-index: 2; /* keeps the buttons above the title while it scales up */
 
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 56px 10px 10px;
+  padding: 6% 1% 1%;
 }
 
 .hero-buttons {
@@ -328,15 +319,49 @@ body {
 /* ==========================================================================
    9. Responsive
    ========================================================================== */
-@media (max-width: 640px) {
+@media (max-width: 700px), (max-height: 500px) {
   .hero {
+    width: min(1000px, calc(100vw - 32px), calc(100vh - 200px));
+    width: min(1000px, calc(100vw - 32px), calc(100svh - 200px));
+    aspect-ratio: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .hero-visual {
+    position: relative;
+    flex: 0 0 auto;
     width: 100%;
-    height: 70vh;
-    min-height: 420px;
+    aspect-ratio: 1;
+  }
+
+  .hero-buttons-wrap {
+    position: relative;
+    inset: auto;
+    gap: 8px;
+    margin: 0 4% 4%;
+    padding: 4% 0 0;
+  }
+
+  .hero-buttons {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .nav-btn {
+    padding: clamp(6px, 2vw, 10px) 4px;
+    border-radius: 8px;
   }
 
   .nav-btn .btn-main {
-    font-size: 1.4rem;
+    font-size: clamp(.8rem, 4vw, 1.2rem);
+    letter-spacing: .04em;
+  }
+
+  .nav-btn .btn-sub {
+    font-size: clamp(.5rem, 2.4vw, .72rem);
+    letter-spacing: .08em;
   }
 }
 
@@ -368,7 +393,7 @@ body {
     animation: none;
   }
 
-  .hero::after {
+  .hero-visual::after {
     display: none;
   }
 }

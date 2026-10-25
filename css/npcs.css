@@ -4,25 +4,12 @@
    Only what differs from the shared styles in base.css.
 
    Contents
-     1. Range filter tokens
-     2. Class filter (category + class selects)
+     1. Class filter (category + class selects)
    ========================================================================== */
 
 
 /* ==========================================================================
-   1. Range filter tokens
-   --------------------------------------------------------------------------
-   Overrides the shared range-filter layout: operator select takes 50% of
-   the row, each numeric input is 48px wide.
-   ========================================================================== */
-.range-filter-row {
-  --rf-select: 50%;
-  --rf-input:  48px;
-}
-
-
-/* ==========================================================================
-   2. Class filter (category + class selects)
+   1. Class filter (category + class selects)
    --------------------------------------------------------------------------
    Two selects on one row, split 36% / 64%. The 3px offset in each calc()
    accounts for half of the 6px gap, so the two always add up to 100%.

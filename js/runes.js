@@ -1,7 +1,5 @@
 (function(){
-  // Canonical display order for the category chips (matches the old
-  // --cat-* var order in runes.css). Any category present in the data
-  // that isn't listed here is appended afterward, alphabetically.
+  // Canonical display order for the category chips
   const CATEGORY_ORDER = ['Armor', 'Shield', 'Melee Weapon', 'Ranged Weapon', 'Ammunition'];
 
   const state = {
@@ -15,7 +13,7 @@
     open: new Set()
   };
 
-  document.getElementById('brandSub').textContent = `Rune Repository · ${RUNES_DATA.length} Runes`;
+  setBrandSub('Rune Repository', RUNES_DATA.length, 'Runes');
 
   RUNES_DATA.forEach((r, i) => {
     r._idx = i;
@@ -29,29 +27,16 @@
   const categoryColorOf = buildTypeColorMap(RUNES_DATA.map(r => r._category), CATEGORY_ORDER);
   RUNES_DATA.forEach(r => { r._cardColor = categoryColorOf[r._category]; });
 
-  initMobileFiltersCollapse();
-  initThemeToggle();
+  initPageChrome();
 
-  const bonusChips = document.getElementById('bonusChips');
-  bonusChips.querySelectorAll('.chip').forEach(chip => {
-    chip.addEventListener('click', () => {
-      const val = chip.dataset.bonus;
-      if (state.bonus.has(val)) state.bonus.delete(val);
-      else state.bonus.add(val);
-      chip.classList.toggle('active');
-      render();
-    });
-  });
-  document.getElementById('clearBonus').addEventListener('click', () => {
-    state.bonus.clear();
-    bonusChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    render();
+  const resetBonus = wireChipSet({
+    container: 'bonusChips', set: state.bonus, dataAttr: 'bonus', clearId: 'clearBonus', render
   });
 
   // ---- Price / Caster Level filters (operator select + up to two numeric
   // inputs; wireRangeFilter/matchesRange are shared helpers in base.js).
   // Both values are plain integers in the data. ----
-  wireRangeFilter({
+  const priceFilter = wireRangeFilter({
     rangeState: state.price,
     operatorId: 'priceOperatorSelect',
     input1Id: 'priceInput1',
@@ -59,9 +44,10 @@
     input2Id: 'priceInput2',
     clearId: 'clearPrice',
     render,
-    clamp: makeClamp(0, 999999)
+    min: 0,
+    max: 999999
   });
-  wireRangeFilter({
+  const clFilter = wireRangeFilter({
     rangeState: state.cl,
     operatorId: 'clOperatorSelect',
     input1Id: 'clInput1',
@@ -69,77 +55,32 @@
     input2Id: 'clInput2',
     clearId: 'clearCL',
     render,
-    clamp: makeClamp(1, 30)
+    min: 1,
+    max: 30
   });
 
-  // Category chips are generated dynamically (colors depend on the data),
-  // the same way feats.js/armors.js build their category chips.
-  const categoryChips = document.getElementById('categoryChips');
-  Object.keys(categoryColorOf).forEach(cat => {
-    const color = categoryColorOf[cat];
-    const chip = document.createElement('div');
-    chip.className = 'chip';
-    chip.style.setProperty('--dotc', color);
-    chip.style.setProperty('--chipc', color);
-    chip.dataset.category = cat;
-    chip.innerHTML = `<span class="dot"></span>${escapeHtml(cat)}`;
-    chip.addEventListener('click', () => {
-      if (state.categories.has(cat)) state.categories.delete(cat);
-      else state.categories.add(cat);
-      chip.classList.toggle('active');
-      render();
-    });
-    categoryChips.appendChild(chip);
-  });
-  document.getElementById('clearCategories').addEventListener('click', () => {
-    state.categories.clear();
-    categoryChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    render();
+  // Category chips are generated dynamically (colors depend on the data).
+  const resetCategories = buildColorChips(categoryColorOf, state.categories, 'categoryChips', {
+    dataAttr: 'category', clearId: 'clearCategories', render
   });
 
-  const searchInputEl = document.getElementById('searchInput');
-  const searchWrapEl = document.getElementById('searchWrap');
-  const searchClearIcon = document.getElementById('searchClearIcon');
-  wireSearchInput({
-    inputEl: searchInputEl,
-    wrapEl: searchWrapEl,
-    clearIconEl: searchClearIcon,
-    onQuery: (q) => { state.query = q; },
-    render: () => render(),
-    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
-  });
-
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'flaming +keen -bane', { prefix: true });
-  initSearchScope(searchWrapEl, (scope) => { state.searchScope = scope; render(); });
+  const search = initSearch({ state, render, example: 'flaming +keen -bane' });
 
   document.getElementById('clearAll').addEventListener('click', (e) => {
     e.stopPropagation();
-    state.query = '';
-    searchInputEl.value = '';
-    searchWrapEl.classList.remove('has-query');
-    state.bonus.clear();
-    bonusChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
-    document.getElementById('clearPrice').click();
-    document.getElementById('clearCL').click();
-    state.categories.clear();
-    categoryChips.querySelectorAll('.chip').forEach(el => el.classList.remove('active'));
+    search.reset();
+    resetBonus();
+    priceFilter.reset();
+    clFilter.reset();
+    resetCategories();
     render();
   });
 
-  // ---- Sort (header buttons) ----
-  document.querySelectorAll('#sortBar .sort-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      state.sort = btn.dataset.sort;
-      render();
-    });
-  });
-  function syncSortButtons(){
-    document.querySelectorAll('#sortBar .sort-btn').forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
-  }
+  const syncSortButtons = wireSortBar(state, render);
 
   wireCopyableList('runeList', 'rune-name');
 
-  const queryMatch = createQueryMatcher({ prefix: true });
+  const queryMatch = createQueryMatcher();
   function matchesQuery(rune, query) {
     return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? rune._blob : rune._nameBlob, query);
   }
@@ -157,22 +98,15 @@
   }
 
   // bonus, price, caster_level and crafting.cost are stored as integers in
-  // the data; these helpers rebuild the original display strings.
-  // 7000 -> "7,000 gp"
-  function formatGp(n){
-    return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + ' gp';
-  }
-  // 3 -> "+3"
-  function formatBonus(n){
-    return (n === null || n === undefined || n === '') ? '' : '+' + n;
-  }
+  // the data. A missing bonus shows nothing (formatSigned alone would give "–").
+  const bonusLabel = n => (n === null || n === undefined) ? '' : formatSigned(n);
 
   function cardHTML(r){
     const cVar = r._cardColor;
     const isOpen = state.open.has(r._idx);
 
     const spellsText = (r.crafting.spells && r.crafting.spells.length) ? r.crafting.spells.join(', ') : '';
-    const clDisplay = formatOrdinal(String(r.caster_level));
+    const clDisplay = formatOrdinal(r.caster_level);
 
     const metaPairs = [
       ['Price', formatGp(r.price)],
@@ -209,7 +143,7 @@
       <div class="entry-head" data-toggle="${r._idx}">
         <div class="entry-title-block">
           <span class="entry-name rune-name copyable" data-copy="${escapeHtml(r.name)}">${escapeHtml(r.name)}</span>
-          <span class="entry-meta">${escapeHtml(formatBonus(r.bonus))}</span>
+          <span class="entry-meta">${escapeHtml(bonusLabel(r.bonus))}</span>
           <span class="entry-tag">${escapeHtml(r._category)}</span>
         </div>
         <div class="entry-right">
@@ -230,7 +164,7 @@
       list = list.filter(r => matchesQuery(r, state.query));
     }
     if (state.bonus.size) {
-      list = list.filter(r => state.bonus.has(String(parseInt(r.bonus, 10))));
+      list = list.filter(r => state.bonus.has(String(r.bonus)));
     }
     if (state.price.operator) {
       list = list.filter(r => matchesRange(r.price, state.price));
@@ -249,11 +183,11 @@
     } else if (state.sort === 'category_desc') {
       sorted.sort((a, b) => (b._category || '').localeCompare(a._category || '') || a.name.localeCompare(b.name));
     } else if (state.sort === 'bonus_desc') {
-      sorted.sort((a, b) => (parseInt(b.bonus, 10) || 0) - (parseInt(a.bonus, 10) || 0) || a.name.localeCompare(b.name));
+      sorted.sort((a, b) => (b.bonus || 0) - (a.bonus || 0) || a.name.localeCompare(b.name));
     } else if (state.sort === 'category') {
       sorted.sort((a, b) => (a._category || '').localeCompare(b._category || '') || a.name.localeCompare(b.name));
     } else if (state.sort === 'bonus') {
-      sorted.sort((a, b) => (parseInt(a.bonus, 10) || 0) - (parseInt(b.bonus, 10) || 0) || a.name.localeCompare(b.name));
+      sorted.sort((a, b) => (a.bonus || 0) - (b.bonus || 0) || a.name.localeCompare(b.name));
     }
     return sorted;
   }
@@ -261,18 +195,11 @@
   function render(){
     syncSortButtons();
     const results = filtered();
-    document.getElementById('listTitle').textContent = `${results.length} Rune${results.length !== 1 ? 's' : ''} Listed`;
-    const listEl = document.getElementById('runeList');
-    if (results.length === 0) {
-      listEl.innerHTML = `<div class="empty-state"><span class="big">No runes found</span>Try a different search term or clear a filter.</div>`;
-      return;
-    }
-    const shown = paginate(state, results);
-    listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Runes');
-    wireCardToggle(listEl, state, 'rune-card', 'rune-name');
-    wireShowMore(listEl, {
-      onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
-      onShowAll: () => { state.visibleCount = results.length; render(); }
+    setListTitle(results.length, 'Rune');
+    renderList({
+      state, results, listId: 'runeList', cardHTML,
+      cardClass: 'rune-card', nameClass: 'rune-name',
+      emptyNoun: 'runes', labelPlural: 'Runes', rerender: render
     });
   }
 

@@ -45,7 +45,7 @@
 
         <div class="filter-group">
           <div class="filter-label"><span>Challenge Ratings (CR)</span><button id="clearCR" type="button">clear</button></div>
-          <div class="range-filter-row" id="crFilterRow">
+          <div class="range-filter-row range-filter-row--compact" id="crFilterRow">
             <select class="select-filter" id="crOperatorSelect">
               <option value="">Any</option>
               <option value="lt">Is Lower Than</option>
@@ -61,7 +61,7 @@
 
         <div class="filter-group">
           <div class="filter-label"><span>Hit Dice (HD)</span><button id="clearHD" type="button">clear</button></div>
-          <div class="range-filter-row" id="hdFilterRow">
+          <div class="range-filter-row range-filter-row--compact" id="hdFilterRow">
             <select class="select-filter" id="hdOperatorSelect">
               <option value="">Any</option>
               <option value="lt">Is Lower Than</option>
@@ -179,12 +179,12 @@
           </span>
           <span class="sort-group">
             <span class="sort-group-label">CR</span>
-            <button type="button" class="sort-btn" data-sort="cr_asc" aria-label="CR ascending">↑</button>
+            <button type="button" class="sort-btn" data-sort="cr" aria-label="CR ascending">↑</button>
             <button type="button" class="sort-btn" data-sort="cr_desc" aria-label="CR descending">↓</button>
           </span>
           <span class="sort-group">
             <span class="sort-group-label">HD</span>
-            <button type="button" class="sort-btn" data-sort="hd_asc" aria-label="HD ascending">↑</button>
+            <button type="button" class="sort-btn" data-sort="hd" aria-label="HD ascending">↑</button>
             <button type="button" class="sort-btn" data-sort="hd_desc" aria-label="HD descending">↓</button>
           </span>
           <span class="sort-group">

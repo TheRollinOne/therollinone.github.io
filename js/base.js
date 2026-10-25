@@ -4,7 +4,8 @@
 // `delay` ms have passed with no further calls (e.g. typing in a search box
 // or a CR/HD number input). Used so filtering/rendering doesn't run on
 // every single keystroke, only once typing pauses.
-function debounce(fn, delay){
+const DEFAULT_DEBOUNCE_MS = 250;
+function debounce(fn, delay = DEFAULT_DEBOUNCE_MS){
   let timer = null;
   return function(...args){
     clearTimeout(timer);
@@ -45,7 +46,7 @@ function buildTypeColorMap(labels, preferredOrder){
 }
 
 function escapeHtml(str){
-  return (str||'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  return String(str ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 function escapeRegExp(str){
@@ -98,15 +99,14 @@ function sortSelectOptions(selectEl){
 // until the next operator, so "bronze dragon" stays one phrase.
 // Returns compiled regexes so callers can parse once, then test many blobs.
 //
-// Optional opts.prefix (default false): "live" matching. Each term must
-// still START at a word boundary, but may end mid-word, so results appear
-// while the user is still typing ("cha" matches chain/chainmail, "chain sh"
-// matches "chain shirt"). With prefix off, terms are whole words/phrases.
-// In prefix mode, any term (plain, + or -) under 2 characters is ignored
-// until the user types more, so the list stays unfiltered at 1 letter.
-function parseSearchQuery(query, opts){
-  const prefix = !!(opts && opts.prefix);
-  const q = String(query || '').trim().toLowerCase();
+// Matching is "live": each term must START at a word boundary but may end
+// mid-word, so results appear while the user is still typing ("cha" matches
+// chain/chainmail, "chain sh" matches "chain shirt"). Any term (plain, + or -)
+// under 2 characters is ignored until the user types more, so the list stays
+// unfiltered at 1 letter.
+// `query` must already be trimmed and lower-cased (wireSearchInput does this).
+function parseSearchQuery(query){
+  const q = String(query || '');
   const must = [], not = [];
   if(!q) return {must, not};
   const isOp = ch => ch === '+' || ch === '-' || ch === '\u2013' || ch === '\u2212';
@@ -121,10 +121,10 @@ function parseSearchQuery(query, opts){
     // drop a dangling operator left at the end while typing ("poison -")
     const t = text.replace(/(^|\s)[+\-\u2013\u2212]$/, '').trim();
     if(!t) return;
-    // live mode: ignore terms shorter than 2 characters (a single letter
-    // matches almost everything and just makes the list flicker)
-    if(prefix && t.length < 2) return;
-    const rx = new RegExp('\\b' + escapeRegExp(t) + (prefix ? '' : '\\b'));
+    // ignore terms shorter than 2 characters (a single letter matches
+    // almost everything and just makes the list flicker)
+    if(t.length < 2) return;
+    const rx = new RegExp('\\b' + escapeRegExp(t));
     (negative ? not : must).push(rx);
   }
   add(false, q.slice(0, ops.length ? ops[0] : q.length));
@@ -142,11 +142,10 @@ function matchesParsedQuery(blob, parsed){
 // Wraps parseSearchQuery/matchesParsedQuery with a one-slot cache so the
 // query string is parsed once per change, not once per item (matchesQuery
 // is normally called from inside a list's .filter() callback).
-// Pass { prefix: true } for live as-you-type matching (see parseSearchQuery).
-function createQueryMatcher(opts){
+function createQueryMatcher(){
   let parsedFor = null, parsedQuery = null;
   return function matches(blob, query){
-    if(query !== parsedFor){ parsedFor = query; parsedQuery = parseSearchQuery(query, opts); }
+    if(query !== parsedFor){ parsedFor = query; parsedQuery = parseSearchQuery(query); }
     return matchesParsedQuery(blob, parsedQuery);
   };
 }
@@ -156,8 +155,8 @@ function createQueryMatcher(opts){
 // inputs; lt/eq/gt show just the first; "between" shows both plus the
 // "and" label.
 
-// Returns a function that parses an input's raw string into a number
-// clamped to [min, max], or null when empty / not a number.
+// Internal helper of wireRangeFilter: returns a function that parses an
+// input's raw string into a number clamped to [min, max], or null when empty / not a number.
 function makeClamp(min, max){
   return function(val){
     if(val === '') return null;
@@ -190,19 +189,19 @@ function matchesRange(value, rangeState){
 // - operatorId / input1Id / andId / input2Id / clearId: element ids.
 // - render: the page's render function (typed numbers are debounced;
 //   the operator select and clear button render immediately).
-// - clamp: parser for the typed values; if omitted, one is built from
-//   min/max (default 0..99).
-// - min / max: numeric bounds for the default clamp. With applyBounds:true
-//   they are also written to the inputs' min/max attributes and
-//   placeholders (used when the bounds come from the real data range).
-// Returns { operatorSelect, input1, input2, syncVisibility } so a page's
-// "clear all" can reset the controls.
-function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, clearId, render, clamp, min = 0, max = 99, applyBounds = false }){
+// - min / max: numeric bounds typed values are clamped to (default 0..99).
+//   With applyBounds:true they are also written to the inputs' min/max
+//   attributes and placeholders (used when the bounds come from the real
+//   data range).
+// Returns { operatorSelect, input1, input2, syncVisibility, reset }.
+// reset() puts the state and controls back to "Any" WITHOUT rendering, so a
+// page's "clear all" can call it and render once at the end.
+function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, clearId, render, min = 0, max = 99, applyBounds = false }){
   const operatorSelect = document.getElementById(operatorId);
   const input1 = document.getElementById(input1Id);
   const andSpan = document.getElementById(andId);
   const input2 = document.getElementById(input2Id);
-  const parse = clamp || makeClamp(min, max);
+  const parse = makeClamp(min, max);
 
   if(applyBounds){
     [input1, input2].forEach(inp => { inp.min = min; inp.max = max; });
@@ -217,7 +216,7 @@ function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, cl
     input2.hidden = (op !== 'between');
   }
 
-  const debouncedRender = debounce(render, 200);
+  const debouncedRender = debounce(render);
 
   operatorSelect.addEventListener('change', () => {
     rangeState.operator = operatorSelect.value;
@@ -232,7 +231,7 @@ function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, cl
     rangeState.v2 = parse(input2.value);
     debouncedRender();
   });
-  document.getElementById(clearId).addEventListener('click', () => {
+  function reset(){
     rangeState.operator = '';
     rangeState.v1 = null;
     rangeState.v2 = null;
@@ -240,11 +239,14 @@ function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, cl
     input1.value = '';
     input2.value = '';
     syncVisibility();
+  }
+  document.getElementById(clearId).addEventListener('click', () => {
+    reset();
     render();
   });
   syncVisibility();
 
-  return { operatorSelect, input1, input2, syncVisibility };
+  return { operatorSelect, input1, input2, syncVisibility, reset };
 }
 
 // Search scope toggle: a "Names Only | All Fields" button pair placed right
@@ -252,7 +254,7 @@ function wireRangeFilter({ rangeState, operatorId, input1Id, andId, input2Id, cl
 // doesn't already contain #searchScope, it is created and inserted after
 // searchWrapEl, so a page only needs this one call. Styling lives in
 // base.css (.search-scope, reusing .sort-btn).
-// onChange(scope) receives 'names' or 'all'. Returns the initial scope.
+// onChange(scope) receives 'names' or 'all'.
 // A page keeps the value in its state (e.g. state.searchScope) and picks
 // which search blob to match against (name only vs. everything).
 const SEARCH_SCOPE_NAMES = 'names';
@@ -281,7 +283,6 @@ function initSearchScope(searchWrapEl, onChange){
       if(onChange) onChange(btn.dataset.scope);
     });
   });
-  return SEARCH_SCOPE_NAMES;
 }
 
 // Search help tooltip (hover; hidden while the box has focus) — shared by
@@ -289,13 +290,8 @@ function initSearchScope(searchWrapEl, onChange){
 // Uses the site's .hover-tooltip look (label lines + .hover-tooltip-value
 // line); positioned like wireHoverCopyTooltip: fixed, centered above the
 // search box, clamped to the viewport (flips below if there's no room
-// above). Relies on the .hover-tooltip.search-tip CSS rules (currently
-// defined in monsters.css); a page needs that block in its own stylesheet
-// for this to render styled.
-// Pass { prefix: true } as a 4th argument on pages using live prefix search
-// so the hint text matches how the search actually behaves.
-function wireSearchTooltip(searchInputEl, searchWrapEl, exampleText, opts){
-  const prefix = !!(opts && opts.prefix);
+// above). Relies on the .hover-tooltip.search-tip CSS rules.
+function wireSearchTooltip(searchInputEl, searchWrapEl, exampleText){
   let tip = null;
   function remove(){ if(tip){ tip.remove(); tip = null; } }
   function show(){
@@ -303,9 +299,7 @@ function wireSearchTooltip(searchInputEl, searchWrapEl, exampleText, opts){
     tip = document.createElement('div');
     tip.className = 'hover-tooltip search-tip';
     tip.innerHTML =
-      (prefix
-        ? '<div>Results update as you type; terms match the start of a word.</div>'
-        : '<div>Matches whole words or phrases only.</div>') +
+      '<div>Results update as you type; terms match the start of a word.</div>' +
       '<div>Use + to require more terms and - to exclude terms.</div>' +
       `<div class="hover-tooltip-value">Example: ${escapeHtml(exampleText)}</div>`;
     document.body.appendChild(tip);
@@ -382,10 +376,14 @@ function showMoreButtonHTML(results, state, itemLabelPlural){
 // safe to call every render() (like wireCardToggle: the listener is only
 // attached once per list element, since the buttons themselves get
 // replaced by innerHTML on every render). Pass { onLoadMore, onShowAll }.
+// Each call refreshes the callbacks the listener reads (like wireCardToggle),
+// so closures that capture the current render's `results` are never stale.
 function wireShowMore(listEl, { onLoadMore, onShowAll }){
+  listEl._showMoreCfg = { onLoadMore, onShowAll };
   if(listEl._showMoreWired) return;
   listEl._showMoreWired = true;
   listEl.addEventListener('click', e => {
+    const { onLoadMore, onShowAll } = listEl._showMoreCfg;
     if(e.target.closest('[data-show-more]')) onLoadMore();
     else if(e.target.closest('[data-show-all]')) onShowAll();
   });
@@ -526,6 +524,267 @@ function wireCardToggle(listEl, state, cardClass, nameClass, onOpen){
   });
 }
 
+// =========================================================================
+// Shared page scaffolding (used by every catalogue page)
+// =========================================================================
+
+// ---- Lazy-loaded full records (chunked data files) ----
+// Builds the loader used by pages whose list holds only slim records and
+// whose full records live in chunk files (data/<name>-<N>.js, each defining
+// window[globalPrefix + N] = [...full records...]; the file URL is
+// META['c' + N]).
+// - META: the page's *_DATA_META object ({ chunkSize, c0, c1, ... }).
+// - globalPrefix: e.g. 'MONSTER_CHUNK_'.
+// - opts.list: the slim record array (indexes line up with the chunks; may
+//   keep growing, e.g. monsters' lazily appended third-party entries).
+// - opts.bodyHTML(fullRecord): builds the card body HTML.
+// - opts.merge(full, slim): combines a full record with its slim one.
+//   Default: Object.assign({}, full, slim) (keeps the fields prepare() added
+//   to the slim record).
+// - opts.defaultChunkSize: used when META has no chunkSize (default 20).
+// Returns { loadDetail(idx), hydrate(idx, cardEl) }; hydrate is the usual
+// onOpen callback for wireCardToggle / renderList.
+function createChunkLoader(META, globalPrefix, opts){
+  const { list, bodyHTML, merge, defaultChunkSize = 20 } = opts;
+  const CH = (META && META.chunkSize) || defaultChunkSize;
+  const mergeFn = merge || ((full, slim) => Object.assign({}, full, slim));
+  const chunkPromises = {};
+  function loadChunk(c){
+    return chunkPromises[c] || (chunkPromises[c] = new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = META['c' + c];
+      s.onload = () => res(window[globalPrefix + c]);
+      s.onerror = () => { delete chunkPromises[c]; s.remove(); rej(new Error('chunk ' + c)); };
+      document.head.appendChild(s);
+    }));
+  }
+  function loadDetail(idx){
+    return loadChunk(Math.floor(idx / CH)).then(arr => mergeFn(arr[idx % CH], list[idx]));
+  }
+  function hydrate(idx, card){
+    const body = card.querySelector('.entry-body');
+    if(!body || body.dataset.ready) return;
+    body.innerHTML = '<div class="entry-desc">Loading…</div>';
+    loadDetail(idx)
+      .then(full => { body.innerHTML = bodyHTML(full); body.dataset.ready = '1'; })
+      .catch(() => { body.innerHTML = '<div class="entry-desc">Could not load details.</div>'; });
+  }
+  return { loadDetail, hydrate };
+}
+
+// ---- Empty / status states ----
+function emptyStateHTML(title, msg = 'Try a different search term or clear a filter.'){
+  return `<div class="empty-state"><span class="big">${escapeHtml(title)}</span>${escapeHtml(msg)}</div>`;
+}
+// Shows a status message in place of the list (and in the list title).
+function showStatus(listId, title, msg){
+  document.getElementById('listTitle').textContent = title;
+  document.getElementById(listId).innerHTML = emptyStateHTML(title, msg);
+}
+
+// ---- Page header text ----
+// "Rune Repository · 120 Runes"
+function setBrandSub(prefix, count, noun){
+  document.getElementById('brandSub').textContent = `${prefix} · ${count} ${noun}`;
+}
+// "1 Rune Listed" / "5 Runes Listed". Pass plural for irregular nouns
+// ("Armor & Shield" / "Armors & Shields").
+function setListTitle(n, singular, plural = singular + 's'){
+  document.getElementById('listTitle').textContent = `${n} ${n !== 1 ? plural : singular} Listed`;
+}
+
+// ---- Small value helpers ----
+// Leading number of a string ("50 lbs." -> 50); -1 when there is none, so
+// missing values sort first.
+function parseLeadingNumber(str){
+  const n = parseFloat(str);
+  return Number.isNaN(n) ? -1 : n;
+}
+
+// Header quick-stat boxes. boxes: [[label, value, extraClass?], ...]
+// (extraClass is appended to the box's class, e.g. ' type').
+function quickStatsHTML(boxes){
+  return `<div class="entry-qstats">${boxes.map(([l, v, cls]) =>
+    `<div class="entry-qstat${cls || ''}"><div class="entry-qstat-label">${escapeHtml(l)}</div><div class="entry-qstat-value">${escapeHtml(v)}</div></div>`
+  ).join('')}</div>`;
+}
+
+// ---- Chip filters ----
+// Wires every .chip inside `container` (element or id) as a multi-select
+// toggle against `set`, plus an optional clear button.
+// - dataAttr: camelCase dataset key holding the chip's value (data-foo-bar
+//   -> 'fooBar').
+// - parse: optional converter for the dataset string (e.g. Number).
+// Returns reset(): clears the set and the .active classes WITHOUT rendering,
+// so a page's "clear all" can call it and render once at the end.
+function wireChipSet({ container, set, dataAttr, clearId, render, parse }){
+  const el = typeof container === 'string' ? document.getElementById(container) : container;
+  el.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const raw = chip.dataset[dataAttr];
+      const val = parse ? parse(raw) : raw;
+      if(set.has(val)) set.delete(val);
+      else set.add(val);
+      chip.classList.toggle('active');
+      render();
+    });
+  });
+  function reset(){
+    set.clear();
+    el.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  }
+  if(clearId){
+    document.getElementById(clearId).addEventListener('click', () => { reset(); render(); });
+  }
+  return reset;
+}
+
+// Appends chips to a container: items are { value, label, color? }. A color
+// makes it a dot chip (--dotc / --chipc); without one it is a plain chip.
+function appendChips(container, items, dataAttr){
+  items.forEach(({ value, label, color }) => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.dataset[dataAttr] = value;
+    if(color){
+      chip.style.setProperty('--dotc', color);
+      chip.style.setProperty('--chipc', color);
+      chip.innerHTML = `<span class="dot"></span>${escapeHtml(label)}`;
+    } else {
+      chip.textContent = label;
+    }
+    container.appendChild(chip);
+  });
+}
+
+// Dynamic dot chips from a {label: color} map (see buildTypeColorMap), wired
+// as a multi-select against `set`. opts: { dataAttr (default 'cat'),
+// clearId, render, labelOf(key) -> display label, parse }. Returns reset().
+function buildColorChips(map, set, container, opts){
+  const { dataAttr = 'cat', clearId, render, labelOf, parse } = opts || {};
+  const el = typeof container === 'string' ? document.getElementById(container) : container;
+  appendChips(el, Object.keys(map).map(k => ({
+    value: k, label: labelOf ? labelOf(k) : k, color: map[k]
+  })), dataAttr);
+  return wireChipSet({ container: el, set, dataAttr, clearId, render, parse });
+}
+
+// Dynamic plain chips (no dot) wired as a multi-select. values: array of
+// raw values, or { value, label } objects. opts as in buildColorChips.
+function buildPlainChips(values, set, container, opts){
+  const { dataAttr = 'value', clearId, render, labelOf, parse } = opts || {};
+  const el = typeof container === 'string' ? document.getElementById(container) : container;
+  appendChips(el, values.map(v => (v !== null && typeof v === 'object')
+    ? v
+    : { value: v, label: labelOf ? labelOf(v) : String(v) }), dataAttr);
+  return wireChipSet({ container: el, set, dataAttr, clearId, render, parse });
+}
+
+// Yes / No single-select toggle (clicking the active one turns it off).
+// Stores 'yes' | 'no' | null in state[key]. Returns reset() (no render).
+function wireYesNoToggle({ container, state, key, clearId, render }){
+  const el = typeof container === 'string' ? document.getElementById(container) : container;
+  [{ k: 'yes', label: 'Yes' }, { k: 'no', label: 'No' }].forEach(opt => {
+    const chip = document.createElement('div');
+    chip.className = 'chip';
+    chip.dataset.yesno = opt.k;
+    chip.textContent = opt.label;
+    chip.addEventListener('click', () => {
+      state[key] = (state[key] === opt.k) ? null : opt.k;
+      el.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.yesno === state[key]));
+      render();
+    });
+    el.appendChild(chip);
+  });
+  function reset(){
+    state[key] = null;
+    el.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  }
+  if(clearId){
+    document.getElementById(clearId).addEventListener('click', () => { reset(); render(); });
+  }
+  return reset;
+}
+
+// ---- Sort bar ----
+// Wires the header #sortBar buttons to state.sort. Returns the function that
+// syncs the .active class (call it at the start of render()).
+function wireSortBar(state, render){
+  const btns = document.querySelectorAll('#sortBar .sort-btn');
+  btns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      state.sort = btn.dataset.sort;
+      render();
+    });
+  });
+  return function syncSortButtons(){
+    btns.forEach(b => b.classList.toggle('active', b.dataset.sort === state.sort));
+  };
+}
+
+// ---- Search box ----
+// Bundles wireSearchInput + wireSearchTooltip + initSearchScope for the
+// standard #searchInput / #searchWrap / #searchClearIcon trio. Keeps
+// state.query and state.searchScope up to date and calls render().
+// example: the "Example: ..." text for the help tooltip.
+// Returns { syncClearIcon, reset() } - reset() empties the box and state
+// WITHOUT rendering (for "clear all").
+function initSearch({ state, render, example }){
+  const inputEl = document.getElementById('searchInput');
+  const wrapEl = document.getElementById('searchWrap');
+  const clearIconEl = document.getElementById('searchClearIcon');
+  const syncClearIcon = wireSearchInput({
+    inputEl, wrapEl, clearIconEl,
+    onQuery: (q) => { state.query = q; },
+    render: () => render()
+  });
+  wireSearchTooltip(inputEl, wrapEl, example);
+  initSearchScope(wrapEl, (scope) => { state.searchScope = scope; render(); });
+  return {
+    syncClearIcon,
+    reset(){
+      state.query = '';
+      inputEl.value = '';
+      syncClearIcon();
+    }
+  };
+}
+
+// ---- Page chrome ----
+// Mobile filter collapse + theme toggle (always used together).
+function initPageChrome(){
+  initMobileFiltersCollapse();
+  initThemeToggle();
+}
+
+// ---- List rendering ----
+// paginate -> cards -> wireCardToggle -> wireShowMore, plus the empty state.
+// - state, results: page state and the full filtered/sorted list.
+// - listId: id of the list element.
+// - cardHTML(item), cardClass, nameClass: as used by wireCardToggle.
+// - emptyNoun: plural noun for "No <noun> found" (as it should display).
+// - labelPlural: plural noun on the "Show All ..." button.
+// - rerender: what "Load more" / "Show all" call (usually render).
+// - onOpen(idx, cardEl): optional; runs when a card opens AND for cards that
+//   are still open after a re-render (used for lazy-loaded bodies).
+function renderList({ state, results, listId, cardHTML, cardClass, nameClass, emptyNoun, labelPlural, rerender, onOpen }){
+  const listEl = document.getElementById(listId);
+  if(results.length === 0){
+    listEl.innerHTML = emptyStateHTML(`No ${emptyNoun} found`);
+    return;
+  }
+  const shown = paginate(state, results);
+  listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, labelPlural);
+  wireCardToggle(listEl, state, cardClass, nameClass, onOpen);
+  if(onOpen){
+    listEl.querySelectorAll('.' + cardClass + '.open').forEach(card => onOpen(+card.dataset.idx, card));
+  }
+  wireShowMore(listEl, {
+    onLoadMore: () => { state.visibleCount += PAGE_SIZE; rerender(); },
+    onShowAll: () => { state.visibleCount = results.length; rerender(); }
+  });
+}
+
 // Mobile filters collapse toggle (desktop always shows filters via CSS).
 function initMobileFiltersCollapse(){
   const filtersInner = document.getElementById('filtersInner');
@@ -547,8 +806,9 @@ function initMobileFiltersCollapse(){
 // Wires a text input + its "has-query" wrapper + clear icon to a query
 // setter and a re-render. Returns the sync function so callers (e.g. a
 // "clear all" button) can re-sync the clear-icon visibility manually.
-function wireSearchInput({inputEl, wrapEl, clearIconEl, onQuery, render, debounceMs = 200}){
-  const debouncedRender = debounce(render, debounceMs);
+function wireSearchInput({inputEl, wrapEl, clearIconEl, onQuery, render}){
+  // short pause after typing stops, so fast typing doesn't lag
+  const debouncedRender = debounce(render);
   function syncClearIcon(){
     wrapEl.classList.toggle('has-query', inputEl.value.length > 0);
   }

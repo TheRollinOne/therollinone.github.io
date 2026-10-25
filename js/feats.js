@@ -42,7 +42,7 @@
     wildShape: /wild shape|wild empathy/i
   };
 
-  document.getElementById('brandSub').textContent = `Feat Library · ${FEATS_DATA.length} Feats`;
+  setBrandSub('Feat Library', FEATS_DATA.length, 'Feats');
 
   FEATS_DATA.forEach((f,i)=>{
     f._idx = i;
@@ -59,29 +59,13 @@
     ].filter(Boolean).join(' ').toLowerCase();
   });
 
-  initMobileFiltersCollapse();
-  initThemeToggle();
+  initPageChrome();
 
   const categoryColorOf = buildTypeColorMap(FEATS_DATA.map(f=>f.category));
-  const allCategories = Object.keys(categoryColorOf);
   FEATS_DATA.forEach(f=>{ f._cardColor = categoryColorOf[f.category]; });
 
-  const categoryChips = document.getElementById('categoryChips');
-  allCategories.forEach(cat=>{
-    const color = categoryColorOf[cat];
-    const chip = document.createElement('div');
-    chip.className='chip';
-    chip.style.setProperty('--dotc', color);
-    chip.style.setProperty('--chipc', color);
-    chip.dataset.cat = cat;
-    chip.innerHTML = `<span class="dot"></span>${cat}`;
-    chip.addEventListener('click', ()=>{
-      if(state.categories.has(cat)) state.categories.delete(cat);
-      else state.categories.add(cat);
-      chip.classList.toggle('active');
-      render();
-    });
-    categoryChips.appendChild(chip);
+  const resetCategories = buildColorChips(categoryColorOf, state.categories, 'categoryChips', {
+    dataAttr: 'cat', clearId: 'clearCategories', render
   });
 
   const prereqChips = document.getElementById('prereqChips');
@@ -100,15 +84,8 @@
     });
   });
 
-  const abilityChips = document.getElementById('abilityChips');
-  abilityChips.querySelectorAll('.chip').forEach(chip=>{
-    chip.addEventListener('click', ()=>{
-      const val = chip.dataset.ability;
-      if(state.abilities.has(val)) state.abilities.delete(val);
-      else state.abilities.add(val);
-      chip.classList.toggle('active');
-      render();
-    });
+  const resetAbilities = wireChipSet({
+    container: 'abilityChips', set: state.abilities, dataAttr: 'ability', render
   });
 
   const babSkillChips = document.getElementById('babSkillChips');
@@ -133,26 +110,7 @@
     render();
   });
 
-  document.getElementById('clearCategories').addEventListener('click', ()=>{
-    state.categories.clear();
-    document.querySelectorAll('#categoryChips .chip').forEach(el=>el.classList.remove('active'));
-    render();
-  });
-
-  const searchInputEl = document.getElementById('searchInput');
-  const searchWrapEl = document.getElementById('searchWrap');
-  const searchClearIcon = document.getElementById('searchClearIcon');
-  const syncSearchClearIcon = wireSearchInput({
-    inputEl: searchInputEl,
-    wrapEl: searchWrapEl,
-    clearIconEl: searchClearIcon,
-    onQuery: (q)=>{ state.query = q; },
-    render: ()=>render(),
-    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
-  });
-
-  wireSearchTooltip(searchInputEl, searchWrapEl, 'power attack +combat -fighter', { prefix: true });
-  initSearchScope(searchWrapEl, (scope)=>{ state.searchScope = scope; render(); });
+  const search = initSearch({ state, render, example: 'power attack +combat -fighter' });
 
   const prereqSearchInputEl = document.getElementById('prereqSearchInput');
   const prereqSearchWrapEl = document.getElementById('prereqSearchWrap');
@@ -162,68 +120,47 @@
     wrapEl: prereqSearchWrapEl,
     clearIconEl: prereqSearchClearIcon,
     onQuery: (q)=>{ state.prereqQuery = q; },
-    render: ()=>render(),
-    debounceMs: 250 // short pause after typing stops, so fast typing doesn't lag
+    render: ()=>render()
   });
 
-  document.getElementById('clearPrereq').addEventListener('click', ()=>{
+  // Resets every prerequisite-related filter WITHOUT rendering.
+  function resetPrereqFilters(){
     state.prereq = null;
-    document.querySelectorAll('#prereqChips .chip').forEach(el=>el.classList.remove('active'));
+    prereqChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
     state.prereqQuery = '';
     prereqSearchInputEl.value = '';
     syncPrereqSearchClearIcon();
-    state.abilities.clear();
-    document.querySelectorAll('#abilityChips .chip').forEach(el=>el.classList.remove('active'));
+    resetAbilities();
     state.bab = false;
     state.skillRanks = false;
-    document.querySelectorAll('#babSkillChips .chip').forEach(el=>el.classList.remove('active'));
+    babSkillChips.querySelectorAll('.chip').forEach(el=>el.classList.remove('active'));
     state.classFeature = '';
     classFeatureSelectEl.value = '';
+  }
+
+  document.getElementById('clearPrereq').addEventListener('click', ()=>{
+    resetPrereqFilters();
     render();
   });
 
   document.getElementById('clearAll').addEventListener('click', (e)=>{
     e.stopPropagation();
-    state.query = '';
-    searchInputEl.value = '';
-    syncSearchClearIcon();
-    state.categories.clear();
-    document.querySelectorAll('#categoryChips .chip').forEach(el=>el.classList.remove('active'));
-    state.prereq = null;
-    document.querySelectorAll('#prereqChips .chip').forEach(el=>el.classList.remove('active'));
-    state.prereqQuery = '';
-    prereqSearchInputEl.value = '';
-    syncPrereqSearchClearIcon();
-    state.abilities.clear();
-    document.querySelectorAll('#abilityChips .chip').forEach(el=>el.classList.remove('active'));
-    state.bab = false;
-    state.skillRanks = false;
-    document.querySelectorAll('#babSkillChips .chip').forEach(el=>el.classList.remove('active'));
-    state.classFeature = '';
-    classFeatureSelectEl.value = '';
+    search.reset();
+    resetCategories();
+    resetPrereqFilters();
     render();
   });
 
-  // Sort buttons in the page header.
-  const sortBtns = document.querySelectorAll('#sortBar .sort-btn');
-  sortBtns.forEach(btn=>{
-    btn.addEventListener('click', ()=>{
-      state.sort = btn.dataset.sort;
-      render();
-    });
-  });
-  function syncSortButtons(){
-    sortBtns.forEach(b=>b.classList.toggle('active', b.dataset.sort === state.sort));
-  }
+  const syncSortButtons = wireSortBar(state, render);
 
   wireCopyableList('featList', 'feat-name');
 
-  const queryMatch = createQueryMatcher({ prefix: true });
+  const queryMatch = createQueryMatcher();
   function matchesQuery(feat, query){
     return queryMatch(state.searchScope === SEARCH_SCOPE_ALL ? feat._blob : feat._nameBlob, query);
   }
 
-  const prereqQueryMatch = createQueryMatcher({ prefix: true });
+  const prereqQueryMatch = createQueryMatcher();
   function matchesPrereqQuery(feat, query){
     return prereqQueryMatch(feat._prereqBlob, query);
   }
@@ -234,7 +171,11 @@
 
     const flavorHtml = f.flavor_text ? `<p class="feat-flavor copyable" data-copy="${escapeHtml(f.flavor_text)}">${escapeHtml(f.flavor_text)}</p>` : '';
 
-    const prereqHtml = (f.prerequisites && f.prerequisites.length>0) ? `\n        <div class="entry-section copyable" data-copy="${escapeHtml(clipboardFormatText(f.prerequisites))}">\n          <div class="entry-section-title">Prerequisites</div>\n          <div class="entry-desc feat-desc"><div>${htmlFormatText(f.prerequisites)}</div></div>\n        </div>` : '';
+    const prereqHtml = (f.prerequisites && f.prerequisites.length>0) ? `
+        <div class="entry-section copyable" data-copy="${escapeHtml(clipboardFormatText(f.prerequisites))}">
+          <div class="entry-section-title">Prerequisites</div>
+          <div class="entry-desc feat-desc"><div>${htmlFormatText(f.prerequisites)}</div></div>
+        </div>` : '';
 
     const groupFields = [
       ['Benefits', f.benefits],
@@ -243,7 +184,11 @@
     ].filter(([label,val])=>val && val.length>0);
 
     const groupInnerHtml = groupFields.map(([label,val])=>{
-      return `\n        <div class="entry-section">\n          <div class="entry-section-title">${escapeHtml(label)}</div>\n          <div class="entry-desc feat-desc"><div>${htmlFormatText(val)}</div></div>\n        </div>`;
+      return `
+        <div class="entry-section">
+          <div class="entry-section-title">${escapeHtml(label)}</div>
+          <div class="entry-desc feat-desc"><div>${htmlFormatText(val)}</div></div>
+        </div>`;
     }).join('');
 
     const combinedCopyText = clipboardFormatText(
@@ -251,10 +196,26 @@
     );
 
     const groupHtml = groupFields.length
-      ? `<div class="copyable" data-copy="${escapeHtml(combinedCopyText)}">${groupInnerHtml}\n        </div>`
+      ? `<div class="copyable" data-copy="${escapeHtml(combinedCopyText)}">${groupInnerHtml}
+        </div>`
       : '';
 
-    return `\n    <div class="entry-card feat-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${f._idx}">\n      <div class="entry-head" data-toggle="${f._idx}">\n        <div class="entry-title-block">\n          <span class="entry-name feat-name copyable" data-copy="${escapeHtml(f.name)}">${escapeHtml(f.name)}</span>\n          <span class="entry-tag">${escapeHtml(f.category)}</span>\n        </div>\n        <div class="entry-right">\n          <span class="entry-badge entry-badge--responsive" title="${escapeHtml(f.flavor_text||'')}">${escapeHtml(f.flavor_text||'')}</span>\n          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>\n        </div>\n      </div>\n      <div class="entry-body">\n        ${flavorHtml}${prereqHtml}${groupHtml}\n      </div>\n    </div>`;
+    return `
+    <div class="entry-card feat-card${isOpen?' open':''}" style="--cardc:${cVar}" data-idx="${f._idx}">
+      <div class="entry-head" data-toggle="${f._idx}">
+        <div class="entry-title-block">
+          <span class="entry-name feat-name copyable" data-copy="${escapeHtml(f.name)}">${escapeHtml(f.name)}</span>
+          <span class="entry-tag">${escapeHtml(f.category)}</span>
+        </div>
+        <div class="entry-right">
+          <span class="entry-badge entry-badge--responsive" title="${escapeHtml(f.flavor_text||'')}">${escapeHtml(f.flavor_text||'')}</span>
+          <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+      </div>
+      <div class="entry-body">
+        ${flavorHtml}${prereqHtml}${groupHtml}
+      </div>
+    </div>`;
   }
 
   // Every filter except Class Feature — the population the Class Feature
@@ -323,18 +284,11 @@
   function render(){
     syncSortButtons();
     const results = filtered();
-    document.getElementById('listTitle').textContent = `${results.length} Feat${results.length!==1?'s':''} Listed`;
-    const listEl = document.getElementById('featList');
-    if(results.length===0){
-      listEl.innerHTML = `<div class="empty-state"><span class="big">No feats found</span>Try a different search term or clear a filter.</div>`;
-      return;
-    }
-    const shown = paginate(state, results);
-    listEl.innerHTML = shown.map(cardHTML).join('') + showMoreButtonHTML(results, state, 'Feats');
-    wireCardToggle(listEl, state, 'feat-card', 'feat-name');
-    wireShowMore(listEl, {
-      onLoadMore: () => { state.visibleCount += PAGE_SIZE; render(); },
-      onShowAll: () => { state.visibleCount = results.length; render(); }
+    setListTitle(results.length, 'Feat');
+    renderList({
+      state, results, listId: 'featList', cardHTML,
+      cardClass: 'feat-card', nameClass: 'feat-name',
+      emptyNoun: 'feats', labelPlural: 'Feats', rerender: render
     });
   }
 
