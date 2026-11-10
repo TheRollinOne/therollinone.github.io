@@ -352,6 +352,7 @@
       if(p.b !== undefined) return `<b>${escapeHtml(p.b)}</b>`;
       if(p.i !== undefined) return `<i>${escapeHtml(p.i)}</i>`;
       if(p.sup !== undefined) return `<sup>${escapeHtml(p.sup)}</sup>`;
+      if(p.raw !== undefined) return p.raw;   // pre-built, already-escaped HTML
       return '';
     }).join('');
   }
@@ -361,6 +362,7 @@
       if(p.b !== undefined) return `**${p.b}**`;
       if(p.i !== undefined) return `*${p.i}*`;
       if(p.sup !== undefined) return p.sup;
+      if(p.raw !== undefined) return p.text ?? '';   // raw HTML part: plain text for the clipboard
       return '';
     }).join('');
   }
@@ -538,9 +540,24 @@
     return lines;
   }
 
+  // A table in ability text uses the same markup as descriptions:
+  //   >> Col1/Col2/Col3
+  //   a | b | c
+  // (a ">>" line followed by a line containing "|").
+  const TABLE_MARKUP_RE = /^\s*>>.*\n[^\n]*\|/m;
   function abilityLines(m){
-    return (m.special_abilities || []).map(a =>
-      gap([{b: `${a.type}${has(a.kind) ? ` (${a.kind})` : ''}`}, ' ' + (a.details || '')]));
+    return (m.special_abilities || []).map(a => {
+      const name = `${a.type}${has(a.kind) ? ` (${a.kind})` : ''}`;
+      const details = a.details || '';
+      if(!TABLE_MARKUP_RE.test(details)){
+        return gap([{b: name}, ' ' + details]);
+      }
+      // Table present: format the details like a description (tables, labels,
+      // bold/italic) and keep line breaks.
+      const line = gap([{b: name}, ' ', {raw: htmlFormatDescription(details), text: clipboardFormatText(details)}]);
+      line.pre = true;
+      return line;
+    });
   }
 
   function ecologyLines(m){
