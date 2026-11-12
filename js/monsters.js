@@ -550,7 +550,10 @@
       const name = `${a.type}${has(a.kind) ? ` (${a.kind})` : ''}`;
       const details = a.details || '';
       if(!TABLE_MARKUP_RE.test(details)){
-        return gap([{b: name}, ' ' + details]);
+        const plain = gap([{b: name}, ' ' + details]);
+        // Keep "\n" line breaks in the text (same as descriptions).
+        if(details.includes('\n')) plain.pre = true;
+        return plain;
       }
       // Table present: format the details like a description (tables, labels,
       // bold/italic) and keep line breaks.
