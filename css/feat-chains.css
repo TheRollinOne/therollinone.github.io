@@ -91,7 +91,7 @@ button.fc-box:focus-visible {
   min-width: var(--fc-w);
   overflow: visible;
   text-overflow: clip;
-  color: #ffffff;
+  color: #e2e2e2;
   font-weight: 700;
   background: color-mix(in srgb, var(--gold) 65%, var(--ink-2));
   border-color: var(--gold);
