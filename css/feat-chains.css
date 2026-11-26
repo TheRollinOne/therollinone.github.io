@@ -1,0 +1,99 @@
+/* ==========================================================================
+   feat-chains.css: Feat chain graph (Feats page)
+   --------------------------------------------------------------------------
+   Left -> right:  required feats | this feat | feats that build on it.
+   feats.js positions every box absolutely inside .fc-canvas and draws the
+   connecting lines as one <svg class="fc-lines"> underneath, so this file
+   only styles the pieces. Boxes reuse the look of .class-pill (spells.css)
+   and the border treatment of .top-menu-link (base.css).
+
+   Tunables (override on .fc-section; feats.js reads --fc-w and --fc-gap):
+     --fc-w      fixed box width (longer names are ellipsised, full name in tooltip)
+     --fc-gap    horizontal space between columns (lines split / rejoin halfway)
+     --fc-line   line color (opaque on purpose: overlapping lines must not darken)
+   ========================================================================== */
+
+.fc-section {
+  --fc-w: 180px;
+  --fc-gap: 50px;
+  --fc-line: color-mix(in srgb, var(--parchment-dim) 55%, var(--ink-2));
+  margin-top: 14px;
+}
+
+.fc-scroll {
+  padding: 6px 2px 10px;
+  overflow-x: auto;
+}
+
+.fc-wrap {
+  display: inline-block;
+  min-width: 100%;
+}
+
+.fc-canvas {
+  position: relative;
+}
+
+/* ---- lines ---- */
+.fc-lines {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+/* feats.js draws the whole graph as one path, each stretch exactly once and on
+   pixel centres, so every line has the same weight. Square caps fill the corner
+   pixel where a horizontal and a vertical piece meet. */
+.fc-lines path {
+  fill: none;
+  stroke: var(--fc-line);
+  stroke-width: 1;
+  stroke-linecap: square;
+}
+
+/* ---- boxes ---- */
+.fc-box {
+  position: absolute;
+  padding: 5px 8px;
+  overflow: hidden;
+
+  font-family: 'JetBrains Mono', monospace;
+  font-size: .78rem;
+  line-height: 1.3;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: var(--parchment-dim);
+  background: var(--ink-2);
+  border: 1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
+  border-radius: 20px;
+
+  cursor: pointer;
+  transition: border-color .15s, background .15s, color .15s;
+}
+
+button.fc-box:hover,
+button.fc-box:focus-visible {
+  color: var(--parchment);
+  background: color-mix(in srgb, var(--gold) 8%, var(--ink-3));
+  border-color: var(--gold);
+  outline: none;
+}
+
+/* The feat whose card this is: filled with the card color, like .chip.active.
+   Never truncated: feats.js widens its column to fit. */
+.fc-current {
+  width: auto;
+  min-width: var(--fc-w);
+  overflow: visible;
+  text-overflow: clip;
+  color: #ffffff;
+  font-weight: 700;
+  text-shadow: 3px 3px 2px #000;
+  background: color-mix(in srgb, var(--fcc, var(--gold)) 85%, var(--ink-2));
+  border-color: var(--fcc, var(--gold));
+  cursor: default;
+}
