@@ -339,11 +339,21 @@
     };
   }
 
+  // True when one of the feat's prerequisites is an either/or that names a feat
+  // ("Deft Maneuvers or Powerful Maneuvers", "Amateur Gunslinger or grit class
+  // feature"): a parents entry with several ids, or any soft parent.
+  const chainHasAlt = id => {
+    const n = chainNodes[id];
+    return !!n && (arr(n.parents).some(e => e.length > 1) || arr(n.softParents).length > 0);
+  };
+  const ALT_NOTE = ' (either/or prerequisite)';
+
   function chainBox(id){
     const idx = featIdxByChainId[id];
     const f = FEATS_DATA[idx];
     if(!f) return '';
-    return `<button type="button" class="fc-box" style="--fcc:${f._cardColor}" data-chain-go="${idx}" data-chain-id="${id}" title="${escapeHtml(chainName(f.name) + ' · ' + f.category)}">${escapeHtml(chainName(f.name))}</button>`;
+    const alt = chainHasAlt(id);
+    return `<button type="button" class="fc-box${alt ? ' fc-alt' : ''}" style="--fcc:${f._cardColor}" data-chain-go="${idx}" data-chain-id="${id}" title="${escapeHtml(chainName(f.name) + ' · ' + f.category + (alt ? ALT_NOTE : ''))}">${escapeHtml(chainName(f.name))}</button>`;
   }
 
   // Builds the graph inside an open card's chain section (once).
@@ -356,7 +366,7 @@
 
     wrap.innerHTML = '<div class="fc-canvas">' +
       L.boxes.map(b=> b.id === f._chainId
-        ? `<span class="fc-box fc-current" data-chain-id="${b.id}" style="--fcc:${f._cardColor}">${escapeHtml(chainName(f.name))}</span>`
+        ? `<span class="fc-box fc-current${chainHasAlt(b.id) ? ' fc-alt' : ''}" data-chain-id="${b.id}" style="--fcc:${f._cardColor}"${chainHasAlt(b.id) ? ` title="${escapeHtml(chainName(f.name) + ALT_NOTE)}"` : ''}>${escapeHtml(chainName(f.name))}</span>`
         : chainBox(b.id)).join('') + '</div>';
     const canvas = wrap.firstChild;
     const els = {};

@@ -49,7 +49,7 @@
 .fc-lines path {
   fill: none;
   stroke: var(--fc-line);
-  stroke-width: 1;
+  stroke-width: 2;
   stroke-linecap: square;
 }
 
@@ -68,7 +68,7 @@
 
   color: var(--parchment-dim);
   background: var(--ink-2);
-  border: 1px solid color-mix(in srgb, var(--parchment-dim) 60%, var(--ink-3));
+  border: 2px solid color-mix(in srgb, var(--gold) 80%, var(--ink-3));
   border-radius: 20px;
 
   cursor: pointer;
@@ -83,7 +83,8 @@ button.fc-box:focus-visible {
   outline: none;
 }
 
-/* The feat whose card this is: filled with the card color, like .chip.active.
+/* The feat whose card this is: filled with the theme color, like a selected
+   chip (.chip.active) or the current page link (.top-menu-link.current).
    Never truncated: feats.js widens its column to fit. */
 .fc-current {
   width: auto;
@@ -92,8 +93,27 @@ button.fc-box:focus-visible {
   text-overflow: clip;
   color: #ffffff;
   font-weight: 700;
-  text-shadow: 3px 3px 2px #000;
-  background: color-mix(in srgb, var(--fcc, var(--gold)) 85%, var(--ink-2));
-  border-color: var(--fcc, var(--gold));
+  background: color-mix(in srgb, var(--gold) 65%, var(--ink-2));
+  border-color: var(--gold);
   cursor: default;
+}
+
+/* Feat with an either/or prerequisite naming a feat ("Deft Maneuvers or
+   Powerful Maneuvers", "Amateur Gunslinger or grit class feature"): dotted,
+   thicker border in the feat's category color. The padding drops by 1px so
+   the box keeps the same size as its neighbours (lines stay aligned).
+   Hover / focus still turn the border gold; only the style stays dotted. */
+.fc-box.fc-alt {
+  padding: 4px 7px;
+  border-style: dashed;
+}
+
+button.fc-box.fc-alt:hover,
+button.fc-box.fc-alt:focus-visible {
+  border-color: var(--gold);
+}
+
+/* On the filled current-feat box, a light border stands out against the fill */
+.fc-current.fc-alt {
+  border-color: #ffffff;
 }
