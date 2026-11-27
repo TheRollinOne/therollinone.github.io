@@ -14,6 +14,10 @@
   };
   // ritual is now numeric: 1 = ritual, 0 = not (tolerates "1" string too)
   const isRitual = s => Number(s.ritual) === 1;
+  // "alchemist 2, magus 2, sorcerer/wizard 3", built from level_entries
+  const levelListText = s => s.level_entries.map(le=>`${le.class} ${le.level}`).join(', ');
+  // Lowest level among the given entries (Infinity when there are none)
+  const lowestLevel = entries => entries.reduce((min, le)=>Math.min(min, le.level), Infinity);
 
   const state = {
     query:'',
@@ -33,6 +37,7 @@
   SPELLS_DATA.forEach((s,i)=>{
     s._idx = i;
     s._classes = s.level_entries.map(le=>le.class);
+    s._minLevel = lowestLevel(s.level_entries);
     s._nameBlob = (s.name || '').toLowerCase();
     s._blob = [
       s.name, schoolDisplay(s), s._classes.join(' '), s.casting_time,
@@ -124,7 +129,8 @@
 
   // Builds the Roll20 clipboard payload: every top-level spell field except
   // level_entries (and internal _-prefixed helper fields), one "Label: value"
-  // per line, in the field's original JSON order. `overrides` lets callers
+  // per line, in the field's original JSON order. A "Level" line built from
+  // level_entries goes right after the name. `overrides` lets callers
   // substitute already-bolded text (e.g. description/heightened) instead of
   // the raw field value.
   const ROLL20_SKIP_FIELDS = new Set(['level_entries']);
@@ -143,8 +149,20 @@
       }
       const label = key.split('_').map(w=>w.charAt(0).toUpperCase()+w.slice(1)).join(' ');
       lines.push(`${label}: ${val}`);
+      if(key === 'name') lines.push(`Level: ${levelListText(s)}`);
     });
     return lines.join('\n');
+  }
+
+  // Level shown beside the name and used by the Level sort: the lowest level
+  // among the currently selected classes, or the lowest overall when no
+  // class is selected (or none of the spell's classes are selected).
+  function effectiveLevel(s){
+    if(state.classes.size){
+      const lvl = lowestLevel(s.level_entries.filter(le=>state.classes.has(le.class)));
+      if(lvl !== Infinity) return lvl;
+    }
+    return s._minLevel;
   }
 
   const queryMatch = createQueryMatcher();
@@ -156,11 +174,7 @@
     const sch = s.school || 'universal';
     const cVar = s._cardColor || TYPE_GRAY;
     const isOpen = state.open.has(s._idx);
-    let displayLevel = s.min_level;
-    if(state.classes.size){
-      const match = s.level_entries.find(le=>state.classes.has(le.class));
-      if(match) displayLevel = match.level;
-    }
+    const displayLevel = effectiveLevel(s);
     const levelDisp = displayLevel===0 ? 'Cantrip' : `Lvl ${displayLevel}`;
 
     const statFields = [
@@ -189,7 +203,7 @@
       const formula2 = formula.replace(/c1_/g, 'c2_');
       return `<span class="class-pill class-pill-damage class-pill-split">${escapeHtml(le.class)} ${le.level}<span class="pill-halves"><span class="pill-half pill-half-1 copyable" data-copy="${escapeHtml(formula1)}" data-tip-label="Click to copy - Caster 1">1</span><span class="pill-half pill-half-2 copyable" data-copy="${escapeHtml(formula2)}" data-tip-label="Click to copy - Caster 2">2</span></span></span>`;
     }).join('');
-    const classLevelInline = s.level_entries.map(le=>`${le.class} ${le.level}`).join(', ');
+    const classLevelInline = levelListText(s);
     const shortDescInline = s.short_description || classLevelInline;
     const ritualTagHTML = isRitual(s) ? `<span class="ritual-tag">Ritual</span>` : '';
 
@@ -295,11 +309,11 @@
     } else if(state.sort==='name_desc'){
       sorted.sort((a,b)=>naturalCompare(b.name, a.name));
     } else if(state.sort==='level_desc'){
-      sorted.sort((a,b)=>(b.min_level-a.min_level) || naturalCompare(a.name, b.name));
+      sorted.sort((a,b)=>(effectiveLevel(b)-effectiveLevel(a)) || naturalCompare(a.name, b.name));
     } else if(state.sort==='school_desc'){
       sorted.sort((a,b)=>(b.school||'').localeCompare(a.school||'') || naturalCompare(a.name, b.name));
     } else if(state.sort==='level'){
-      sorted.sort((a,b)=>(a.min_level-b.min_level) || naturalCompare(a.name, b.name));
+      sorted.sort((a,b)=>(effectiveLevel(a)-effectiveLevel(b)) || naturalCompare(a.name, b.name));
     } else if(state.sort==='school'){
       sorted.sort((a,b)=>(a.school||'').localeCompare(b.school||'') || naturalCompare(a.name, b.name));
     }
